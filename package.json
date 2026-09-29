@@ -1,0 +1,38 @@
+{
+  "name": "al-matcha-co-pos",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "server": "npm run dev --prefix server",
+    "seed": "npm run seed --prefix server",
+    "install:server": "npm install --prefix server",
+    "serve": "npm start --prefix server",
+    "update-menu": "npm run update-menu --prefix server",
+    "restore": "npm run restore --prefix server"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:5000"
+}

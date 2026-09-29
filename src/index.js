@@ -1,0 +1,16 @@
+import React, { Suspense, lazy } from 'react';
+import ReactDOM from 'react-dom/client';
+
+// Two sites in one app:
+//   /pos, /pos/...  → staff POS (sign-in with PIN)
+//   everything else → customer ordering page
+const isPos = /^\/pos(\/|$)/.test(window.location.pathname);
+const App = lazy(() => (isPos ? import('./App') : import('./shop/Shop')));
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Suspense fallback={null}>
+      <App />
+    </Suspense>
+  </React.StrictMode>
+);

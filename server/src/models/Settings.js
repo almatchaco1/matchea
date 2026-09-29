@@ -1,0 +1,45 @@
+import mongoose from 'mongoose';
+
+const { ObjectId } = mongoose.Schema.Types;
+
+const settingsSchema = new mongoose.Schema(
+  {
+    key: { type: String, default: 'shop', unique: true },
+    name: { type: String, default: 'AL Matcha Co' },
+    address: { type: String, default: '' },
+    tin: { type: String, default: '' },
+    footer: { type: String, default: 'Thank you! Come back soon.' },
+    vat: { type: Number, default: 0, min: 0, max: 100 }, // 0: not VAT-registered
+    sizes: [{ label: String, price: { type: Number, default: 0 }, mult: { type: Number, default: 1 }, cup: { type: ObjectId, ref: 'Ingredient', default: null } }],
+    milks: [{ label: String, price: { type: Number, default: 0 }, ing: { type: ObjectId, ref: 'Ingredient', default: null } }],
+    addons: [{ label: String, price: { type: Number, default: 0 }, ing: { type: ObjectId, ref: 'Ingredient', default: null }, qty: { type: Number, default: 0 } }],
+    sweetness: { type: [String], default: ['0%', '25%', '50%', '75%', '100%'] },
+    // Store info shown in the website footer (all optional)
+    contactPhone: { type: String, default: '' },
+    contactEmail: { type: String, default: '' },
+    hours: { type: String, default: '' }, // up to 4 lines, e.g. 'Mon–Sat 10am–8pm'
+    facebook: { type: String, default: '' },
+    instagram: { type: String, default: '' },
+    tiktok: { type: String, default: '' },
+    onlineOpen: { type: Boolean, default: true }, // customers can place online orders
+    onlineMessage: { type: String, default: '', maxlength: 160 }, // shown on the order page (e.g. 'Closed for the day')
+    // Pay by scanning the shop's own GCash / Maya QR (v = image version, 0 = no image)
+    qr: {
+      gcash: { v: { type: Number, default: 0 }, name: { type: String, default: '' }, number: { type: String, default: '' }, payload: { type: String, default: '' } },
+      maya: { v: { type: Number, default: 0 }, name: { type: String, default: '' }, number: { type: String, default: '' }, payload: { type: String, default: '' } },
+    },
+    qrOnline: { type: Boolean, default: true }, // customers can pay by QR when ordering online
+    payAtPickup: { type: Boolean, default: true }, // online orders may be paid at the counter
+    dailyGoal: { type: Number, default: 0, min: 0 }, // ₱ sales target per day (0 = off)
+    seasonal: { type: Boolean, default: true }, // seasonal decorations (Christmas lights, sakura…) on the website and POS
+    backupCopyDir: { type: String, default: '' }, // extra copy of each backup (e.g. Google Drive folder)
+    migrations: { type: [String], default: [] }, // one-time setup steps already done (e.g. the default GCash QR)
+  },
+  { timestamps: true }
+);
+
+settingsSchema.statics.get = async function () {
+  return (await this.findOne({ key: 'shop' })) || this.create({ key: 'shop', sizes: [{ label: 'Regular', price: 0, mult: 1 }] });
+};
+
+export default mongoose.model('Settings', settingsSchema);
