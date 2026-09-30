@@ -8,7 +8,7 @@ import Settings from '../models/Settings.js';
 import { ah, HttpError, assertValid } from '../lib/util.js';
 import { requireCustomer } from '../middleware/customerAuth.js';
 import { priceOrder, usageList, nextOrderNo } from '../lib/orders.js';
-import { checkOnlineOrder, normPhone, ONLINE, checkQrRef, cleanQrRef, checkPaidTime } from '../../../src/shared/rules.mjs';
+import { checkOnlineOrder, normPhone, ONLINE, checkQrRef, cleanQrRef, checkPaidTime, ONLINE_FEE_PCT, withOnlineFee } from '../../../src/shared/rules.mjs';
 import { mustPayFirst } from '../lib/noshow.js';
 import { addonIdsFor, imageFor, hasBundledImage, photoUrl } from '../../../src/shared/menu-defaults.mjs';
 import { computeTotals, priceLine } from '../../../src/shared/pricing.mjs';
@@ -16,7 +16,7 @@ import { redeemReward, returnReward } from '../lib/loyalty.js';
 import { rewardValue } from '../../../src/shared/loyalty.mjs';
 import Customer from '../models/Customer.js';
 import Asset from '../models/Asset.js';
-import { paymongoEnabled, createCheckout, getCheckout, expireCheckout, paidPayment, methodFrom, verifyWebhook } from '../lib/paymongo.js';
+import { paymongoEnabled, methodTypes, createCheckout, getCheckout, expireCheckout, paidPayment, methodFrom, verifyWebhook } from '../lib/paymongo.js';
 
 const PAY_WINDOW_MIN = 45; // unpaid "pay now" orders are cancelled after this many minutes
 
@@ -78,7 +78,7 @@ r.get('/menu', ah(async (_req, res) => {
   res.json({
     shop: {
       name: s.name, address: s.address, phone: s.contactPhone || '', email: s.contactEmail || '', hours: s.hours || '',
-      facebook: s.facebook || '', instagram: s.instagram || '', tiktok: s.tiktok || '', open: s.onlineOpen !== false, message: s.onlineMessage || '', payOnline: paymongoEnabled(), seasonal: s.seasonal !== false,
+      facebook: s.facebook || '', instagram: s.instagram || '', tiktok: s.tiktok || '', open: s.onlineOpen !== false, message: s.onlineMessage || '', payOnline: paymongoEnabled(), payTypes: paymongoEnabled() ? payTypes() : [], seasonal: s.seasonal !== false,
       qr: qrInfo(s), payAtPickup: s.payAtPickup !== false || (!paymongoEnabled() && !Object.keys(qrInfo(s)).length) },
     sizes: s.sizes.map(({ _id, label, price }) => ({ _id, label, price })),
     sweetness: s.sweetness,
@@ -140,6 +140,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
   assertValid(checkOnlineOrder(b));
   const phone = b.phone ? normPhone(b.phone) : '';
   let payNow = b.payNow === true;
+  const payType = String(b.payType || '');
   // Paid by scanning the shop's QR: the customer gives the reference number, staff checks it before accepting
   let qrPay = null;
   if (b.qrPay) {
@@ -169,6 +170,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
   }
   const useReward = b.useReward === true;
   if (payNow && !paymongoEnabled()) throw new HttpError(409, 'Online payment is not available right now. Please choose pay at pickup.');
+  if (payNow && !payTypes().includes(payType)) throw new HttpError(400, 'Choose GCash or Maya to pay online.', { pay: 'Choose GCash or Maya.' });
   const open = await Sale.countDocuments({ customerId: cust._id, source: 'online', status: { $in: ['awaiting_payment', 'new', 'preparing', 'ready'] } });
   if (open >= ONLINE.openOrdersPerPhone) throw new HttpError(429, 'You already have orders waiting. Please pick those up first, or ask at the counter.');
 
@@ -193,6 +195,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
     trackCode: crypto.randomBytes(9).toString('base64url'),
     customer: String(b.customer).trim().replace(/\s+/g, ' '), phone, pickupNote: String(b.pickupNote || '').trim(),
     lines: priced, subtotal: t.subtotal, discount: t.discount, total: t.total, vat: t.vat, vatExempt: t.vatExempt,
+    onlineFee: payNow ? withOnlineFee(t.total, payType).fee : 0,
     pay: { method: 'unpaid', tendered: 0, change: 0, ref: '' },
     usage: usageList(usage), cost, stampsUsed: useReward ? 9 : 0,
     ...(qrPay ? { qrPay: { method: qrPay.method, ref: qrPay.ref, at: qrPay.at, verified: false, shot: qrPay.shot, paidAt: qrPay.paidAt, ...(qrPay.timeOld ? { timeOld: qrPay.timeOld } : {}),
@@ -210,12 +213,12 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
   // Pay now: hand the customer to PayMongo's secure checkout page
   try {
     const base = baseUrl(req);
-    const co = await createCheckout({ sale, shopName: settings.name, successUrl: `${base}/order/${sale.trackCode}?paid=1`, cancelUrl: `${base}/order/${sale.trackCode}` });
+    const co = await createCheckout({ sale, shopName: settings.name, successUrl: `${base}/order/${sale.trackCode}?paid=1`, cancelUrl: `${base}/order/${sale.trackCode}`, type: payType });
     const upd = await Sale.findByIdAndUpdate(sale._id, { checkoutId: co.id, checkoutUrl: co.url }, { new: true });
     res.status(201).json(publicView(upd));
   } catch (e) {
     // Couldn't start payment: keep the order, switch it to pay at pickup so nothing is lost
-    const upd = await Sale.findByIdAndUpdate(sale._id, { status: 'new' }, { new: true });
+    const upd = await Sale.findByIdAndUpdate(sale._id, { status: 'new', onlineFee: 0 }, { new: true });
     res.status(201).json({ ...publicView(upd), notice: 'Online payment is unavailable right now, so your order was sent as pay at pickup.' });
   }
 }));
@@ -265,6 +268,9 @@ r.post('/paymongo/webhook', ah(async (req, res) => {
   res.json({ received: true }); // always 200 for events we don't handle, so PayMongo doesn't retry
 }));
 
+/** PayMongo methods offered as separate choices (each with its own fee): 'gcash', 'paymaya' */
+const payTypes = () => methodTypes().filter((m) => ONLINE_FEE_PCT[m]);
+
 /** QR payment options customers can use online: { gcash: { v, name, number }, … } */
 function qrInfo(s) {
   const out = {};
@@ -274,7 +280,7 @@ function qrInfo(s) {
 }
 const publicView = (s) => ({
   code: s.trackCode, no: s.no, date: s.date, status: s.status === 'void' ? 'cancelled' : s.status,
-  customer: s.customer.split(' ')[0], total: s.total,
+  customer: s.customer.split(' ')[0], total: s.total, onlineFee: s.onlineFee || 0,
   // choices are included so the customer can tap "Order again"
   lines: s.lines.map(({ name, mods, qty, total, product, sizeId, addonIds }) => ({
     name, mods, qty, total, productId: product ? String(product) : null, sizeId: sizeId || null, addonIds: addonIds || [],

@@ -91,14 +91,14 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
           <div className="paybox">
             <b>Waiting for payment</b>
             <p>Your order goes to the shop as soon as you pay.{mins > 0 ? ` Please pay within ${mins} minute${mins === 1 ? '' : 's'}.` : ''}</p>
-            {o.checkoutUrl && <a className="sh-btn big" href={o.checkoutUrl}>Pay {peso(o.total)} now</a>}
+            {o.checkoutUrl && <a className="sh-btn big" href={o.checkoutUrl}>Pay {peso(o.total + (o.onlineFee || 0))} now</a>}
             <button className="sh-btn ghost" disabled={!!busy} onClick={() => post('pay-later')}>{busy === 'pay-later' ? 'Switching…' : 'Pay at pickup instead'}</button>
           </div>
         )
       ) : cancelled ? (
         <div className="shop-alert">
           This order was cancelled{o.cancelReason ? `: ${o.cancelReason}` : '.'}{' '}
-          {o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total)} will be refunded. The shop may contact you.` : o.qrPay ? '' : 'You were not charged.'}
+          {o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total + (o.onlineFee || 0))} will be refunded. The shop may contact you.` : o.qrPay ? '' : 'You were not charged.'}
         </div>
       ) : (
         <ol className="steps">
@@ -118,9 +118,10 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
           <span>{o.freeDrink ? 'Free drink (stamp card)' : 'Discount'}</span><b>−{peso(o.discount.amount)}</b>
         </div>
       )}
+      {o.onlineFee > 0 && <div className="ck-disc ck-fee"><span>Online payment fee</span><b>+{peso(o.onlineFee)}</b></div>}
       <div className="ck-total">
         <span>{o.paidOnline ? `Paid online · ${payLabel}` : o.qrPay?.verified ? `Paid · ${qr}` : o.qrPay && !cancelled ? `Sent by ${qr} · being checked` : o.status === 'paid' ? `Paid · ${payLabel}` : cancelled ? 'Total' : waiting ? 'To pay' : 'Pay at the counter'}</span>
-        <b>{peso(o.total)}</b>
+        <b>{peso(o.total + (o.onlineFee || 0))}</b>
       </div>
       {o.status === 'paid' && mine && (mine.canRate || mine.rating) && <RateOrder code={code} rating={mine.rating} onDone={onChange} />}
       {o.stampsAwarded > 0 && <div className="okbox center">+{o.stampsAwarded} {o.stampsAwarded === 1 ? 'stamp' : 'stamps'} added to your card{o.stampsBalance != null ? ` · ${o.stampsBalance % 9}/9` : ''}</div>}

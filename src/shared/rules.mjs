@@ -243,6 +243,15 @@ export function checkCheckout({ lineCount, total, discount = {}, pay = {}, custo
 export const ONLINE = { lines: 20, lineQty: 10, name: 40, pickupNote: 120, openOrdersPerPhone: 3,
   payFirstOver: 3000, payFirstDrinks: 10, // big orders (over ₱3,000 or more than 10 drinks) must be paid first
   payTimeOld: 30, payTimeAhead: 5 }; // receipt time more than 30 min before the order is flagged; up to 5 min ahead is allowed (phone clocks differ)
+/** PayMongo's cut for online GCash / Maya payments (%). The customer pays it, so the shop still gets the full price. */
+export const ONLINE_FEE_PCT = { gcash: 2.23, paymaya: 1.79 };
+/** ₱250 by GCash → { total: 255.7, fee: 5.7 }: after PayMongo takes its % of the total, the shop receives ₱250. */
+export function withOnlineFee(amount, type) {
+  const pct = ONLINE_FEE_PCT[type], a = Number(amount) || 0;
+  if (!pct || a <= 0) return { total: a, fee: 0 };
+  const total = Math.round((a / (1 - pct / 100)) * 100) / 100;
+  return { total, fee: Math.round((total - a) * 100) / 100 };
+}
 /** Discounts above this % need an admin's PIN when a cashier is signed in. */
 export const DISC_PIN_OVER = 20;
 /** Normalise a PH mobile number to 09XXXXXXXXX, or '' when it isn't one. */

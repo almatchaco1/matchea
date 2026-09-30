@@ -41,6 +41,7 @@ const saleSchema = new mongoose.Schema(
       shotReused: { no: Number, date: String, code: String, same: Boolean }, // set when this screenshot was already used for another order
       paidAt: Date, timeOld: Number }, // paidAt: time on the customer's receipt; timeOld: minutes it was before the order (set when that's suspiciously long)
     noShow: { type: Boolean, default: false }, // cancelled because the customer never picked it up
+    onlineFee: { type: Number, default: 0 }, // PayMongo fee the customer paid on top of the total (the shop still receives the total)
     refundDue: { type: Boolean, default: false }, // paid online, then cancelled: refund in the PayMongo dashboard
     lines: [lineSchema],
     subtotal: Number,

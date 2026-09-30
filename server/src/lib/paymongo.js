@@ -32,19 +32,25 @@ async function pm(method, path, body) {
 }
 
 /** Create a hosted checkout for an order. Amounts go to PayMongo in centavos. */
-export async function createCheckout({ sale, shopName, successUrl, cancelUrl }) {
+export async function createCheckout({ sale, shopName, successUrl, cancelUrl, type }) {
+  const no = String(sale.no).padStart(3, '0');
+  // With a discount (e.g. free drink) the items no longer add up to the total, so send the order as one line
+  const items = sale.discount?.amount > 0
+    ? [{ name: `${shopName} order #${no}`.slice(0, 100), description: sale.lines.map((l) => `${l.qty}× ${l.name}`).join(', ').slice(0, 100), amount: Math.round(sale.total * 100), currency: 'PHP', quantity: 1 }]
+    : sale.lines.map((l) => ({
+      name: l.name.slice(0, 100), description: (l.mods || l.name).slice(0, 100),
+      amount: Math.round(l.unit * 100), currency: 'PHP', quantity: l.qty,
+    }));
+  if (sale.onlineFee > 0) items.push({ name: 'Online payment fee', description: 'PayMongo fee for paying online', amount: Math.round(sale.onlineFee * 100), currency: 'PHP', quantity: 1 });
   const s = await pm('POST', '/v1/checkout_sessions', {
     data: {
       attributes: {
-        line_items: sale.lines.map((l) => ({
-          name: l.name.slice(0, 100), description: (l.mods || l.name).slice(0, 100),
-          amount: Math.round(l.unit * 100), currency: 'PHP', quantity: l.qty,
-        })),
-        payment_method_types: methodTypes(),
+        line_items: items,
+        payment_method_types: type ? [type] : methodTypes(), // one method per checkout, so the fee added matches it
         success_url: successUrl,
         cancel_url: cancelUrl,
         reference_number: String(sale._id),
-        description: `${shopName} order #${String(sale.no).padStart(3, '0')}`,
+        description: `${shopName} order #${no}`,
         send_email_receipt: false,
         show_description: true,
         show_line_items: true,

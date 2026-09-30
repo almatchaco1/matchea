@@ -363,6 +363,7 @@
 .reward input{accent-color:var(--green);margin-top:4px;width:18px;height:18px}
 .reward small{display:block;color:var(--ink-2);font-size:12.5px}
 .ck-disc{display:flex;justify-content:space-between;color:var(--ok);font-weight:700;padding-top:8px}
+.ck-disc.ck-fee{color:inherit;font-weight:600;opacity:.85}
 .toggle-row{display:flex;gap:12px;align-items:flex-start;padding:6px 0 10px;cursor:pointer}
 .toggle-row input{accent-color:var(--green);width:20px;height:20px;margin-top:2px}
 .toggle-row small{display:block;color:var(--ink-2);font-size:13px}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { call } from './api';
-import { ONLINE, checkQrRef, checkPaidTime, cleanQrRef } from '../shared/rules.mjs';
+import { ONLINE, checkQrRef, checkPaidTime, cleanQrRef, ONLINE_FEE_PCT, withOnlineFee } from '../shared/rules.mjs';
 import { peso } from '../lib/format';
 import { rewardsReady, rewardValue } from '../shared/loyalty.mjs';
 import { computeTotals } from '../shared/pricing.mjs';
@@ -16,11 +16,13 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const drinkCount = cart.reduce((a, l) => a + (+l.qty || 0), 0);
   const bigOrder = canPayFirst && (subtotal > ONLINE.payFirstOver || drinkCount > ONLINE.payFirstDrinks); // big orders are paid first
   const pickupOk = menu?.shop?.payAtPickup !== false && !noShowRule && !bigOrder;
-  // How to pay: 'gcash' | 'maya' (scan the shop's QR) | 'paymongo' | 'pickup'
-  const options = [...Object.keys(qrs), ...(payOnline ? ['paymongo'] : []), ...(pickupOk ? ['pickup'] : [])];
+  // How to pay: 'gcash' | 'maya' (scan the shop's QR) | 'pm:gcash' | 'pm:paymaya' (PayMongo, opens the app) | 'pickup'
+  const pmTypes = payOnline ? (menu?.shop?.payTypes || []).filter((t) => ONLINE_FEE_PCT[t]) : [];
+  const options = [...Object.keys(qrs), ...pmTypes.map((t) => 'pm:' + t), ...(pickupOk ? ['pickup'] : [])];
   const [chosen, setMethod] = useState(null); // null = the first option (the menu may still be loading)
   const method = chosen && options.includes(chosen) ? chosen : options[0] || 'pickup';
-  const payNow = method === 'paymongo';
+  const payNow = method.startsWith('pm:');
+  const payType = payNow ? method.slice(3) : '';
   const qrMethod = qrs[method] ? method : null;
   const [ref, setRef] = useState('');
   const [refErr, setRefErr] = useState('');
@@ -36,6 +38,8 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const freeItem = live.map((l) => menu?.items.find((i) => i._id === l.productId)).filter(Boolean).sort((a, b) => b.price - a.price)[0];
   const total = useReward && canReward ? computeTotals(subtotal, { type: 'reward', amount: freeValue }).total : subtotal;
   const payable = payOnline && payNow && total > 0;
+  const fee = payable ? withOnlineFee(total, payType) : { total, fee: 0 }; // PayMongo's fee, paid by the customer
+  const PM_NAME = { gcash: 'GCash', paymaya: 'Maya' };
   const needQr = !!qrMethod && total > 0;
   const qrImg = useAmountQr(qrMethod ? qrs[qrMethod] : null, total, menu?.shop?.name);
   const phone = isPhone();
@@ -61,7 +65,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
     setBusy(true);
     try {
       const o = await call('POST', '/public/orders', {
-        pickupNote: note, payNow: payable, useReward: useReward && canReward,
+        pickupNote: note, payNow: payable, ...(payable ? { payType } : {}), useReward: useReward && canReward,
         qrPay: needQr ? { method: qrMethod, ref: cleanRef, paidTime, ...(shot ? { shot, shotPrint } : {}) } : undefined,
         lines: cart.map(({ productId, sizeId, addonIds, sweet, note: n, qty }) => ({ productId, sizeId, addonIds, sweet, note: n, qty })),
       });
@@ -142,7 +146,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
                 <input type="radio" name="pay" checked={method === k} onChange={() => { setMethod(k); setRefErr(''); }} />
                 <span>{k === 'gcash' ? <><b>Pay now with GCash</b><small>Scan our QR, then type the reference number</small></>
                   : k === 'maya' ? <><b>Pay now with Maya</b><small>Scan our QR, then type the reference number</small></>
-                  : k === 'paymongo' ? <><b>Pay now online</b><small>GCash, Maya or QR Ph · secure checkout by PayMongo</small></>
+                  : k.startsWith('pm:') ? <><b>Pay in the {PM_NAME[k.slice(3)]} app</b><small>Log in and pay, confirmed right away · +{peso(withOnlineFee(total, k.slice(3)).fee)} online fee</small></>
                   : <><b>Pay at pickup</b><small>Cash, GCash or Maya at the counter</small></>}</span>
               </label>
             ))}
@@ -201,13 +205,14 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
           </div>
         )}
         {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - total)}</b></div>}
-        <div className="ck-total"><span>Total</span><b className="num"><CountUp value={total} format={peso} /></b></div>
+        {fee.fee > 0 && <div className="ck-disc ck-fee"><span>Online payment fee ({PM_NAME[payType]})</span><b>+{peso(fee.fee)}</b></div>}
+        <div className="ck-total"><span>Total</span><b className="num"><CountUp value={fee.total} format={peso} /></b></div>
         {msg && <div className="shop-alert" role="alert">{msg}</div>}
         {!menu.shop.open && <div className="shop-alert">{menu.shop.message || 'Online ordering is closed right now.'}</div>}
         <button className="sh-btn big" disabled={busy || !menu.shop.open} onClick={place}>
-          {busy ? (payable ? 'Opening secure payment…' : 'Placing order…') : payable ? `Continue to payment · ${peso(total)}` : needQr ? `I’ve paid · Place order` : `Place order · ${peso(total)}`}
+          {busy ? (payable ? 'Opening secure payment…' : 'Placing order…') : payable ? `Pay ${peso(fee.total)} with ${PM_NAME[payType]}` : needQr ? `I’ve paid · Place order` : `Place order · ${peso(total)}`}
         </button>
-        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? 'You’ll pay on PayMongo’s secure page, then come back here to track your order.' : needQr ? 'Your order is sent with your reference number.' : 'Pay at the counter by cash, GCash or Maya.'} Pickup only.</p>
+        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your reference number.' : 'Pay at the counter by cash, GCash or Maya.'} Pickup only.</p>
       </aside>
     </div>
   );
