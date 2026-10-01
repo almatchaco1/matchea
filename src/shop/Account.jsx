@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePullRefresh } from './fx';
 import { call } from './api';
 import { checkCustomerName, checkPhone, checkPassword, normPhone, fmtPhoneInput, cleanName } from '../shared/rules.mjs';
 import { peso, pad } from '../lib/format';
@@ -10,9 +11,14 @@ import { Field, CodeStep, PasswordBox } from './Auth';
 
 const LABEL = { awaiting_payment: 'Waiting for payment', new: 'Order received', preparing: 'Preparing', ready: 'Ready for pickup', paid: 'Picked up', cancelled: 'Cancelled' };
 
-export function OrdersPage({ orders, go }) {
+export function OrdersPage({ orders, go, reload }) {
+  const { pull, busy } = usePullRefresh(reload);
   return (
     <section className="panel">
+      <div className={`ptr ${busy ? 'busy' : ''}`} style={{ '--p': Math.min(1, pull), height: busy ? 56 : Math.min(1.3, pull) * 56 }} aria-hidden={!busy} role="status">
+        <svg className="ptr-whisk" viewBox="0 0 24 40" style={{ transform: busy ? undefined : `rotate(${pull * 300}deg)` }}><rect x="9" y="1" width="6" height="15" rx="2.5" /><path d="M9 16l-6 22M10.5 16l-3 23M12 16v23.5M13.5 16l3 23M15 16l6 22" /></svg>
+        <span>{busy ? 'Refreshing…' : pull >= 0.8 ? 'Let go to refresh' : 'Pull to refresh'}</span>
+      </div>
       <h1>My orders</h1>
       {!orders.length ? (
         <div className="empty-state"><Doodle kind="orders" /><p className="muted">No orders yet. Your first matcha is waiting for you!</p><button className="sh-btn" onClick={() => go('/menu')}>Order something</button></div>

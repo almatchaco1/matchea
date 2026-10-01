@@ -1283,3 +1283,28 @@ td>.btn.sm{margin-top:2px;margin-bottom:2px}
 .kqr-dup b{display:block}
 /* ₱5,000+ cash at the register: the Charge button turns amber and needs a second tap */
 .btn.primary.charge.big-cash,.btn.primary.charge.big-cash:hover:not(:disabled){background:var(--warn);border-color:var(--warn);color:var(--surface);animation:none}
+
+/* ---------- Motion round 2 ---------- */
+/* Tab highlight: the stretch is animated in JS (TabInk); keep only the fade here */
+.tab-ink{transition:opacity .2s}
+/* Register cart: swipe a line left to reveal Remove */
+.swipe{position:relative;touch-action:pan-y;border-bottom:1px dashed var(--line)}
+.swipe>.swipe-in.line{border-bottom:0;background:var(--surface);position:relative;z-index:1;will-change:transform}
+.swipe-del{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding:0 17px 0 0;border:0;border-radius:0;background:var(--bad);color:#fff;font-weight:700;font-size:13px;letter-spacing:.02em}
+.swipe:not(.open) .swipe-del{pointer-events:none}
+.swipe:first-child{border-top:0}
+/* Paid: a check draws itself, then the receipt slides out like it's printing */
+.paid-check{display:grid;place-items:center;margin:-2px 0 10px}
+.paid-check svg{width:58px;height:58px;overflow:visible}
+.paid-check circle{fill:var(--ok-bg);stroke:var(--ok);stroke-width:3;stroke-dasharray:145;stroke-dashoffset:145;animation:pcCircle .5s cubic-bezier(.65,0,.35,1) forwards;transform-origin:center}
+.paid-check path{fill:none;stroke:var(--ok);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:36;stroke-dashoffset:36;animation:pcTick .35s cubic-bezier(.65,0,.45,1) .42s forwards}
+.paid-check svg{animation:pcPop .45s cubic-bezier(.3,1.6,.5,1) .7s}
+@keyframes pcCircle{to{stroke-dashoffset:0}}
+@keyframes pcTick{to{stroke-dashoffset:0}}
+@keyframes pcPop{50%{transform:scale(1.12)}}
+.rc-print{animation:rcPrint .9s cubic-bezier(.25,.8,.3,1) .55s backwards}
+@keyframes rcPrint{from{clip-path:inset(0 0 100% 0);transform:translateY(-18px)}to{clip-path:inset(0 0 0 0);transform:none}}
+/* Reports: bars and best-seller lines resize smoothly when the period changes */
+.panel svg rect.rp-bar{transition:transform .7s cubic-bezier(.25,.8,.3,1)}
+.hbar .b i{transition:width .7s cubic-bezier(.25,.8,.3,1)}
+@media (prefers-reduced-motion:reduce){.rc-print{clip-path:none}.paid-check circle,.paid-check path{stroke-dashoffset:0}}

@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { priceLine } from '../shared/pricing.mjs';
 import { ONLINE, LIMITS } from '../shared/rules.mjs';
 import { peso, pad } from '../lib/format';
 import StampCard from './StampCard';
-import { CountUp } from './fx';
+import { CountUp, photoFrom, morphIn, morphOut } from './fx';
 import { Doodle, LiveCup } from './art';
 import { ShareDrink } from './share';
 
@@ -76,7 +76,7 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
       <div className="mn-grid" key={cat}>
         {shown.map((it, i) => (
           <article key={it._id} className={`mn-card ${it.soldOut ? 'out' : ''}`} style={{ '--i': Math.min(i, 10) }}>
-            <button className="mn-photo" disabled={it.soldOut || !menu.shop.open} onClick={() => onPick(it)} aria-label={`Choose ${it.name}`}>
+            <button className="mn-photo" disabled={it.soldOut || !menu.shop.open} onClick={(e) => { photoFrom(e.currentTarget.querySelector('img')); onPick(it); }} aria-label={`Choose ${it.name}`}>
               {it.image && <img src={it.image} alt="" loading="lazy" />}
               {it.soldOut ? <span className="mn-tag">{it.notAvailable ? 'Not available' : 'Sold out'}</span> : it.bestSeller && <span className="mn-best hanko"><b lang="ja">人気</b>Best seller</span>}
             </button>
@@ -85,7 +85,7 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
               {it.desc && <p>{it.desc}</p>}
               <div className="mn-foot">
                 <span className="mn-price">{peso(from(it))}</span>
-                <button className="mn-add" disabled={it.soldOut || !menu.shop.open} onClick={() => onPick(it)} aria-label={`Add ${it.name}`}>+</button>
+                <button className="mn-add" disabled={it.soldOut || !menu.shop.open} onClick={(e) => { photoFrom(e.currentTarget.closest('.mn-card')?.querySelector('.mn-photo img')); onPick(it); }} aria-label={`Add ${it.name}`}>+</button>
               </div>
             </div>
           </article>
@@ -107,17 +107,20 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
   const set = (p) => setL({ ...L, ...p });
   const sizeAt = Math.max(0, menu.sizes.findIndex((s) => s._id === x.sizeId));
   const picked = addons.filter((a) => L.addonIds.includes(a._id));
-  useEffect(() => { if (sharing) return undefined; const k = (e) => e.key === 'Escape' && onClose(); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, [onClose, sharing]);
+  const hero = useRef(null);
+  useLayoutEffect(() => { morphIn(hero.current); }, []); // the menu photo grows into this sheet
+  const close = () => { morphOut(hero.current); onClose(); }; // …and shrinks back when it closes
+  useEffect(() => { if (sharing) return undefined; const k = (e) => e.key === 'Escape' && close(); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, [onClose, sharing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const shareCard = () => setSharing({ item, who: firstName(who), shop: menu.shop,
     size: item.hasSizes && menu.sizes.length > 1 ? { label: menu.sizes[sizeAt]?.label, big: sizeAt > 0 } : null,
     sweet: item.sweet && L.sweet ? `${L.sweet} sweet` : '', addons: picked.map((a) => a.label) });
   return (<>
-    <div className="shop-scrim" onMouseDown={(e) => !sharing && e.target === e.currentTarget && onClose()}>
+    <div className="shop-scrim" onMouseDown={(e) => !sharing && e.target === e.currentTarget && close()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={item.name}>
-        <button className="sheet-x" onClick={onClose} aria-label="Close">×</button>
+        <button className="sheet-x" onClick={close} aria-label="Close">×</button>
         <div className={`sheet-hero size-${sizeAt}`}>
-          {item.image && <img src={item.image} alt="" />}
+          {item.image && <img ref={hero} src={item.image} alt="" />}
           {item.hasSizes && menu.sizes.length > 1 && <span className="sh-size" key={x.sizeId}>{menu.sizes[sizeAt]?.label}</span>}
           <span className="sh-tags">{picked.map((a) => <i key={a._id}>+ {a.label}</i>)}</span>
           <LiveCup name={item.name} sweet={item.sweet ? L.sweet : null} sizeAt={item.hasSizes ? sizeAt : 0} sizes={item.hasSizes ? menu.sizes.length : 1} addons={picked} />

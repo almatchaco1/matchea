@@ -158,7 +158,7 @@ export default function Reports({ data, toast, isAdmin, refresh, goInventory }) 
       <div className="two">
         <div className="panel">
           <div className="card-h"><h3>{single ? 'Sales by hour' : 'Sales by day'}</h3><span className="muted">₱</span></div>
-          <div className="card-b">{a.orders ? <BarChart single={single} a={a} days={days} /> : <div className="empty">{sum ? 'No sales in this period.' : 'Loading…'}</div>}</div>
+          <div className="card-b">{a.orders ? <BarChart key={`${single}-${days.length}`} single={single} a={a} days={days} /> : <div className="empty">{sum ? 'No sales in this period.' : 'Loading…'}</div>}</div>
         </div>
         <div className="panel">
           <div className="card-h"><h3>Best sellers</h3><span className="muted" style={{ fontSize: 12 }}>qty</span></div>
@@ -241,7 +241,8 @@ function BarChart({ single, a, days }) {
       ))}
       {series.map((v, i) => (
         <g key={i}>
-          <rect x={P.l + i * bw + bw * 0.15} y={y(v)} width={bw * 0.7} height={Math.max(0, H - P.b - y(v))} rx="3" fill="var(--matcha)"><title>{labels[i]}: {peso(v)}</title></rect>
+          {/* full-height bar scaled to its value, so a new period grows/shrinks it smoothly */}
+          <rect className="rp-bar" x={P.l + i * bw + bw * 0.15} y={P.t} width={bw * 0.7} height={H - P.b - P.t} rx="3" fill="var(--matcha)" style={{ transform: `scaleY(${Math.max(0, v / top)})` }}><title>{labels[i]}: {peso(v)}</title></rect>
           {i % every === 0 && <text x={P.l + i * bw + bw / 2} y={H - 8} textAnchor="middle">{labels[i]}</text>}
         </g>
       ))}

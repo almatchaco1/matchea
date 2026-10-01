@@ -1405,3 +1405,21 @@
 .qr-shot-have span{flex:1;display:flex;flex-direction:column;font-size:14px}
 .qr-shot-have small{color:var(--ink-2);font-size:12.5px}
 .acct-forgot{text-align:left;margin:-6px 0 0}
+
+/* ---------- Motion round 2 ---------- */
+/* Header gets slimmer and frostier once you scroll (margin makes up the height, so the page doesn't jump) */
+.sh-head{transition:padding .3s var(--ease-out),margin .3s var(--ease-out),box-shadow .25s,background .25s}
+.sh-head.scrolled{padding-top:5px;padding-bottom:5px;margin-bottom:10px;-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5)}
+.sh-head .sh-logo{transition:transform .4s var(--spring),scale .3s var(--ease-out)}
+.sh-head.scrolled .sh-logo{scale:.82}
+.sh-head .sh-name{transition:font-size .3s var(--ease-out)}
+.sh-head.scrolled .sh-name{font-size:17px}
+@media (max-width:480px){.sh-head.scrolled .sh-name{font-size:15px}}
+/* Pull to refresh (Orders page): a whisk that turns as you pull, then whisks while loading */
+.ptr{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;overflow:hidden;margin:-6px 0 0;opacity:var(--p);transition:height .25s var(--ease-out)}
+.ptr span{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.ptr-whisk{width:22px;height:34px;flex:none}
+.ptr-whisk rect{fill:#EBD6AC;stroke:#8A6A2E;stroke-width:1.4}
+.ptr-whisk path{fill:none;stroke:#C29A55;stroke-width:1.5;stroke-linecap:round}
+.ptr.busy .ptr-whisk{animation:ptrWhisk .4s ease-in-out infinite alternate;transform-origin:50% 10%}
+@keyframes ptrWhisk{from{transform:rotate(-14deg) translateX(-2px)}to{transform:rotate(14deg) translateX(2px)}}

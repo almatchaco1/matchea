@@ -9,6 +9,7 @@ import ReceiptModal from './Receipt';
 import { printSale, loadPrinterSettings } from '../lib/printer';
 import { Field } from './Field';
 import { allowedAddons, imageOf } from '../lib/drinkImages';
+import { SwipeRow } from '../lib/motion';
 import { checkCheckout, LIMITS, normPhone, DISC_PIN_OVER } from '../shared/rules.mjs';
 import AdminPin from './AdminPin';
 import { QrHint, ShowQr } from './PayQr';
@@ -222,7 +223,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
         </div>
         <div className="lines">
           {!cart.length ? <div className="empty">Tap a drink to start an order.</div> : priced.map((l, i) => (
-            <div className="line" key={l.key}>
+            <SwipeRow className="line" key={l.key} onRemove={() => setCart((c) => c.filter((x) => x.key !== l.key))}>
               <div className="qty">
                 <button onClick={() => setQty(i, -1)} aria-label="Fewer">−</button><span className="num">{l.qty}</span><button onClick={() => setQty(i, 1)} aria-label="More">+</button>
               </div>
@@ -233,7 +234,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
                 <button className="x" onClick={() => setCart(cart.filter((_, k) => k !== i))}>Remove</button>
               </div>
               <div className="amt num">{peso(l.total)}</div>
-            </div>
+            </SwipeRow>
           ))}
         </div>
 

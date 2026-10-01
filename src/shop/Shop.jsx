@@ -11,7 +11,7 @@ import Track from './Track';
 import { AccountPage, OrdersPage } from './Account';
 import { alertReady } from './ReadyAlerts';
 import { flyToCart, bumpCart } from './motion';
-import { useReveal, useRipples, useScrolled, CountUp } from './fx';
+import { useReveal, useRipples, useScrolled, CountUp, usePressSpring } from './fx';
 import { Loader, Avatar } from './art';
 import { Privacy, Terms } from './Legal';
 import { seasonOf, Lights, Falling } from '../lib/season';
@@ -81,6 +81,7 @@ export default function Shop() {
   const rootRef = useRef(null);
   useReveal(rootRef, pathname + (menu ? 1 : 0) + (me ? 1 : 0));
   useRipples(rootRef);
+  usePressSpring(); // buttons squish when pressed
   // Sign-in required for the menu, cart and account
   useEffect(() => {
     if (checking) return;
@@ -134,7 +135,7 @@ export default function Shop() {
     onQuickAdd={(line, img) => { flyToCart(img); setCart((c) => [...c, { ...line, qty: 1 }]); }}
     onRemoveFav={async (id) => { const r = await call('DELETE', `/customer/favorites/${id}`); setMe(r.customer); }} />;
   else if (pathname === '/cart') page = <CartPage menu={menu} me={me} payFirst={payFirst} cart={cart} setCart={setCart} priced={priced} total={total} go={go} onEdit={(i) => setPicking({ item: byId[cart[i].productId], index: i })} onPlaced={() => { loadOrders(); refreshMe(); }} />;
-  else if (pathname === '/orders') page = <OrdersPage orders={orders} go={go} />;
+  else if (pathname === '/orders') page = <OrdersPage orders={orders} go={go} reload={loadOrders} />;
   else if (pathname === '/account') page = <AccountPage me={me} setMe={setMe} go={go} signOut={signOut} />;
   else page = <Landing menu={menu} err={menuErr} go={go} me={me} season={season} />;
 

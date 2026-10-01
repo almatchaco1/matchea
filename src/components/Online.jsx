@@ -1,5 +1,5 @@
 // Staff: online orders. New → Preparing → Ready → Paid (or Cancelled).
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, getToken } from '../lib/api';
 import { peso, pad, timeOf } from '../lib/format';
 import { PAY_LABELS, r2 } from '../shared/pricing.mjs';
@@ -9,6 +9,7 @@ import Modal from './Modal';
 import { Field, useErrors } from './Field';
 import ReceiptModal from './Receipt';
 import { QrHint, ShowQr, QR_LABEL } from './PayQr';
+import { useFlip } from '../lib/motion';
 
 const COLS = [
   ['new', 'New', 'Accept to start making it. Stock is taken when you accept.'],
@@ -18,6 +19,8 @@ const COLS = [
 const ago = (d) => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : timeOf(d); };
 
 export default function Online({ data, refresh, toast, orders, meta = {}, reload }) {
+  const board = useRef(null);
+  useFlip(board); // cards glide to their new column
   const [busy, setBusy] = useState(null);
   const [paying, setPaying] = useState(null);
   const [cancelling, setCancelling] = useState(null);
@@ -56,14 +59,14 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
         {meta.awaitingPayment > 0 && <span className="muted"> · {meta.awaitingPayment} waiting for the customer to pay</span>}
       </p>
 
-      <div className="kanban">
+      <div className="kanban" ref={board}>
         {COLS.map(([st, title, hint]) => {
           const list = orders.filter((o) => o.status === st);
           return (
             <section key={st} className={`kcol k-${st}`}>
               <div className="kcol-h"><h3>{title}</h3><span className="pill mute">{list.length}</span></div>
               {!list.length ? <p className="muted kempty">{hint}</p> : list.map((o) => (
-                <article key={o._id} className="kcard panel">
+                <article key={o._id} data-flip={o._id} className="kcard panel">
                   <header>
                     <span className="kno num">#{pad(o.no)}</span>
                     <span className="muted" style={{ fontSize: 12 }}>{o.date !== new Date().toISOString().slice(0, 10) && st === 'new' ? o.date + ' · ' : ''}{ago(o.createdAt)}</span>

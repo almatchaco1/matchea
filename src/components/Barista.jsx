@@ -8,6 +8,7 @@ import { checkProduct } from '../shared/rules.mjs';
 import { howTo } from '../lib/recipe';
 import { ProductModal } from './Menu';
 import { ConfirmButton } from './Modal';
+import { useFlip, leave } from '../lib/motion';
 
 function chime() {
   try {
@@ -25,6 +26,8 @@ function chime() {
 const mins = (d, now) => Math.max(0, Math.floor((now - new Date(d)) / 60000));
 
 export default function Barista({ toast, data: menu, refresh, isAdmin, training, trainTickets, setTrainTickets }) {
+  const grid = useRef(null);
+  useFlip(grid); // the other tickets glide over when one is done
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
   const [now, setNow] = useState(Date.now());
@@ -68,11 +71,12 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
     try { await api.post(`/barista/${t._id}/line/${l.i}`, { done: !l.done }); } catch (e) { toast(e.message); load(); }
   };
   const done = async (t) => {
-    if (training) { setTrainTickets((ts) => ts.filter((x) => x._id !== t._id)); setUndo({ id: t._id, no: t.no, ticket: t }); return; }
+    const card = grid.current?.querySelector(`[data-flip="${t._id}"]`);
+    if (training) { leave(card, () => { setTrainTickets((ts) => ts.filter((x) => x._id !== t._id)); setUndo({ id: t._id, no: t.no, ticket: t }); }); return; }
     setBusy(t._id);
     try {
       const r = await api.post(`/barista/${t._id}/done`);
-      setData((d) => ({ ...d, tickets: d.tickets.filter((x) => x._id !== t._id) }));
+      leave(card, () => setData((d) => ({ ...d, tickets: d.tickets.filter((x) => x._id !== t._id) })));
       if (r.ready) toast(`#${pad(t.no)} is ready. The customer has been told.`);
       else setUndo({ id: t._id, no: t.no });
     } catch (e) { toast(e.message); load(); }
@@ -106,11 +110,11 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
       {data && !tickets.length && (
         <div className="bar-empty"><b>All caught up</b><span>{training ? 'Ring up a practice order in Register and it shows up here.' : 'New orders show up here by themselves, with a chime.'}</span></div>
       )}
-      <div className="bar-grid">
+      <div className="bar-grid" ref={grid}>
         {tickets.map((t) => {
           const m = mins(t.createdAt, now);
           return (
-            <article key={t._id} className={`ticket ${m >= 10 ? 'late' : m >= 5 ? 'slow' : ''}`}>
+            <article key={t._id} data-flip={t._id} className={`ticket ${m >= 10 ? 'late' : m >= 5 ? 'slow' : ''}`}>
               <header>
                 <span className="t-no"><i>#</i>{pad(t.no)}</span>
                 <span className={`t-src ${t.source}`}>{t.source === 'online' ? 'Online' : t.source === 'training' ? 'Practice' : t.source === 'staff' ? 'Staff' : 'Counter'}</span>

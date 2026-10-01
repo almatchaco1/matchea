@@ -114,7 +114,12 @@ export default function ReceiptModal({ sale, settings, onClose, justPaid, autoPr
         <button className="btn primary" onClick={onClose} autoFocus>Close</button>
       </>}
     >
-      <div ref={ref}><Receipt sale={sale} settings={settings} /></div>
+      {justPaid && (
+        <div className="paid-check" aria-hidden="true">
+          <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="23" /><path d="M15 27.5l7.5 7.5L37.5 19" /></svg>
+        </div>
+      )}
+      <div ref={ref} className={justPaid ? 'rc-print' : undefined}><Receipt sale={sale} settings={settings} /></div>
     </Modal>
   );
 }
