@@ -991,11 +991,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;op
 .bento>.stat:not(:first-child){display:flex;flex-direction:column;justify-content:center;border-radius:20px}
 @media (max-width:760px){.stat-row.bento{grid-template-columns:repeat(2,minmax(0,1fr))}.bento>.stat:first-child{grid-row:span 1;min-height:130px}}
 
-/* Soft ink underline under section titles */
 h2.sec{position:relative}
-h2.sec::after{content:"";position:absolute;left:18px;right:-6px;bottom:-3px;height:6px;border-radius:6px;background:color-mix(in srgb,var(--matcha) 16%,transparent);transform-origin:left;animation:inkLine .8s var(--ease-out) .2s backwards;z-index:-1}
-.cart-h h2.sec::after{display:none}
-@keyframes inkLine{from{transform:scaleX(0)}}
 
 /* ---------- "Kissaten Night": dark mode with gold details ---------- */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--gold:#D9BC78}}
@@ -1314,3 +1310,10 @@ td>.btn.sm{margin-top:2px;margin-bottom:2px}
 /* Online handover: pickup code */
 .pk-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .pk-in{width:140px;font-size:24px;letter-spacing:.35em;text-align:center;font-family:var(--mono)}
+/* Quantity next to a text box (drink options): same height and corners as the box, buttons share the width evenly */
+.field>.qty{align-self:stretch;height:40px;border-radius:12px;background:var(--surface)}
+.field>.qty button{flex:1 1 0;width:auto;height:100%;font-size:17px;background:transparent}
+.field>.qty button:hover:not(:disabled){background:var(--surface2)}
+.field>.qty span{flex:1 1 0;min-width:28px;font-size:15px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .field>.qty{background:#0F1914;border-color:#2A3D2F}}
+:root[data-theme="dark"] .field>.qty{background:#0F1914;border-color:#2A3D2F}

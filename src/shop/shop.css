@@ -929,14 +929,9 @@
 .track>.muted.center:first-child .jp{display:block;letter-spacing:.3em;font-size:11px;margin-top:2px}
 .ld-script .jp{font-size:14px;margin-left:8px;color:var(--matcha-2);opacity:.8;letter-spacing:.12em}
 
-/* Brush-ink stroke under section titles */
+/* Section titles (no underline stroke) */
 .ld-steps h2,.ld-menu-h h2,.mn-top h1,.shop .panel>h1:first-child,.ck-h h1{position:relative;display:inline-block;z-index:0}
-.ld-steps h2::after,.ld-menu-h h2::after,.mn-top h1::after,.shop .panel>h1:first-child::after,.ck-h h1::after{content:"";position:absolute;left:-6px;right:-10px;bottom:-2px;height:.5em;z-index:-1;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 30' preserveAspectRatio='none'%3E%3Cpath d='M4 18c40-9 92-12 150-10s104 5 142 2c-30 6-70 12-136 12S30 24 4 18Z' fill='%23DCE9C4'/%3E%3Cpath d='M10 20c60-6 140-8 200-4' stroke='%238DB255' stroke-width='1.5' fill='none' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E") center/100% 100% no-repeat;
-  transform-origin:left;animation:brush .9s var(--ease-out) .25s backwards}
-@keyframes brush{from{transform:scaleX(0)}}
 .shop .panel.center>h1:first-child{display:block}
-.shop .panel.center>h1:first-child::after{display:none}
 
 /* Hanko (seal stamp) badges */
 .mn-best.hanko,.ld-best.hanko{display:inline-flex;align-items:center;gap:6px;background:var(--cream);color:var(--green);border:1.5px solid var(--green);padding:2px 9px 2px 2px;box-shadow:0 4px 10px -4px rgba(43,90,32,.45)}
@@ -1074,8 +1069,6 @@
   .ld-marquee{background:#1F4617}
   .jp{color:#A9D27E}
 
-  /* brush strokes under titles: darker green paint */
-  .ld-steps h2::after,.ld-menu-h h2::after,.mn-top h1::after,.shop .panel>h1:first-child::after,.ck-h h1::after{opacity:.35}
 
   /* stamp card stays a light "paper" card, so keep its text dark */
   .sc-front{--ink:#1D2E18;--ink-2:#5A6852;--green:#2B5A20;--green-2:#3F7A2C;color:#1D2E18}
@@ -1200,8 +1193,6 @@
   .ld-marquee{background:linear-gradient(90deg,#1C3F15,#2B5A20,#1C3F15)}
   .ld-marquee i{color:var(--blush)}
 
-  /* brush strokes under titles: blush */
-  .ld-steps h2::after,.ld-menu-h h2::after,.mn-top h1::after,.shop .panel>h1:first-child::after,.ck-h h1::after{opacity:.55}
 
   /* checkout */
   .ck-total{border-top-color:rgba(255,255,255,.1)}
