@@ -11,7 +11,7 @@ import { ShareDrink } from './share';
 const STEPS = [
   ['new', 'Order received', 'The shop will confirm it shortly.'],
   ['preparing', 'Preparing', 'Your matcha is being whisked.'],
-  ['ready', 'Ready for pickup', 'Come to the counter, tell your pickup code and pay.'],
+  ['ready', 'Ready for pickup', 'Come to the counter, show your order number and pay.'],
   ['paid', 'Picked up', 'Enjoy! Good Matcha, Good Mood.'],
 ];
 
@@ -112,7 +112,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
           {STEPS.map(([k, title, text], i) => (
             <li key={k} className={i < idx ? 'done' : i === idx ? 'now' : ''}>
               <span className="dot" aria-hidden="true" />
-              <div><b>{title}</b>{i === idx && <small>{k === 'ready' && prepaid ? 'Come to the counter and tell your pickup code. It’s already paid.' : k === 'new' && o.qrPay && !o.qrPay.verified ? (slowCheck ? `Still checking your ${qr} payment (ref ${o.qrPay.ref}). Sorry for the wait. If it takes much longer, please message the shop.` : `The shop is checking your ${qr} payment (ref ${o.qrPay.ref}). This usually takes a few minutes.`) : text}</small>}</div>
+              <div><b>{title}</b>{i === idx && <small>{k === 'ready' && o.pickupCode ? `Come to the counter and tell your pickup code.${prepaid ? ' It’s already paid.' : ' Pay when you pick up.'}` : k === 'ready' && prepaid ? 'Come to the counter and show your order number. It’s already paid.' : k === 'new' && o.qrPay && !o.qrPay.verified ? (slowCheck ? `Still checking your ${qr} payment (ref ${o.qrPay.ref}). Sorry for the wait. If it takes much longer, please message the shop.` : `The shop is checking your ${qr} payment (ref ${o.qrPay.ref}). This usually takes a few minutes.`) : text}</small>}</div>
             </li>
           ))}
         </ol>

@@ -148,7 +148,7 @@ export default function Shop() {
       <Header me={me} go={go} path={pathname} count={count} shop={menu?.shop} activeCount={active.length} season={season} />
       {readyBanner && (
         <div className="ready-banner" role="alert">
-          <span><b>Order #{String(readyBanner.no).padStart(3, '0')} is ready!</b> Come to the counter and show your order number.</span>
+          <span><b>Order #{String(readyBanner.no).padStart(3, '0')} is ready!</b> {readyBanner.pickupCode ? <>Tell your pickup code <b className="num">{readyBanner.pickupCode}</b> at the counter.</> : 'Come to the counter and show your order number.'}</span>
           <span>
             <button className="sh-btn sm" onClick={() => { go('/order/' + readyBanner.code); setReadyBanner(null); }}>View</button>
             <button className="ready-x" onClick={() => setReadyBanner(null)} aria-label="Dismiss">×</button>

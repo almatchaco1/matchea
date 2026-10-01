@@ -23,7 +23,7 @@ export function chime() {
 export function alertReady(order, shopName, onClick) {
   chime();
   const title = `Order #${pad(order.no)} is ready!`;
-  const body = `${shopName || 'AL Matcha Co'}: come to the counter and show your order number.${order.paidOnline ? ' It’s already paid.' : ''}`;
+  const body = `${shopName || 'AL Matcha Co'}: come to the counter and ${order.pickupCode ? `tell your pickup code ${order.pickupCode}` : 'show your order number'}.${order.paidOnline ? ' It’s already paid.' : ''}`;
   if (supported() && Notification.permission === 'granted') {
     try {
       const n = new Notification(title, { body, tag: `ready-${order.code}`, icon: '/logo192.png' });
