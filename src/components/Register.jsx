@@ -384,7 +384,6 @@ function ItemModal({ product: p, settings: s, initial, stock, otherUsage, onClos
       {addons.length > 0 && <div className="opt-group"><h4>Add-ons</h4><div className="opts">
         {addons.map((o) => { const on = L.addonIds.includes(o._id); return <Opt key={o._id} on={on} label={o.label} price={o.price} onClick={() => set({ addonIds: on ? L.addonIds.filter((a) => a !== o._id) : [...L.addonIds, o._id] })} />; })}</div></div>}
       <div className="row">
-        <div className="field" style={{ flex: '2 1 200px' }}><label htmlFor="itemNote">Note</label><input id="itemNote" maxLength={LIMITS.note} placeholder="Less ice, extra hot…" value={L.note} onChange={(e) => set({ note: e.target.value })} /></div>
         <div className="field" style={{ flex: '0 0 auto' }}><label>Qty</label><div className="qty">
           <button onClick={() => set({ qty: Math.max(1, L.qty - 1) })}>−</button><span className="num">{L.qty}</span><button onClick={() => set({ qty: Math.min(LIMITS.lineQty, L.qty + 1) })} disabled={L.qty >= LIMITS.lineQty}>+</button></div></div>
       </div>

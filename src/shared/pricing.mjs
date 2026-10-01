@@ -41,7 +41,7 @@ export function priceLine(line, product, settings) {
   for (const k in usage) usage[k] = r2(usage[k] * qty);
 
   const sweet = product.sweet !== false ? String(line.sweet || '') : '';
-  const note = String(line.note || '').slice(0, 120).trim();
+  const note = ''; // special requests (less ice, extra hot…) aren't offered, so any note sent is ignored
   const mods = [
     size && sizes.length > 1 ? size.label : '',
     milk && milks.length > 1 ? milk.label : '',

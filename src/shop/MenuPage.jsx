@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { priceLine } from '../shared/pricing.mjs';
-import { ONLINE, LIMITS } from '../shared/rules.mjs';
+import { ONLINE } from '../shared/rules.mjs';
 import { peso, pad } from '../lib/format';
 import StampCard from './StampCard';
 import { CountUp, photoFrom, morphIn, morphOut } from './fx';
@@ -148,10 +148,6 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
           {addons.length > 0 && <Group title="Add-ons" hint="Optional">
             {addons.map((a) => { const on = L.addonIds.includes(a._id); return <Choice key={a._id} on={on} onClick={() => set({ addonIds: on ? L.addonIds.filter((i) => i !== a._id) : [...L.addonIds, a._id] })} label={a.label} sub={`+${peso(a.price)}`} />; })}
           </Group>}
-          <label className="au-field">
-            <span>Special request <i className="opt">optional</i></span>
-            <input value={L.note} maxLength={LIMITS.note} placeholder="Less ice, extra hot…" onChange={(e) => set({ note: e.target.value })} />
-          </label>
         </div>
         <div className="sheet-f">
           <div className="qty" aria-label="Quantity">
