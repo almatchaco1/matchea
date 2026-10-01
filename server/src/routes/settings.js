@@ -6,6 +6,7 @@ import { ah, assertValid, HttpError } from '../lib/util.js';
 import Asset from '../models/Asset.js';
 import { isQrPh } from '../../../src/shared/qrph.mjs';
 import { checkSettings, isObjectId, checkStoreInfo, socialUrl, normPhone } from '../../../src/shared/rules.mjs';
+import { cleanDecor, GREETING_MAX } from '../../../src/shared/decor.mjs';
 
 const r = Router();
 
@@ -52,7 +53,9 @@ r.put('/', requireAdmin, ah(async (req, res) => {
     facebook: socialUrl('facebook', info.facebook), instagram: socialUrl('instagram', info.instagram), tiktok: socialUrl('tiktok', info.tiktok),
   });
   if (b.onlineOpen != null) s.onlineOpen = !!b.onlineOpen;
-  if (b.seasonal != null) s.seasonal = !!b.seasonal;
+  if (b.decor != null) s.decor = cleanDecor(b.decor);
+  if (b.decorGreeting != null) s.decorGreeting = String(b.decorGreeting).replace(/\s+/g, ' ').trim().slice(0, GREETING_MAX);
+  if (b.decorPos != null) s.decorPos = !!b.decorPos;
   if (b.onlineMessage != null) s.onlineMessage = String(b.onlineMessage).trim().slice(0, 160);
   if (Array.isArray(b.sweetness) && b.sweetness.length && b.sweetness.length <= 10) s.sweetness = b.sweetness.map((x) => String(x).slice(0, 10));
   await s.save();

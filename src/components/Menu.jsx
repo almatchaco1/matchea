@@ -10,6 +10,7 @@ import { photoUrl } from '../shared/menu-defaults.mjs';
 import { starterSteps, toSteps } from '../lib/recipe';
 import { AdminBtn } from './Locked';
 import { QrSettingsModal } from './PayQr';
+import DecorPicker from './DecorPicker';
 
 export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
   const [switching, setSwitching] = useState('');
@@ -253,13 +254,11 @@ function ShopModal({ s, ingredients, onClose, done, toast }) {
         <label className={`check ${f.onlineOpen !== false ? 'on' : ''}`}>
           <input type="checkbox" checked={f.onlineOpen !== false} onChange={(e) => set('onlineOpen', e.target.checked)} /> <span>Customers can order online</span>
         </label>
-        <label className={`check ${f.seasonal !== false ? 'on' : ''}`}>
-          <input type="checkbox" checked={f.seasonal !== false} onChange={(e) => set('seasonal', e.target.checked)} /> <span>Seasonal decorations <span className="muted">· Christmas lights (Sep–Dec), hearts (Feb), sakura (Mar–May), rain (Jun–Aug) on the website and POS</span></span>
-        </label>
         <Field id="sOnMsg" label="Message on the order page (optional)" error={errs.onlineMessage} hint="Shown at the top, e.g. “Closed today, see you tomorrow!”">
           <input id="sOnMsg" value={f.onlineMessage || ''} maxLength={160} onChange={(e) => set('onlineMessage', e.target.value)} />
         </Field>
       </div>
+      <DecorPicker f={f} set={set} />
       <div className="opt-group">
         <h4>Store info <span className="muted" style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· shown at the bottom of the website. Leave blank what you don’t have yet.</span></h4>
         <div className="row">

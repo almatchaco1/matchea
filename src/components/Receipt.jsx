@@ -78,19 +78,38 @@ const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 const LABEL_CSS = `
   @page { size: 58mm 40mm; margin: 0; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; color: #000; }
-  .lbl { width: 58mm; height: 40mm; padding: 2.5mm 3mm; display: flex; flex-direction: column; justify-content: center; text-align: center; page-break-after: always; break-after: page; overflow: hidden; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .lbl { width: 58mm; height: 40mm; padding: 1.4mm; page-break-after: always; break-after: page; overflow: hidden; }
   .lbl:last-child { page-break-after: auto; break-after: auto; }
-  .top { font-size: 8pt; display: flex; justify-content: space-between; }
-  .nm { font-size: 20pt; font-weight: 800; line-height: 1.05; margin: 1mm 0; text-transform: uppercase; word-break: break-word; }
-  .dr { font-size: 10pt; font-weight: 700; }
-  .md { font-size: 8pt; line-height: 1.25; margin-top: .5mm; }
+  .in { height: 100%; border: .35mm solid #000; border-radius: 2.6mm; display: flex; flex-direction: column; overflow: hidden; }
+  .hd, .ft { display: flex; justify-content: space-between; align-items: center; gap: 2mm; padding: 1mm 2.2mm; font-size: 6.6pt; white-space: nowrap; }
+  .hd { border-bottom: .25mm solid #000; }
+  .ft { border-top: .25mm solid #000; }
+  .shop { font-weight: 800; letter-spacing: .14em; text-transform: uppercase; display: flex; align-items: center; gap: .8mm; overflow: hidden; text-overflow: ellipsis; }
+  .shop svg { width: 2.6mm; height: 2.6mm; flex: none; }
+  .no { font-weight: 800; font-size: 7.4pt; }
+  .no em { font-style: normal; font-weight: 600; font-size: 6pt; letter-spacing: .08em; text-transform: uppercase; border: .25mm solid #000; border-radius: 1mm; padding: 0 .7mm; margin-left: .8mm; }
+  .mid { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: .6mm 2.2mm; }
+  .nm { font-size: 16pt; font-weight: 800; line-height: 1.02; letter-spacing: -.01em; text-transform: capitalize; word-break: break-word; }
+  .nm.m { font-size: 13pt; } .nm.s { font-size: 11pt; }
+  .dr { font-size: 8.6pt; font-weight: 700; line-height: 1.15; margin-top: .9mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .md { font-size: 7pt; line-height: 1.2; margin-top: .4mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ft b { font-weight: 800; }
 `;
+const LEAF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C4 10 10 4 21 3c-1 10-7 17-17 17Z" fill="#000"/><path d="M4 20 13 11" stroke="#fff" stroke-width="1.8"/></svg>';
 /** Cup labels: on the receipt printer when set up, otherwise through the print window (58 × 40 mm stickers). */
 export async function printCupLabels(sale, settings) {
   if (await printLabels(sale, settings)) return 'Labels sent to the printer.';
-  const html = cupLabels(sale).map((c) => `<div class="lbl"><div class="top"><span>#${pad(c.no)}${c.online ? ' · Online' : ''}</span><span>${c.n} of ${c.of}</span></div>`
-    + `<div class="nm">${esc(c.name || '—')}</div><div class="dr">${esc(c.drink)}</div>${c.mods ? `<div class="md">${esc(c.mods)}</div>` : ''}</div>`).join('');
+  const shop = esc(settings?.name || 'AL Matcha Co');
+  const html = cupLabels(sale).map((c) => {
+    const name = c.name || '—';
+    const size = name.length > 20 ? ' s' : name.length > 13 ? ' m' : '';
+    return `<div class="lbl"><div class="in">`
+      + `<div class="hd"><span class="shop">${LEAF}${shop}</span><span class="no">#${pad(c.no)}${c.online ? '<em>Online</em>' : ''}</span></div>`
+      + `<div class="mid"><div class="nm${size}">${esc(name)}</div><div class="dr">${esc(c.drink)}</div>${c.mods ? `<div class="md">${esc(c.mods)}</div>` : ''}</div>`
+      + `<div class="ft"><span>${esc(c.time.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' }))}</span><span>cup <b>${c.n}</b> of ${c.of}</span></div>`
+      + `</div></div>`;
+  }).join('');
   printHtml(html, LABEL_CSS, `Cup labels #${pad(sale.no)}`);
   return '';
 }

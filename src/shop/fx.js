@@ -39,6 +39,50 @@ export function CountUp({ value, format = (n) => n, duration = 500 }) {
   return format(shown);
 }
 
+/** A price whose digits roll up or down like an odometer when it changes (cart total). */
+export function RollNum({ value, format = (n) => String(n) }) {
+  const str = format(+value || 0);
+  const chars = str.split('');
+  return (
+    <span className="rn" aria-label={str}>
+      {chars.map((ch, i) => {
+        const p = chars.length - 1 - i; // place from the right, so the same digit keeps its slot
+        if (!/\d/.test(ch)) return <span key={`c${p}`} className="rn-c" aria-hidden="true">{ch}</span>;
+        return (
+          <span key={`d${p}`} className="rn-d" aria-hidden="true">
+            <span className="rn-s" style={{ transform: `translateY(${-ch * 10}%)`, transitionDelay: `${Math.min(p, 6) * 35}ms` }}>
+              {'0123456789'.split('').map((d) => <span key={d}>{d}</span>)}
+            </span>
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+/** Menu cards further down the page rise in as they scroll into view, a few at a time. */
+export function useScrollIn(ref, key) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || calm() || !('IntersectionObserver' in window)) return undefined;
+    const below = [...el.children].filter((c) => c.getBoundingClientRect().top > window.innerHeight - 10);
+    if (!below.length) return undefined;
+    below.forEach((c) => c.classList.add('rv-wait'));
+    const io = new IntersectionObserver((entries) => {
+      let k = 0;
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        const n = e.target;
+        n.style.setProperty('--rv', k++);
+        n.classList.replace('rv-wait', 'rv-in');
+        io.unobserve(n);
+      });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.1 });
+    below.forEach((c) => io.observe(c));
+    return () => { io.disconnect(); below.forEach((c) => c.classList.remove('rv-wait')); };
+  }, [ref, key]);
+}
+
 /** A little burst of matcha-coloured confetti from an element (order placed, order ready). */
 export function confetti(from, n = 36) {
   if (calm() || typeof document === 'undefined') return;

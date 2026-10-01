@@ -114,15 +114,18 @@ export function labelBytes(sale, s = {}, { width = 32 } = {}) {
   const cmd = (x) => bytes.push(...x);
   const text = (t = '') => { for (const ch of plain(t)) bytes.push(ch.charCodeAt(0)); bytes.push(0x0a); };
   cmd(CMD.init);
+  const rule = () => text('-'.repeat(w));
   for (const c of cupLabels(sale)) {
-    cmd(CMD.center);
-    text(`${plain(s.name || 'AL Matcha Co')}  #${String(c.no).padStart(3, '0')}${c.online ? ' ONLINE' : ''}`);
-    cmd(CMD.boldOn); cmd(CMD.big); wrap((c.name || '-').toUpperCase(), Math.floor(w / 2)).forEach(text); cmd(CMD.normal);
-    wrap(c.drink.replace(/ Matcha Latte$/, ' Matcha'), w).forEach(text); cmd(CMD.boldOff);
     cmd(CMD.left);
-    if (c.mods) wrap(c.mods, w).forEach(text);
+    lr(plain(s.name || 'AL Matcha Co').toUpperCase(), `#${String(c.no).padStart(3, '0')}${c.online ? ' ONLINE' : ''}`, w).forEach(text);
+    rule();
     cmd(CMD.center);
-    text(`${c.n} of ${c.of}  -  ${c.time.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}`);
+    const name = (c.name || '-').replace(/\b\w/g, (x) => x.toUpperCase());
+    cmd(CMD.boldOn); cmd(CMD.big); wrap(name, Math.floor(w / 2)).forEach(text); cmd(CMD.normal);
+    wrap(c.drink, w).forEach(text); cmd(CMD.boldOff);
+    if (c.mods) wrap(c.mods, w).forEach(text);
+    cmd(CMD.left); rule();
+    lr(c.time.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' }), `cup ${c.n} of ${c.of}`, w).forEach(text);
     cmd(CMD.feed(3)); cmd(CMD.cut);
   }
   return new Uint8Array(bytes);

@@ -4,8 +4,8 @@ import { ONLINE, checkQrRef, checkPaidTime, cleanQrRef, ONLINE_FEE_PCT, withOnli
 import { peso } from '../lib/format';
 import { rewardsReady, rewardValue } from '../shared/loyalty.mjs';
 import { computeTotals } from '../shared/pricing.mjs';
-import { CountUp } from './fx';
-import { Loader, Doodle } from './art';
+import { RollNum } from './fx';
+import { Doodle } from './art';
 import { useAmountQr, saveQr, openGcash, isPhone } from '../lib/payqr';
 
 export default function CartPage({ menu, me, payFirst, cart, setCart, priced, total: subtotal, go, onEdit, onPlaced }) {
@@ -82,7 +82,13 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
     } finally { setBusy(false); }
   };
 
-  if (!menu) return <div className="shop-loading"><Loader /></div>;
+  if (!menu) return (
+    <section className="panel skel-cart" aria-busy="true" aria-label="Loading your cart">
+      <div className="skel skel-line" style={{ width: 140, height: 26 }} />
+      {[0, 1].map((i) => <div key={i} className="row"><div className="skel" style={{ width: 64, height: 64, borderRadius: 14, flex: 'none' }} /><div style={{ flex: 1 }}><div className="skel skel-line" style={{ width: '60%' }} /><div className="skel skel-line" style={{ width: '35%' }} /></div></div>)}
+      <div className="skel" style={{ height: 48, borderRadius: 999, marginTop: 8 }} />
+    </section>
+  );
   if (!cart.length) return (
     <section className="panel center empty-state">
       <Doodle kind="cart" />
@@ -206,7 +212,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         )}
         {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - total)}</b></div>}
         {fee.fee > 0 && <div className="ck-disc ck-fee"><span>Online payment fee ({PM_NAME[payType]})</span><b>+{peso(fee.fee)}</b></div>}
-        <div className="ck-total"><span>Total</span><b className="num"><CountUp value={fee.total} format={peso} /></b></div>
+        <div className="ck-total"><span>Total</span><b className="num"><RollNum value={fee.total} format={peso} /></b></div>
         {msg && <div className="shop-alert" role="alert">{msg}</div>}
         {!menu.shop.open && <div className="shop-alert">{menu.shop.message || 'Online ordering is closed right now.'}</div>}
         <button className="sh-btn big" disabled={busy || !menu.shop.open} onClick={place}>

@@ -31,7 +31,9 @@ const settingsSchema = new mongoose.Schema(
     qrOnline: { type: Boolean, default: true }, // customers can pay by QR when ordering online
     payAtPickup: { type: Boolean, default: true }, // online orders may be paid at the counter
     dailyGoal: { type: Number, default: 0, min: 0 }, // ₱ sales target per day (0 = off)
-    seasonal: { type: Boolean, default: true }, // seasonal decorations (Christmas lights, sakura…) on the website and POS
+    decor: { type: [String], default: [] }, // decorations picked by the owner (ids from src/shared/decor.mjs)
+    decorGreeting: { type: String, default: '', maxlength: 80 }, // greeting shown on the website home page
+    decorPos: { type: Boolean, default: true }, // also show the top string (lights, flags…) on the POS
     backupCopyDir: { type: String, default: '' }, // extra copy of each backup (e.g. Google Drive folder)
     migrations: { type: [String], default: [] }, // one-time setup steps already done (e.g. the default GCash QR)
   },

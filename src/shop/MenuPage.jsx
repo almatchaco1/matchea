@@ -3,9 +3,13 @@ import { priceLine } from '../shared/pricing.mjs';
 import { ONLINE } from '../shared/rules.mjs';
 import { peso, pad } from '../lib/format';
 import StampCard from './StampCard';
-import { CountUp, photoFrom, morphIn, morphOut } from './fx';
+import { CountUp, photoFrom, morphIn, morphOut, useScrollIn } from './fx';
+import { TabInk } from '../lib/motion';
 import { Doodle, LiveCup } from './art';
 import { ShareDrink } from './share';
+
+// Keep the picked category chip in view (centered) on phones
+const slideInto = (b) => { const nav = b.parentElement; nav.scrollTo?.({ left: b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); };
 
 const firstName = (n) => (n || '').trim().split(/\s+/)[0] || '';
 
@@ -14,6 +18,9 @@ const STATUS = { awaiting_payment: 'Waiting for payment', new: 'Order received',
 export default function MenuPage({ menu, err, reload, me, active, go, onPick, onQuickAdd, onRemoveFav }) {
   const [cat, setCat] = useState('All');
   const [added, setAdded] = useState('');
+  const catsRef = useRef(null);
+  const gridRef = useRef(null);
+  useScrollIn(gridRef, `${cat}|${menu?.items.length || 0}`);
   if (!menu) return <div className="mn">{err ? <div className="shop-alert">{err} <button className="shop-link" onClick={reload}>Try again</button></div> : <MenuSkeleton />}</div>;
   const best = menu.items.filter((i) => i.bestSeller);
   const cats = ['All', ...(best.length ? ['Best sellers'] : []), ...new Set(menu.items.map((i) => i.cat))];
@@ -70,10 +77,11 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
           </div>
         </section>
       )}
-      <nav className="mn-cats" aria-label="Categories">
-        {cats.map((c) => <button key={c} aria-pressed={c === cat} onClick={() => setCat(c)}>{c} <small>{c === 'All' ? menu.items.length : c === 'Best sellers' ? best.length : menu.items.filter((i) => i.cat === c).length}</small></button>)}
+      <nav className="mn-cats" aria-label="Categories" ref={catsRef}>
+        <TabInk nav={catsRef} dep={`${cat}|${cats.length}`} sel={'[aria-pressed="true"]'} className="cat-ink" />
+        {cats.map((c) => <button key={c} aria-pressed={c === cat} onClick={(e) => { setCat(c); slideInto(e.currentTarget); }}>{c} <small>{c === 'All' ? menu.items.length : c === 'Best sellers' ? best.length : menu.items.filter((i) => i.cat === c).length}</small></button>)}
       </nav>
-      <div className="mn-grid" key={cat}>
+      <div className="mn-grid" key={cat} ref={gridRef}>
         {shown.map((it, i) => (
           <article key={it._id} className={`mn-card ${it.soldOut ? 'out' : ''}`} style={{ '--i': Math.min(i, 10) }}>
             <button className="mn-photo" disabled={it.soldOut || !menu.shop.open} onClick={(e) => { photoFrom(e.currentTarget.querySelector('img')); onPick(it); }} aria-label={`Choose ${it.name}`}>
@@ -171,6 +179,7 @@ export function MenuSkeleton({ n = 8 }) {
     <div aria-busy="true" aria-label="Loading the menu">
       <div className="skel skel-line" style={{ width: 90, height: 22, marginBottom: 10 }} />
       <div className="skel skel-line" style={{ width: 280, height: 32, marginBottom: 22 }} />
+      <div className="skel-chips">{[64, 110, 96, 84].map((w, i) => <div key={i} className="skel" style={{ width: w }} />)}</div>
       <div className="mn-grid">
         {Array.from({ length: n }, (_, i) => (
           <div key={i} className="mn-card skel-card">

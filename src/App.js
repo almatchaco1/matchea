@@ -12,7 +12,7 @@ import Barista from './components/Barista';
 import PrinterSettings from './components/PrinterSettings';
 import { loadPrinterSettings, reconnect } from './lib/printer';
 import { usePosRipples, TabInk, useHeaderFit } from './lib/motion';
-import { seasonOf, Lights } from './lib/season';
+import { DecorString } from './lib/decor';
 import { LockIcon } from './components/Locked';
 import './styles.css';
 
@@ -163,7 +163,7 @@ export default function App() {
     <>
       <div className="app">
         <header className="top" ref={topRef} data-fit="0">
-          {data.settings && data.settings.seasonal !== false && <Lights season={seasonOf()} count={30} />}
+          {data.settings?.decorPos !== false && <DecorString decor={data.settings?.decor} wide />}
           <div className="brand">
             <picture className="seal-logo"><source srcSet="/brand/logo-small-light.svg" media="(prefers-color-scheme: dark)" /><img src="/brand/logo-small.svg" alt="" width="46" height="46" /></picture>
             <div><h1>{data.settings?.name || 'AL Matcha Co'}</h1><small>Point of sale · Inventory</small></div>

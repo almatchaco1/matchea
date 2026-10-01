@@ -40,6 +40,14 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
     return undefined;
   }, [loaded, code]);
   const waiting = o?.status === 'awaiting_payment';
+  // The pickup code card flips open the first time this order shows as ready
+  const [reveal, setReveal] = useState(false);
+  const isReady = o?.status === 'ready' && !!o?.pickupCode;
+  useEffect(() => {
+    if (!isReady) return;
+    try { if (sessionStorage.getItem('alm.pk.' + code)) return; sessionStorage.setItem('alm.pk.' + code, '1'); } catch {}
+    setReveal(true);
+  }, [isReady, code]);
   useEffect(() => { load(); const t = setInterval(load, waiting && cameBack ? 3000 : 8000); return () => clearInterval(t); }, [load, waiting, cameBack]);
   useEffect(() => { if (o && !waiting && cameBack) window.history.replaceState(null, '', window.location.pathname); }, [o, waiting, cameBack]);
 
@@ -102,9 +110,10 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
         </div>
       ) : (<>
         {o.pickupCode && (
-          <div className={`pk-code ${o.status === 'ready' ? 'ready' : ''}`}>
+          <div className={`pk-code ${o.status === 'ready' ? 'ready' : ''} ${reveal && o.status === 'ready' ? 'reveal' : ''}`}>
+            {reveal && o.status === 'ready' && <span className="pk-cover" aria-hidden="true"><b>Your order is ready!</b><small>Here’s your code</small></span>}
             <span className="pk-l">Pickup code</span>
-            <span className="pk-d" aria-label={`Pickup code ${o.pickupCode.split('').join(' ')}`}>{o.pickupCode.split('').map((d, i) => <b key={i}>{d}</b>)}</span>
+            <span className="pk-d" aria-label={`Pickup code ${o.pickupCode.split('').join(' ')}`}>{o.pickupCode.split('').map((d, i) => <b key={i} style={{ '--n': i }}>{d}</b>)}</span>
             <small>{o.status === 'ready' ? 'Tell this code at the counter to get your order.' : 'You’ll tell this code at the counter when you pick up. Keep it to yourself.'}</small>
           </div>
         )}

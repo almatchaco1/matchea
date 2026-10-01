@@ -1,0 +1,118 @@
+/* ===== Decorations (shared by the POS and the customer site) ===== */
+.top{position:relative}
+.dc-string{position:absolute;left:0;right:0;top:0;height:30px;pointer-events:none;z-index:2;overflow:visible}
+.top>.dc-string{top:-2px;left:18px;right:18px}
+.sh-head>.dc-string{top:0}
+.dc-wire{position:absolute;left:0;top:0;width:100%;overflow:visible}
+.dc-wire path{fill:none;stroke:#2B5A20;stroke-width:1;vector-effect:non-scaling-stroke;opacity:.55}
+
+/* Christmas lights */
+.xl-wire{position:absolute;left:0;top:0;width:100%;height:10px}
+.xl-wire path{fill:none;stroke:#2B5A20;stroke-width:.6;vector-effect:non-scaling-stroke;opacity:.55}
+.xlights i{position:absolute;top:4px;width:8px;height:12px;margin-left:-4px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;animation:bulb 2.4s ease-in-out infinite}
+.xlights i::before{content:"";position:absolute;left:2px;top:-3px;width:4px;height:4px;border-radius:1px;background:#2B5A20}
+.xlights i.c0{background:#F3C94A;--glow:#F3C94A}
+.xlights i.c1{background:#8DB255;--glow:#8DB255}
+.xlights i.c2{background:#EFA2B0;--glow:#EFA2B0}
+.xlights i.c3{background:#FFF6DF;--glow:#FFF6DF}
+@keyframes bulb{0%,100%{opacity:.55;box-shadow:0 0 0 transparent}50%{opacity:1;box-shadow:0 0 10px 2px var(--glow)}}
+
+/* Fiesta banderitas: little triangle flags that flutter */
+.dc-flags i{position:absolute;width:17px;height:21px;margin-left:-8.5px;background:var(--c);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:rotate(var(--a));animation:flutter 3s ease-in-out infinite;filter:drop-shadow(0 1px 0 rgba(43,90,32,.2))}
+.dc-flags i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.35),transparent 45%,rgba(0,0,0,.08))}
+@keyframes flutter{0%,100%{transform:rotate(var(--a)) skewX(0)}30%{transform:rotate(calc(var(--a) + 7deg)) skewX(-4deg)}65%{transform:rotate(calc(var(--a) - 5deg)) skewX(3deg)}}
+
+.top>.dc-flags i{width:13px;height:16px;margin-left:-6.5px}
+
+/* Leafy garland */
+.dc-garland .dc-wire path{stroke:#4F7F35;stroke-width:2.2;opacity:.85}
+.dc-garland i{position:absolute;width:12px;height:6px;margin:-3px 0 0 -1px;background:var(--g);border-radius:0 100% 0 100%;transform-origin:0 50%;transform:rotate(var(--a));box-shadow:inset 0 -1px 0 rgba(0,0,0,.12)}
+.dc-garland b{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:radial-gradient(circle,#FFF6DF 0 22%,#F3C94A 23% 32%,#EFA2B0 34%);box-shadow:0 0 0 1.5px rgba(239,162,176,.35);animation:bud 3.4s ease-in-out infinite}
+@keyframes bud{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+
+/* Parol stars and paper lanterns hanging from the header corners */
+.dc-hang{position:absolute;left:0;right:0;top:100%;height:0;pointer-events:none;z-index:1;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .35s}
+.sh-head.scrolled .dc-hang{transform:translateY(-40px);opacity:0}
+.dc-pend{position:absolute;top:0;display:flex;flex-direction:column;align-items:center;transform-origin:50% 0;animation:sway 5s ease-in-out infinite}
+.dc-pend::before{content:"";width:1.5px;height:var(--len);background:rgba(43,90,32,.55)}
+.dc-pend.l.p0{left:14px}.dc-pend.r.p0{right:14px}
+.dc-pend.l.p1{left:62px}.dc-pend.r.p1{right:62px}
+.dc-pend.small svg{transform:scale(.78);transform-origin:50% 0}
+@keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+.dc-parol{width:46px;height:71px;overflow:visible;animation:parolGlow 3s ease-in-out infinite}
+.dc-parol .ring{fill:none;stroke:#F3C94A;stroke-width:2.4}
+.dc-parol .out{fill:#F3C94A;stroke:#C99A1E;stroke-width:1;stroke-linejoin:round}
+.dc-parol .in{fill:#EFA2B0}
+.dc-parol .dot{fill:#FFF6DF}
+.dc-parol .tail{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:3 3}
+.dc-parol .t1{stroke:#EFA2B0}.dc-parol .t2{stroke:#8DB255}.dc-parol .t3{stroke:#F3C94A}
+@keyframes parolGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(243,201,74,.45))}50%{filter:drop-shadow(0 0 10px rgba(243,201,74,.95))}}
+.dc-lantern{width:36px;height:59px;overflow:visible;filter:drop-shadow(0 4px 6px rgba(43,90,32,.25))}
+.dc-lantern .cap{fill:#2B5A20}
+.dc-lantern .body{fill:#EFA2B0}
+.dc-lantern.l1 .body{fill:#F3B9C3}
+.dc-lantern .glow{fill:#FFF6DF;opacity:.45;animation:lanternGlow 2.8s ease-in-out infinite}
+.dc-lantern .rib{fill:none;stroke:rgba(43,90,32,.35);stroke-width:1}
+.dc-lantern .tassel{fill:none;stroke:#F3C94A;stroke-width:1.8;stroke-linecap:round}
+@keyframes lanternGlow{0%,100%{opacity:.3}50%{opacity:.7}}
+@media (max-width:860px){.dc-pend.wide-only{display:none}.dc-pend.l.p1{left:52px}.dc-pend.r.p1{right:52px}.dc-pend{scale:.82}}
+
+/* Background effects */
+.dc-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;--travel:110vh}
+.dc-bg.boxed{position:absolute;z-index:0;--travel:150px}
+.dc-fx{position:absolute;inset:0}
+.dc-fx i{position:absolute;left:var(--x);top:-28px;width:calc(10px * var(--s));height:calc(10px * var(--s));animation-iteration-count:infinite;animation-timing-function:linear;will-change:transform}
+.m-fall i{animation-name:dcFall}
+.m-sway i{animation-name:dcSway;animation-timing-function:ease-in-out}
+.m-rain i{animation-name:dcRain}
+.m-flip i{animation-name:dcFlip}
+.m-rise i,.m-bubble i{top:auto;bottom:-70px}
+.m-rise i{animation-name:dcRise}
+.m-bubble i{animation-name:dcBubble;animation-timing-function:ease-in-out}
+.m-twinkle i,.m-wander i,.m-burst i{top:var(--y)}
+.m-twinkle i{animation-name:dcTwinkle;animation-timing-function:ease-in-out}
+.m-wander i{animation-name:dcWander;animation-timing-function:ease-in-out;animation-direction:alternate}
+@keyframes dcFall{from{transform:translate(0,-10px) rotate(0)}to{transform:translate(var(--dx),var(--travel)) rotate(360deg)}}
+@keyframes dcSway{0%{transform:translate(0,-10px) rotate(var(--r))}25%{transform:translate(calc(var(--dx) * .8),calc(var(--travel) * .25)) rotate(calc(var(--r) + 80deg))}50%{transform:translate(calc(var(--dx) * -.3),calc(var(--travel) * .5)) rotate(calc(var(--r) + 150deg))}75%{transform:translate(calc(var(--dx) * .6),calc(var(--travel) * .75)) rotate(calc(var(--r) + 230deg))}100%{transform:translate(var(--dx),var(--travel)) rotate(calc(var(--r) + 300deg))}}
+@keyframes dcRain{from{transform:translate(0,-30px) rotate(8deg)}to{transform:translate(-30px,var(--travel)) rotate(8deg)}}
+@keyframes dcFlip{0%{transform:translate(0,-10px) rotate(var(--r)) rotateX(0)}50%{transform:translate(calc(var(--dx) * .5),calc(var(--travel) * .5)) rotate(calc(var(--r) + 180deg)) rotateX(540deg)}100%{transform:translate(var(--dx),var(--travel)) rotate(calc(var(--r) + 360deg)) rotateX(1080deg)}}
+@keyframes dcRise{0%{transform:translate(0,0) rotate(-4deg)}50%{transform:translate(calc(var(--dx) * .5),calc(var(--travel) * -.55)) rotate(4deg)}100%{transform:translate(var(--dx),calc(var(--travel) * -1 - 90px)) rotate(-3deg)}}
+@keyframes dcBubble{0%{transform:translate(0,0);opacity:0}10%{opacity:.85}50%{transform:translate(calc(var(--dx) * .4),calc(var(--travel) * -.5))}90%{opacity:.8}100%{transform:translate(calc(var(--dx) * -.2),calc(var(--travel) * -1 - 70px));opacity:0}}
+@keyframes dcTwinkle{0%,100%{transform:scale(.2) rotate(0);opacity:0}45%{transform:scale(1) rotate(45deg);opacity:1}60%{transform:scale(.85) rotate(60deg);opacity:.85}}
+@keyframes dcWander{0%{transform:translate(0,0);opacity:.2}30%{opacity:1}50%{transform:translate(var(--dx),calc(var(--dx) * -.5));opacity:.5}80%{opacity:1}100%{transform:translate(calc(var(--dx) * -.6),calc(var(--dx) * .4));opacity:.3}}
+
+.fx-snow i{border-radius:50%;background:radial-gradient(circle,#fff 0 35%,rgba(255,255,255,.4) 60%,transparent 70%);opacity:.9}
+.fx-snow i:nth-child(3n){background:radial-gradient(circle,#F7E1E4 0 35%,rgba(247,225,228,.4) 60%,transparent 70%)}
+.fx-sakura i{border-radius:80% 0 80% 0;background:linear-gradient(135deg,#F7C6D0,#EFA2B0);opacity:.75;width:calc(11px * var(--s));height:calc(9px * var(--s))}
+.fx-hearts i{width:calc(14px * var(--s));height:calc(14px * var(--s));background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z' fill='%23EFA2B0'/%3E%3C/svg%3E") center/contain no-repeat;opacity:.65}
+.fx-tealeaves i{width:calc(16px * var(--s));height:calc(9px * var(--s));border-radius:0 100% 0 100%;background:linear-gradient(135deg,#9CC46A,#4F7F35);box-shadow:inset 1px -1px 0 rgba(255,255,255,.25);opacity:.75}
+.fx-autumn i{width:calc(16px * var(--s));height:calc(16px * var(--s));background:var(--c);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l1.6 4.2 3-2-0.6 4 4-0.6-2 3 4.2 1.6-3.6 2 1.4 3.4-4.2-0.8L12 22l-3.8-5.2-4.2.8L5.4 14 1.8 12 6 10.4l-2-3 4 .6-.6-4 3 2Z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l1.6 4.2 3-2-0.6 4 4-0.6-2 3 4.2 1.6-3.6 2 1.4 3.4-4.2-0.8L12 22l-3.8-5.2-4.2.8L5.4 14 1.8 12 6 10.4l-2-3 4 .6-.6-4 3 2Z'/%3E%3C/svg%3E") center/contain no-repeat;opacity:.75}
+.fx-rain i{width:1.5px;height:calc(22px * var(--s));border-radius:2px;background:linear-gradient(transparent,rgba(43,90,32,.4));opacity:.55}
+.fx-confetti i{width:calc(7px * var(--s));height:calc(11px * var(--s));border-radius:1.5px;background:var(--c);opacity:.85}
+.fx-confetti i:nth-child(3n){border-radius:50%;height:calc(7px * var(--s))}
+.fx-balloons i{width:calc(26px * var(--s));height:calc(32px * var(--s));border-radius:50% 50% 48% 48%/56% 56% 44% 44%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.65) 0 9%,transparent 10%),var(--c);box-shadow:inset -4px -6px 10px rgba(0,0,0,.12);opacity:.88}
+.fx-balloons i::before{content:"";position:absolute;left:50%;top:100%;width:6px;height:5px;margin-left:-3px;background:var(--c);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.fx-balloons i::after{content:"";position:absolute;left:50%;top:calc(100% + 5px);width:1px;height:calc(46px * var(--s));background:rgba(43,90,32,.45)}
+.fx-bubbles i{width:calc(16px * var(--s));height:calc(16px * var(--s));border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.9) 0 12%,rgba(255,255,255,.12) 40%,rgba(141,178,85,.18) 70%,rgba(141,178,85,.35) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}
+.fx-sparkles i{width:calc(14px * var(--s));height:calc(14px * var(--s));background:var(--c);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);filter:drop-shadow(0 0 4px var(--c))}
+.fx-sparkles i:nth-child(odd){--c:#F3C94A}
+.fx-fireflies i{width:calc(6px * var(--s));height:calc(6px * var(--s));border-radius:50%;background:#F7E58A;box-shadow:0 0 8px 3px rgba(243,201,74,.65),0 0 18px 6px rgba(243,201,74,.25)}
+/* Fireworks: each burst is 12 sparks flying out from the center */
+.fx-fireworks i{width:0;height:0}
+.fx-fireworks b{position:absolute;left:0;top:0;width:3px;height:calc(14px * var(--s));margin-left:-1.5px;border-radius:2px;background:linear-gradient(var(--c),transparent);transform-origin:50% 0;animation-name:spark;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(.2,.7,.3,1);opacity:0}
+@keyframes spark{0%,40%{transform:rotate(var(--k)) translateY(0) scaleY(.2);opacity:0}43%{opacity:1}80%{transform:rotate(var(--k)) translateY(calc(34px * var(--s))) scaleY(1);opacity:.9}100%{transform:rotate(var(--k)) translateY(calc(46px * var(--s))) scaleY(.4);opacity:0}}
+.dc-bg.boxed .fx-fireworks b{height:calc(8px * var(--s))}
+.dc-bg.boxed .fx-fireworks i{scale:.55}
+.dc-bg.boxed .fx-balloons i{scale:.8}
+
+@media (prefers-color-scheme:dark){
+  .fx-rain i{background:linear-gradient(transparent,rgba(195,226,154,.45))}
+  .fx-snow i{opacity:.7}
+  .dc-wire path,.xl-wire path,.dc-pend::before{stroke:#9CC46A}
+  .dc-pend::before{background:rgba(195,226,154,.5)}
+}
+@media (prefers-reduced-motion:reduce){
+  .dc-bg{display:none}
+  .xlights i,.dc-flags i,.dc-garland b,.dc-pend,.dc-parol,.dc-lantern .glow{animation:none}
+  .xlights i{opacity:.9}
+}

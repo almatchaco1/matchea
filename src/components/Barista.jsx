@@ -114,7 +114,8 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
         {tickets.map((t) => {
           const m = mins(t.createdAt, now);
           return (
-            <article key={t._id} data-flip={t._id} className={`ticket ${m >= 10 ? 'late' : m >= 5 ? 'slow' : ''}`}>
+            <article key={t._id} data-flip={t._id} className={`ticket ${m >= 10 ? 'late' : m >= 5 ? 'slow' : ''}`} style={{ '--age': Math.min(1, m / 12).toFixed(2) }}>
+              <i className="t-warm" aria-hidden="true" />
               <header>
                 <span className="t-no"><i>#</i>{pad(t.no)}</span>
                 <span className={`t-src ${t.source}`}>{t.source === 'online' ? 'Online' : t.source === 'training' ? 'Practice' : t.source === 'staff' ? 'Staff' : 'Counter'}</span>

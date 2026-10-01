@@ -25,15 +25,16 @@ export function usePosRipples() {
 }
 
 /** A green pill that slides under the selected tab, stretching like a drop of matcha on the way. Put it inside the tablist. */
-export function TabInk({ nav, dep }) {
+export function TabInk({ nav, dep, sel = '[aria-selected="true"]', className = 'tab-ink' }) {
   const [box, setBox] = useState(null);
   const ink = useRef(null);
   const prev = useRef(null); // { left, width, key } of the last tab it sat under
+  const [tries, retry] = useState(0);
   useLayoutEffect(() => {
     const el = nav.current;
-    if (!el) return undefined;
+    if (!el) { const r = requestAnimationFrame(() => retry((n) => n + 1)); return () => cancelAnimationFrame(r); } // the nav's ref is set right after this first run
     const measure = () => {
-      const on = el.querySelector('[aria-selected="true"]');
+      const on = el.querySelector(sel);
       if (!on) { setBox(null); el.classList.remove('has-ink'); return; }
       setBox({ left: on.offsetLeft, width: on.offsetWidth, key: on.textContent });
       el.classList.add('has-ink');
@@ -45,7 +46,7 @@ export function TabInk({ nav, dep }) {
     window.addEventListener('resize', measure);
     document.fonts?.ready?.then(measure).catch(() => {});
     return () => { ro?.disconnect(); window.removeEventListener('resize', measure); };
-  }, [nav, dep]);
+  }, [nav, dep, sel, tries]);
   // Moving to another tab: stretch over both tabs, then settle on the new one (resizes just jump)
   useLayoutEffect(() => {
     const p = prev.current, n = box, el = ink.current;
@@ -59,7 +60,7 @@ export function TabInk({ nav, dep }) {
       { transform: `translateX(${n.left}px)`, width: `${n.width}px` },
     ], { duration: 560 });
   }, [box]);
-  return <span ref={ink} className="tab-ink" aria-hidden="true" style={box ? { transform: `translateX(${box.left}px)`, width: box.width } : { opacity: 0 }} />;
+  return <span ref={ink} className={className} aria-hidden="true" style={box ? { transform: `translateX(${box.left}px)`, width: box.width } : { opacity: 0 }} />;
 }
 
 /**

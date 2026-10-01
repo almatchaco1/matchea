@@ -11,10 +11,10 @@ import Track from './Track';
 import { AccountPage, OrdersPage } from './Account';
 import { alertReady } from './ReadyAlerts';
 import { flyToCart, bumpCart } from './motion';
-import { useReveal, useRipples, useScrolled, CountUp, usePressSpring } from './fx';
+import { useReveal, useRipples, useScrolled, RollNum, usePressSpring } from './fx';
 import { Loader, Avatar } from './art';
 import { Privacy, Terms } from './Legal';
-import { seasonOf, Lights, Falling } from '../lib/season';
+import { DecorString, DecorHang, DecorBg } from '../lib/decor';
 import './shop.css';
 
 const PROTECTED = /^\/(menu|cart|account|orders|welcome)(\/|$)/;
@@ -109,7 +109,7 @@ export default function Shop() {
 
   if (checking) return <div className="shop"><div className="shop-loading"><Loader /></div></div>;
 
-  const season = menu && menu.shop?.seasonal !== false ? seasonOf() : null;
+  const decor = menu?.shop?.decor || [];
   const track = pathname.match(/^\/order\/([\w-]{8,20})$/);
   let page;
   if (pathname === '/forgot') page = <ForgotPage go={go} onSignedIn={onSignedIn} />;
@@ -129,7 +129,7 @@ export default function Shop() {
     } : null} />;
   else if (pathname === '/privacy') page = <Privacy shop={menu?.shop} />;
   else if (pathname === '/terms') page = <Terms shop={menu?.shop} />;
-  else if (!me) page = <Landing menu={menu} err={menuErr} go={go} season={season} />;
+  else if (!me) page = <Landing menu={menu} err={menuErr} go={go} />;
   else if (pathname === '/welcome') page = <AddPhone me={me} setMe={setMe} go={go} />;
   else if (pathname === '/menu') page = <MenuPage menu={menu} err={menuErr} reload={loadMenu} me={me} active={active} go={go} onPick={(item) => setPicking({ item })}
     onQuickAdd={(line, img) => { flyToCart(img); setCart((c) => [...c, { ...line, qty: 1 }]); }}
@@ -137,15 +137,15 @@ export default function Shop() {
   else if (pathname === '/cart') page = <CartPage menu={menu} me={me} payFirst={payFirst} cart={cart} setCart={setCart} priced={priced} total={total} go={go} onEdit={(i) => setPicking({ item: byId[cart[i].productId], index: i })} onPlaced={() => { loadOrders(); refreshMe(); }} />;
   else if (pathname === '/orders') page = <OrdersPage orders={orders} go={go} reload={loadOrders} />;
   else if (pathname === '/account') page = <AccountPage me={me} setMe={setMe} go={go} signOut={signOut} />;
-  else page = <Landing menu={menu} err={menuErr} go={go} me={me} season={season} />;
+  else page = <Landing menu={menu} err={menuErr} go={go} me={me} />;
 
   const showCartBar = me && count > 0 && pathname === '/menu';
   const tabbar = !!me && !['/signin', '/signup', '/welcome', '/forgot'].includes(pathname);
   return (
     <div className={`shop ${tabbar ? 'has-tabbar' : ''}`} ref={rootRef}>
       <div className="shop-bg" aria-hidden="true"><i /><i /><i /></div>
-      <Falling season={season} />
-      <Header me={me} go={go} path={pathname} count={count} shop={menu?.shop} activeCount={active.length} season={season} />
+      <DecorBg decor={decor} />
+      <Header me={me} go={go} path={pathname} count={count} shop={menu?.shop} activeCount={active.length} decor={decor} />
       {readyBanner && (
         <div className="ready-banner" role="alert">
           <span><b>Order #{String(readyBanner.no).padStart(3, '0')} is ready!</b> {readyBanner.pickupCode ? <>Tell your pickup code <b className="num">{readyBanner.pickupCode}</b> at the counter.</> : 'Come to the counter and show your order number.'}</span>
@@ -158,7 +158,7 @@ export default function Shop() {
       <main className="shop-main"><div className="page" key={pathname}>{page}</div></main>
       {showCartBar && (
         <div className="shop-bar">
-          <button onClick={() => go('/cart')}><span className="shop-count">{count}</span> View cart <b className="num"><CountUp value={total} format={peso} /></b></button>
+          <button onClick={() => go('/cart')}><span className="shop-count">{count}</span> View cart <b className="num"><RollNum value={total} format={peso} /></b></button>
         </div>
       )}
       {picking && menu && (
@@ -211,7 +211,7 @@ function TabBar({ path, go, count, activeCount, me }) {
 const staffDevice = () => { try { return !!localStorage.getItem('matchaPos.token'); } catch { return false; } };
 const toPos = () => window.location.assign('/pos');
 
-function Header({ me, go, path, count, shop, activeCount, season }) {
+function Header({ me, go, path, count, shop, activeCount, decor }) {
   // Hidden way in for staff: tap the logo 5 times quickly
   const taps = useRef([]);
   const brandClick = (e) => {
@@ -228,7 +228,8 @@ function Header({ me, go, path, count, shop, activeCount, season }) {
   const scrolled = useScrolled();
   return (
     <header className={`sh-head ${scrolled ? 'scrolled' : ''}`}>
-      <Lights season={season} />
+      <DecorString decor={decor} />
+      <DecorHang decor={decor} />
       <a href="/" className="sh-brand" onClick={brandClick}>
         <img className="sh-logo" src="/brand/logo-small.svg" alt="" width="44" height="44" />
         <span className="sh-name">{shop?.name || 'AL Matcha Co'}</span>

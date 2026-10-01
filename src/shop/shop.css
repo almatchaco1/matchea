@@ -915,7 +915,7 @@
 @media (max-width:480px){.sc-back{flex-direction:column;text-align:center;gap:12px}.sc-free-stamp{width:96px;height:96px}.sc-free-stamp b{font-size:26px}.sc-face{padding:20px 18px 16px}}
 
 /* =====================================================================
-   Round 3: Japanese café look (washi paper, brush ink, hanko) + seasons
+   Round 3: Japanese café look (washi paper, brush ink, hanko) + decorations
    ===================================================================== */
 /* Washi paper fibers over the whole site */
 .shop-bg{z-index:-2}
@@ -959,12 +959,12 @@
   background:repeating-linear-gradient(45deg,rgba(239,201,207,.85) 0 8px,rgba(247,225,228,.85) 8px 16px);box-shadow:0 2px 4px rgba(0,0,0,.06);
   -webkit-mask:linear-gradient(90deg,transparent 0,#000 3px,#000 calc(100% - 3px),transparent 100%);mask:linear-gradient(90deg,transparent 0,#000 3px,#000 calc(100% - 3px),transparent 100%);animation:rise .6s var(--ease-out) .3s backwards}
 
-/* Season greeting on the home page */
+/* Decoration greeting on the home page */
 .ld-season{display:inline-flex;align-items:center;gap:8px;margin:0 0 10px;padding:6px 14px 6px 8px;border-radius:999px;background:var(--cream);color:var(--green);font-size:13px;font-weight:700;box-shadow:0 6px 16px -10px rgba(43,90,32,.6);animation:rise .6s var(--ease-out) backwards}
 .ld-season i{width:22px;height:22px;border-radius:50%;flex:none;background:var(--green) center/14px no-repeat}
-.ld-season.s-christmas i{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 6 11h3l-4 6h5v4h4v-4h5l-4-6h3Z' fill='%23DCE9C4'/%3E%3Ccircle cx='12' cy='3' r='1.6' fill='%23F3C94A'/%3E%3C/svg%3E")}
-.ld-season.s-valentine i,.ld-season.s-sakura i{background-color:var(--pink-3);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z' fill='%232B5A20'/%3E%3C/svg%3E")}
-.ld-season.s-rain i,.ld-season.s-newyear i{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3v18M3 12h18M6 6l12 12M18 6 6 18' stroke='%23DCE9C4' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")}
+.ld-season.s-star i{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 2 2.9 6.6 7.1.7-5.4 4.8 1.6 7L12 17.4 5.8 21.1l1.6-7L2 9.3l7.1-.7Z' fill='%23F3C94A'/%3E%3C/svg%3E")}
+.ld-season.s-heart i{background-color:var(--pink-3);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z' fill='%232B5A20'/%3E%3C/svg%3E")}
+.ld-season.s-leaf i{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 19C5 10 11 5 20 4c-1 9-6 15-15 15Z' fill='%23DCE9C4'/%3E%3Cpath d='M5 19 14 10' stroke='%232B5A20' stroke-width='1.5'/%3E%3C/svg%3E")}
 @media (max-width:860px){.ld-season{margin-left:auto;margin-right:auto}}
 .hanko b{writing-mode:horizontal-tb;width:auto;min-width:28px;height:20px;padding:0 4px;font-size:10px;border-radius:999px;transform:none;letter-spacing:.02em}
 .ld-best.hanko b{min-width:24px;height:16px;font-size:8.5px}
@@ -1427,3 +1427,49 @@
 /* My orders: remove a cancelled order from the list */
 .olist-rm{display:block;margin:6px 4px 0 auto;padding:4px 6px;border:0;background:none;color:var(--ink-2);font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .olist-rm:hover{color:var(--bad,#AE3229)}
+
+/* ===== Round 6 motion ===== */
+/* Category chips: a green pill slides (and stretches) to the picked chip */
+.mn-cats .cat-ink{position:absolute;left:0;top:16px;height:calc(100% - 24px);width:0;border-radius:999px;background:var(--green);box-shadow:0 8px 16px -8px rgba(43,90,32,.75);z-index:0;pointer-events:none;transition:opacity .2s}
+.shop .mn-cats button{position:relative;z-index:1}
+.shop .mn-cats.has-ink button[aria-pressed="true"]{background:transparent;color:#fff;box-shadow:none;transition:color .25s .1s,transform .25s var(--spring)}
+
+/* Menu cards further down rise in as they scroll into view */
+.shop .mn-grid .mn-card.rv-wait{opacity:0;animation:none}
+.shop .mn-grid .mn-card.rv-in{animation:cardRv .75s var(--ease-out) backwards;animation-delay:calc(var(--rv,0) * 85ms)}
+@keyframes cardRv{from{opacity:0;transform:translateY(38px) scale(.94) rotate(-1.2deg)}60%{opacity:1}}
+
+/* Odometer price: each digit rolls to its new value */
+.rn{display:inline-flex;align-items:flex-end;white-space:nowrap}
+.rn-d{display:inline-block;height:1.15em;line-height:1.15em;overflow:hidden;vertical-align:bottom}
+.rn-s{display:flex;flex-direction:column;transition:transform .7s cubic-bezier(.34,1.4,.5,1)}
+.rn-s span{height:1.15em;line-height:1.15em;text-align:center}
+.rn-c{line-height:1.15em}
+
+/* Pickup code: the card flips open when the order turns ready, the digits flap in, then a pink glow */
+.pk-code{position:relative;perspective:900px}
+.pk-code.reveal{animation:pkGlow 1.4s ease-out 1.5s 2}
+.pk-cover{position:absolute;inset:-1.5px;z-index:2;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(135deg,var(--green),#4F8C3A);color:#FFF6DF;transform-origin:0 50%;backface-visibility:hidden;animation:pkOpen .9s cubic-bezier(.6,0,.3,1) .7s forwards;box-shadow:0 14px 30px -14px rgba(43,90,32,.8)}
+.pk-cover b{font:700 21px/1.1 var(--serif)}
+.pk-cover small{font-size:12px;opacity:.85;color:inherit}
+@keyframes pkOpen{0%{transform:rotateY(0)}70%{opacity:1}100%{transform:rotateY(-180deg);opacity:0;visibility:hidden}}
+.pk-code.reveal .pk-d b{animation:pkFlap .55s cubic-bezier(.3,1.5,.5,1) backwards;animation-delay:calc(1.25s + var(--n,0) * 110ms);transform-origin:50% 50%}
+@keyframes pkFlap{0%{transform:rotateX(-100deg);opacity:0}60%{opacity:1}}
+@keyframes pkGlow{0%{box-shadow:0 0 0 0 rgba(239,162,176,.7)}70%{box-shadow:0 0 0 16px rgba(239,162,176,0)}100%{box-shadow:0 0 0 0 rgba(239,162,176,0)}}
+
+/* Loading placeholders: a soft pink-to-matcha shimmer sweeping across */
+.skel{background:linear-gradient(105deg,#F0DADF 0,#F0DADF 30%,#FAEEF0 42%,#E2EED0 50%,#FAEEF0 58%,#F0DADF 70%,#F0DADF 100%);background-size:900px 100%;animation:shimmer2 1.6s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes shimmer2{0%{background-position:-450px 0}100%{background-position:450px 0}}
+.skel-chips{display:flex;gap:8px;margin:0 0 18px}
+.skel-chips .skel{height:36px;border-radius:999px}
+.skel-cart{display:flex;flex-direction:column;gap:12px}
+.skel-cart .row{display:flex;gap:12px;align-items:center}
+@media (prefers-color-scheme:dark){
+  .skel{background:linear-gradient(105deg,#1C2719 0,#1C2719 30%,#26341F 42%,#2F4527 50%,#26341F 58%,#1C2719 70%,#1C2719 100%);background-size:900px 100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .pk-cover{display:none}
+  .pk-code.reveal,.pk-code.reveal .pk-d b,.shop .mn-grid .mn-card.rv-in{animation:none}
+  .rn-s{transition:none}
+  .skel{animation:none}
+}

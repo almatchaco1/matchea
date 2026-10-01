@@ -17,6 +17,7 @@ import { rewardValue } from '../../../src/shared/loyalty.mjs';
 import Customer from '../models/Customer.js';
 import Asset from '../models/Asset.js';
 import { paymongoEnabled, methodTypes, createCheckout, getCheckout, expireCheckout, paidPayment, methodFrom, verifyWebhook } from '../lib/paymongo.js';
+import { cleanDecor } from '../../../src/shared/decor.mjs';
 
 const PAY_WINDOW_MIN = 45; // unpaid "pay now" orders are cancelled after this many minutes
 
@@ -78,7 +79,8 @@ r.get('/menu', ah(async (_req, res) => {
   res.json({
     shop: {
       name: s.name, address: s.address, phone: s.contactPhone || '', email: s.contactEmail || '', hours: s.hours || '',
-      facebook: s.facebook || '', instagram: s.instagram || '', tiktok: s.tiktok || '', open: s.onlineOpen !== false, message: s.onlineMessage || '', payOnline: paymongoEnabled(), payTypes: paymongoEnabled() ? payTypes() : [], seasonal: s.seasonal !== false,
+      facebook: s.facebook || '', instagram: s.instagram || '', tiktok: s.tiktok || '', open: s.onlineOpen !== false, message: s.onlineMessage || '', payOnline: paymongoEnabled(), payTypes: paymongoEnabled() ? payTypes() : [],
+      decor: cleanDecor(s.decor), greeting: s.decorGreeting || '',
       qr: qrInfo(s), payAtPickup: s.payAtPickup !== false || (!paymongoEnabled() && !Object.keys(qrInfo(s)).length) },
     sizes: s.sizes.map(({ _id, label, price }) => ({ _id, label, price })),
     sweetness: s.sweetness,
