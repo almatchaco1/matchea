@@ -105,7 +105,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const [touched, setTouched] = useState({});
   const [serverErr, setServerErr] = useState('');
   const touch = (k) => setTouched((p) => (p[k] ? p : { ...p, [k]: true }));
-  const cErr = checkCheckout({ lineCount: cart.length, total: t.total, discount: rewardOn ? { type: 'none' } : discount, pay, customer });
+  const cErr = checkCheckout({ lineCount: cart.length, total: t.total, discount: rewardOn ? { type: 'none' } : discount, pay, customer, needName: true });
   const errFor = (k) => (touched[k] || touched.all ? cErr[k] : undefined);
   const stampPending = stampPhone.trim() && !stampCust; // typed a number but it isn't linked yet
   const staffOn = staffMode && !training;
@@ -263,7 +263,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
             </div>
           ) : (<>
           <div className="row">
-            <Field id="custName" label="Customer" error={errFor('customer')}><input id="custName" placeholder="Name for the cup" maxLength={LIMITS.customer} value={customer} onChange={(e) => { setCustomer(e.target.value); touch('customer'); }} /></Field>
+            <Field id="custName" label="Customer name" error={cart.length && customer.trim() ? cErr.customer : errFor('customer')} hint={customer.trim() ? undefined : 'Needed: called out when the drink is ready'}><input id="custName" placeholder="Name for the cup" maxLength={LIMITS.customer} value={customer} autoComplete="off" aria-required="true" onChange={(e) => { setCustomer(e.target.value); touch('customer'); }} onBlur={() => touch('customer')} /></Field>
             <div className="field"><label htmlFor="discSel">Discount</label>
               <select id="discSel" value={rewardOn ? 'none' : discount.type} disabled={rewardOn} title={rewardOn ? 'A free drink can’t be combined with other discounts' : undefined} onChange={(e) => setDiscount({ ...discount, type: e.target.value })}>
                 <option value="none">None</option><option value="scpwd">Senior / PWD</option><option value="pct">Promo %</option>

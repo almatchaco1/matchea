@@ -215,7 +215,7 @@ export function checkStaff(b = {}) {
 }
 
 // ---------- checkout ----------
-export function checkCheckout({ lineCount, total, discount = {}, pay = {}, customer }) {
+export function checkCheckout({ lineCount, total, discount = {}, pay = {}, customer, needName = false }) {
   const e = {};
   if (!lineCount) e.lines = 'The order is empty.';
   else if (lineCount > LIMITS.lines) e.lines = `An order can have at most ${LIMITS.lines} lines.`;
@@ -225,7 +225,8 @@ export function checkCheckout({ lineCount, total, discount = {}, pay = {}, custo
     text(e, 'scIdNo', discount.idNo, { label: 'the ID number', required: true, min: 3, max: 30, pattern: /^[A-Za-z0-9 -]+$/, patternMsg: 'Use letters, numbers, spaces and dashes only.' });
     text(e, 'scName', discount.idName, { label: 'the name on the ID', required: true, min: 2, max: 60, pattern: /^[\p{L}][\p{L} .,'-]*$/u, patternMsg: 'Use letters only (spaces, dots and hyphens are fine).' });
   }
-  text(e, 'customer', customer, { label: 'customer name', max: LIMITS.customer });
+  if (needName) Object.assign(e, checkCupName(customer)); // counter orders: the name to call when the drink is ready
+  else text(e, 'customer', customer, { label: 'customer name', max: LIMITS.customer });
   if (!METHODS.includes(pay.method)) e.method = 'Choose a payment method.';
   if (pay.method === 'cash') {
     const t = {};
@@ -303,6 +304,18 @@ export function checkCustomerName(v, key = 'name') {
   const low = n.toLowerCase(), bare = low.replace(/[^\p{L} ]/gu, '').trim();
   if (FAKE_NAMES.has(bare) || /(\p{L})\1\1/u.test(low) || /asdf|qwer|zxcv|hjkl/.test(low) || (bare.replace(/ /g, '').length >= 4 && !/[aeiouy]/i.test(bare)))
     e[key] = 'Please enter your real name, so the shop knows whose order it is.';
+  return e;
+}
+/** The name written on the cup and called out when the drink is ready (nicknames are fine). */
+export function checkCupName(v) {
+  const e = {}, n = str(v).replace(/\s+/g, ' ');
+  if (!n) return { customer: 'Type the customer’s name, so you can call it when the drink is ready.' };
+  text(e, 'customer', n, { label: 'the name', min: 2, max: LIMITS.customer,
+    pattern: /^[\p{L}0-9][\p{L}0-9 .'&-]*$/u, patternMsg: 'Use letters (numbers, spaces, dots and hyphens are fine).' });
+  if (e.customer) return e;
+  const bare = n.toLowerCase().replace(/[^\p{L} ]/gu, '').trim();
+  if (!/\p{L}/u.test(n) || FAKE_NAMES.has(bare) || /(\p{L})\1\1/u.test(n.toLowerCase()) || /asdf|qwer|zxcv/.test(bare))
+    e.customer = 'Type the customer’s real name or nickname, so you can call it.';
   return e;
 }
 /** True for numbers that can't be real: all one digit, 1234567… runs, or 7 same digits at the end. */

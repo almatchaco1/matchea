@@ -37,7 +37,7 @@ r.post('/', ah(async (req, res) => {
   if (useReward && !cust) throw new HttpError(400, 'Enter the customer\'s number to use a free drink.', { loyaltyPhone: 'Enter their number first.' });
   const discount = useReward ? { type: 'none' } : { type: b.discount?.type || 'none', pct: b.discount?.pct, idNo: b.discount?.idNo, idName: b.discount?.idName };
   const t = computeTotals(subtotal, useReward ? { type: 'reward', amount: rewardValue(priced.map((l) => l.base)) } : discount, settings.vat);
-  assertValid(checkCheckout({ lineCount: lines.length, total: t.total, discount, pay: b.pay, customer: b.customer }));
+  assertValid(checkCheckout({ lineCount: lines.length, total: t.total, discount, pay: b.pay, customer: b.customer, needName: true }));
   // Big promo discounts by a cashier need an admin's PIN
   let approvedBy;
   if (discount.type === 'pct' && +discount.pct > DISC_PIN_OVER && req.user.role !== 'admin') {
@@ -59,7 +59,7 @@ r.post('/', ah(async (req, res) => {
   try { sale = await Sale.create({
     no, date, hour,
     cashier: req.user._id, cashierName: req.user.name,
-    customer: String(b.customer || '').trim().slice(0, 60),
+    customer: String(b.customer || '').trim().replace(/\s+/g, ' ').slice(0, 60),
     lines: priced,
     subtotal: t.subtotal, discount: t.discount, total: t.total, vat: t.vat, vatExempt: t.vatExempt,
     pay: { method, tendered, change, ref: String(b.pay.ref || '').trim().slice(0, 60) },
