@@ -310,8 +310,8 @@
 
 /* ---------- Orders & account ---------- */
 .olist{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
-.shop .olist button{width:100%;display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;transition:border-color .15s}
-.shop .olist button:hover{border-color:var(--green)}
+.shop .olist .olist-row{width:100%;display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;transition:border-color .15s}
+.shop .olist .olist-row:hover{border-color:var(--green)}
 .olist small{display:block;color:var(--ink-2);font-size:13px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .olist-r{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
 .pill{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--pink-2);color:var(--ink-2);white-space:nowrap}
@@ -736,8 +736,8 @@
 .acct-av{animation:logoIn .7s var(--spring) both}
 .olist li{animation:lineIn .45s var(--ease-out) both}
 .olist li:nth-child(2){animation-delay:.05s}.olist li:nth-child(3){animation-delay:.1s}.olist li:nth-child(n+4){animation-delay:.15s}
-.shop .olist button{transition:border-color .2s,transform .25s var(--spring),box-shadow .2s}
-.shop .olist button:hover{transform:translateX(4px);box-shadow:0 10px 20px -16px rgba(43,90,32,.6)}
+.shop .olist .olist-row{transition:border-color .2s,transform .25s var(--spring),box-shadow .2s}
+.shop .olist .olist-row:hover{transform:translateX(4px);box-shadow:0 10px 20px -16px rgba(43,90,32,.6)}
 .shop .rate-stars button{transition:transform .25s var(--spring),color .15s}
 .shop .rate-stars button.on{animation:pop .35s var(--spring)}
 
@@ -1030,7 +1030,7 @@
   .shop .sh-btn.ghost:hover:not(:disabled){background:var(--matcha-2);border-color:#8DBE62}
 
   /* surfaces that were plain white */
-  .au-field input,.au-field textarea,.shop .choice,.qty,.pay label,.steps .dot,.shop .olist button,.shop .fav-save,.rate textarea,.code-boxes span{background:var(--card);color:var(--ink)}
+  .au-field input,.au-field textarea,.shop .choice,.qty,.pay label,.steps .dot,.shop .olist .olist-row,.shop .fav-save,.rate textarea,.code-boxes span{background:var(--card);color:var(--ink)}
   .au-field.invalid input,.code-boxes.bad span{background:#2A1614}
   .shop .sh-cart:hover{background:#26341F}
   .shop .sheet-x{background:rgba(23,32,21,.92);color:var(--ink)}
@@ -1177,7 +1177,7 @@
   .shop .mn-cats button[aria-pressed="true"]{background:linear-gradient(180deg,#5E9F45,#3E7B2C);border-color:transparent;color:#fff;box-shadow:0 8px 20px -10px rgba(106,170,78,.8)}
 
   /* inputs and choice pills */
-  .au-field input,.au-field textarea,.au-field select,.shop .choice,.qty,.pay label,.shop .olist button,.shop .fav-save,.rate textarea,.code-boxes span{background:#0F1914;color:var(--ink);border-color:#2A3D2F}
+  .au-field input,.au-field textarea,.au-field select,.shop .choice,.qty,.pay label,.shop .olist .olist-row,.shop .fav-save,.rate textarea,.code-boxes span{background:#0F1914;color:var(--ink);border-color:#2A3D2F}
   .au-field input:focus,.au-field textarea:focus{border-color:var(--leaf);box-shadow:0 0 0 4px rgba(195,226,154,.12)}
   .shop .choice[aria-pressed="true"],.shop .choice.on,.pay label:has(input:checked){background:rgba(106,170,78,.14);border-color:#6AAA4E;color:var(--ink)}
 
@@ -1433,3 +1433,6 @@
 .pk-code.ready .pk-d b{box-shadow:inset 0 0 0 2px var(--green);animation:pkPop .5s cubic-bezier(.3,1.6,.5,1) backwards}
 .pk-code.ready .pk-d b:nth-child(2){animation-delay:.06s}.pk-code.ready .pk-d b:nth-child(3){animation-delay:.12s}.pk-code.ready .pk-d b:nth-child(4){animation-delay:.18s}
 @keyframes pkPop{from{transform:scale(.6);opacity:0}}
+/* My orders: remove a cancelled order from the list */
+.olist-rm{display:block;margin:6px 4px 0 auto;padding:4px 6px;border:0;background:none;color:var(--ink-2);font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.olist-rm:hover{color:var(--bad,#AE3229)}

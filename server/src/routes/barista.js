@@ -51,8 +51,7 @@ r.post('/:id/done', ah(async (req, res) => {
   }
   const s = await Sale.findOneAndUpdate({ _id: cur._id, status: { $in: ['paid', 'staff'] }, baristaDone: { $ne: true } }, { baristaDone: true, madeAt: new Date(), madeBy: req.user.name }, { new: true });
   if (!s) throw new HttpError(409, 'This order was already done or voided.');
-  if (s.textReady && s.phone) notifyReady(s).catch((e) => console.error('Ready text failed:', e.message));
-  res.json({ ok: true, texted: !!(s.textReady && s.phone) });
+  res.json({ ok: true });
 }));
 
 // Clear every counter order from the screen (e.g. the first time, or after a rush). Online orders stay.

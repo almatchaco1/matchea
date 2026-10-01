@@ -51,8 +51,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
     try { const c = await api.get(`/sales/loyalty?phone=${encodeURIComponent(normPhone(stampPhone))}`); setStampCust(c); if (!customer.trim()) setCustomer(c.name.split(' ')[0]); }
     catch (e) { setStampErr(e.fields?.loyaltyPhone || e.message); }
   };
-  const clearStamps = () => { setStampPhone(''); setStampCust(null); setStampErr(''); setUseReward(false); setTextReady(true); };
-  const [textReady, setTextReady] = useState(true); // text the stamp-card customer when the barista is done
+  const clearStamps = () => { setStampPhone(''); setStampCust(null); setStampErr(''); setUseReward(false); };
 
   // Names on orders still waiting, so two people with the same name don't get mixed up
   const [openNames, setOpenNames] = useState([]);
@@ -160,7 +159,6 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
         lines: cart.map(({ productId, sizeId, milkId, addonIds, sweet, note, qty }) => ({ productId, sizeId, milkId, addonIds, sweet, note, qty })),
         customer, discount: rewardOn ? { type: 'none' } : discount, pay: { method: pay.method, tendered: pay.method === 'cash' ? tendered : undefined, ref: pay.ref },
         loyaltyPhone: stampCust ? normPhone(stampPhone) : undefined, useReward: rewardOn || undefined, override: override.current || undefined,
-        textReady: stampCust?.canText && textReady ? true : undefined,
       });
       override.current = null;
       clearStamps(); setSheet(false); setCart([]); setCustomer(''); setDiscount({ type: 'none', pct: discount.pct, idNo: '', idName: '' }); setPay({ method: pay.method, tendered: '', ref: '' }); setTouched({});
@@ -304,9 +302,6 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
                   <label className="stamp-use"><input type="checkbox" checked={useReward} onChange={(e) => setUseReward(e.target.checked)} /> Use free drink (−{peso(freeValue)})</label>
                 )}
                 {!useReward && cart.length > 0 && (() => { const n = cart.reduce((a, l) => a + l.qty, 0); return <small className="muted">+{n} {n === 1 ? 'stamp' : 'stamps'} with this order</small>; })()}
-                {stampCust.canText ? (
-                  <label className="stamp-use"><input type="checkbox" checked={textReady} onChange={(e) => setTextReady(e.target.checked)} /> Text {stampCust.name.split(' ')[0]} when the drink is ready</label>
-                ) : <small className="muted">{stampCust.textsOff ? 'This customer turned off “ready” texts.' : 'Ready texts are off: no SMS service is set up.'}</small>}
               </div>
             )}
           </div>}

@@ -309,7 +309,7 @@ r.post('/orders/:code/rating', requireCustomer, limit(30, 15 * 60000), ah(async 
 
 // Order history
 r.get('/orders', requireCustomer, ah(async (req, res) => {
-  const list = await Sale.find({ customerId: req.customer._id, source: 'online' }).sort({ createdAt: -1 }).limit(50);
+  const list = await Sale.find({ customerId: req.customer._id, source: 'online', hiddenByCustomer: { $ne: true } }).sort({ createdAt: -1 }).limit(50);
   res.json(list.map((s) => ({
     code: s.trackCode, no: s.no, date: s.date, status: s.status === 'void' ? 'cancelled' : s.status, total: s.total,
     createdAt: s.createdAt, paidOnline: !!s.paidOnline, items: s.lines.map((l) => `${l.qty}× ${l.name}`).join(', '),
@@ -317,6 +317,13 @@ r.get('/orders', requireCustomer, ah(async (req, res) => {
     rating: s.rating?.stars ? { stars: s.rating.stars, comment: s.rating.comment || '' } : null,
     canRate: s.status === 'paid' && !s.rating?.stars && Date.now() - new Date(s.completedAt || s.updatedAt) < RATE_DAYS * 864e5,
   })));
+}));
+
+// Remove a cancelled order from the customer's list (the shop keeps its records)
+r.post('/orders/:code/hide', requireCustomer, ah(async (req, res) => {
+  const r2 = await Sale.updateOne({ trackCode: String(req.params.code), customerId: req.customer._id, source: 'online', status: { $in: ['cancelled', 'void'] } }, { hiddenByCustomer: true });
+  if (!r2.matchedCount) throw new HttpError(409, 'Only cancelled orders can be removed from your list.');
+  res.json({ ok: true });
 }));
 
 export default r;

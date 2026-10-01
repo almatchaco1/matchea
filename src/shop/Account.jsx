@@ -26,7 +26,7 @@ export function OrdersPage({ orders, go, reload }) {
         <ul className="olist">
           {orders.map((o) => (
             <li key={o.code}>
-              <button onClick={() => go('/order/' + o.code)}>
+              <button className="olist-row" onClick={() => go('/order/' + o.code)}>
                 <div>
                   <b>#{pad(o.no)}</b> <span className="muted">· {new Date(o.createdAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} {new Date(o.createdAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</span>
                   <small>{o.items}</small>
@@ -37,6 +37,11 @@ export function OrdersPage({ orders, go, reload }) {
                   <b>{peso(o.total)}</b>
                 </div>
               </button>
+              {o.status === 'cancelled' && (
+                <button className="olist-rm" onClick={async () => { try { await call('POST', `/customer/orders/${o.code}/hide`); await reload?.(); } catch { /* stays in the list */ } }}>
+                  Remove from my orders
+                </button>
+              )}
             </li>
           ))}
         </ul>

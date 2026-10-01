@@ -142,7 +142,11 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
             Order again
           </button>
         ) : <button className="sh-btn" onClick={() => go('/signin')}>Sign in to order</button>}
-        <button className="sh-btn ghost" onClick={() => go(signedIn ? '/menu' : '/')}>Close</button>
+        <button className="sh-btn ghost" onClick={async () => {
+          // A cancelled order is done with: closing it also takes it off "My orders"
+          if (cancelled && signedIn && mine) { try { await call('POST', `/customer/orders/${code}/hide`); await onChange?.(); } catch { /* keep it listed */ } go('/orders'); return; }
+          go(signedIn ? '/menu' : '/');
+        }}>Close</button>
       </div>
       {shareLine && !cancelled && (
         <button className="shop-link center-link share-link" onClick={() => setSharing(shareLine)}>

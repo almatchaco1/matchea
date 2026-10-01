@@ -7,7 +7,6 @@ import { ah, HttpError, shopTime, applyUsage, assertValid, dayRange } from '../l
 import { checkId } from '../lib/ids.js';
 import { checkCheckout, LIMITS, normPhone, DISC_PIN_OVER } from '../../../src/shared/rules.mjs';
 import Customer from '../models/Customer.js';
-import { smsEnabled } from '../lib/notify.js';
 import User from '../models/User.js';
 import { redeemReward, returnReward, awardStamps, takeBackStamps } from '../lib/loyalty.js';
 import { rewardValue } from '../../../src/shared/loyalty.mjs';
@@ -66,7 +65,6 @@ r.post('/', ah(async (req, res) => {
     pay: { method, tendered, change, ref: String(b.pay.ref || '').trim().slice(0, 60) },
     usage: usageList(usage), cost,
     customerId: cust?._id, stampsUsed: useReward ? 9 : 0,
-    ...(cust?.phone && b.textReady === true ? { phone: cust.phone, textReady: true } : {}), // text them when the barista is done
   }); } catch (e) {
     if (useReward) await Customer.updateOne({ _id: cust._id }, { $inc: { stamps: 9, rewardsUsed: -1 } });
     throw e;
@@ -111,9 +109,9 @@ r.get('/open-names', ah(async (_req, res) => {
 r.get('/loyalty', ah(async (req, res) => {
   const phone = normPhone(req.query.phone);
   if (!phone) throw new HttpError(400, 'Enter a PH mobile number like 0917 123 4567.', { loyaltyPhone: 'Enter a PH mobile number.' });
-  const c = await Customer.findOne({ phone }, 'name stamps smsReady');
+  const c = await Customer.findOne({ phone }, 'name stamps');
   if (!c) throw new HttpError(404, 'No customer account uses this number. They can sign up on the ordering site.', { loyaltyPhone: 'No account with this number.' });
-  res.json({ name: c.name, stamps: c.stamps || 0, canText: smsEnabled() && c.smsReady !== false, textsOff: c.smsReady === false });
+  res.json({ name: c.name, stamps: c.stamps || 0 });
 }));
 
 // Orders in a date range: ?from=YYYY-MM-DD&to=YYYY-MM-DD
