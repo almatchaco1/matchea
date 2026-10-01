@@ -6,7 +6,7 @@ import { CountUp } from '../shop/fx';
 import PayPicker from './PayPicker';
 import Modal from './Modal';
 import ReceiptModal from './Receipt';
-import { printSale, loadPrinterSettings } from '../lib/printer';
+import { printSale, printLabels, loadPrinterSettings } from '../lib/printer';
 import { Field } from './Field';
 import { allowedAddons, imageOf } from '../lib/drinkImages';
 import { SwipeRow } from '../lib/motion';
@@ -51,7 +51,17 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
     try { const c = await api.get(`/sales/loyalty?phone=${encodeURIComponent(normPhone(stampPhone))}`); setStampCust(c); if (!customer.trim()) setCustomer(c.name.split(' ')[0]); }
     catch (e) { setStampErr(e.fields?.loyaltyPhone || e.message); }
   };
-  const clearStamps = () => { setStampPhone(''); setStampCust(null); setStampErr(''); setUseReward(false); };
+  const clearStamps = () => { setStampPhone(''); setStampCust(null); setStampErr(''); setUseReward(false); setTextReady(true); };
+  const [textReady, setTextReady] = useState(true); // text the stamp-card customer when the barista is done
+
+  // Names on orders still waiting, so two people with the same name don't get mixed up
+  const [openNames, setOpenNames] = useState([]);
+  const [dupOk, setDupOk] = useState(''); // cashier chose to keep a repeated name
+  const loadNames = () => api.get('/sales/open-names').then(setOpenNames).catch(() => {});
+  useEffect(() => { loadNames(); const t = setInterval(loadNames, 20000); return () => clearInterval(t); }, []);
+  const normName = (v) => String(v || '').toLowerCase().replace(/[.\s]+/g, ' ').trim();
+  const typedName = normName(customer);
+  const dupOf = typedName ? openNames.find((o) => { const n = normName(o.name); return n === typedName || n.split(' ')[0] === typedName; }) : null;
 
   const loadNext = () => api.get('/sales/next-number').then((r) => setNextNo(r.next)).catch(() => {});
   useEffect(() => { loadNext(); }, []);
@@ -110,7 +120,8 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const stampPending = stampPhone.trim() && !stampCust; // typed a number but it isn't linked yet
   const staffOn = staffMode && !training;
   const staffErr = staffOn && (cart.length > 5 || cart.some((l) => l.qty > 5)) ? 'A staff drink order can have up to 5 drinks.' : '';
-  const canCharge = staffOn ? cart.length && !busy && !hasMissing && !staffErr && staffFor : cart.length && !busy && !hasMissing && !Object.keys(cErr).length && !stampPending;
+  const dupBlock = !training && !!dupOf && dupOk !== typedName; // same name already waiting: add a letter, or keep it on purpose
+  const canCharge = staffOn ? cart.length && !busy && !hasMissing && !staffErr && staffFor : cart.length && !busy && !hasMissing && !Object.keys(cErr).length && !stampPending && !dupBlock;
 
   const chargeRef = useRef(null);
   const charge = async () => {
@@ -149,6 +160,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
         lines: cart.map(({ productId, sizeId, milkId, addonIds, sweet, note, qty }) => ({ productId, sizeId, milkId, addonIds, sweet, note, qty })),
         customer, discount: rewardOn ? { type: 'none' } : discount, pay: { method: pay.method, tendered: pay.method === 'cash' ? tendered : undefined, ref: pay.ref },
         loyaltyPhone: stampCust ? normPhone(stampPhone) : undefined, useReward: rewardOn || undefined, override: override.current || undefined,
+        textReady: stampCust?.canText && textReady ? true : undefined,
       });
       override.current = null;
       clearStamps(); setSheet(false); setCart([]); setCustomer(''); setDiscount({ type: 'none', pct: discount.pct, idNo: '', idName: '' }); setPay({ method: pay.method, tendered: '', ref: '' }); setTouched({});
@@ -158,6 +170,8 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
       if (ps.kind && ps.auto) {
         try { await printSale(sale, settings); printed = 'Printed.'; } catch (err) { printed = err.message; }
       }
+      if (ps.kind && ps.labels) { try { await printLabels(sale, settings); } catch (err) { printed = printed || err.message; } } // one label per cup
+      setDupOk(''); loadNames();
       setReceipt({ ...sale, _printed: printed });
       refresh(); loadNext();
     } catch (e) {
@@ -274,6 +288,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               <Field id="scIdNo" label="Senior / PWD ID no." error={errFor('scIdNo')}><input id="scIdNo" maxLength={30} autoComplete="off" autoCapitalize="characters" value={discount.idNo} onChange={(e) => { setDiscount({ ...discount, idNo: e.target.value }); touch('scIdNo'); }} placeholder="e.g. 12345-678" /></Field>
             </>}
           </div>
+          {dupBlock && <div className="dup-name" role="alert"><span><b>“{customer.trim()}”</b> already has an order waiting (#{pad(dupOf.no)}). Add a letter so you call the right person, e.g. “{customer.trim()} B.”</span><button className="btn sm ghost" onClick={() => setDupOk(typedName)}>Keep “{customer.trim()}”</button></div>}
           {!training && <div className="stamp-box">
             <Field id="stampPhone" label="Stamp card (customer's mobile no.)" error={stampErr} hint={stampCust ? undefined : stampPending ? 'Press Enter or Find to link the card' : 'Optional: 1 stamp per drink, 10th drink free'}>
               <div className="stamp-in">
@@ -289,6 +304,9 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
                   <label className="stamp-use"><input type="checkbox" checked={useReward} onChange={(e) => setUseReward(e.target.checked)} /> Use free drink (−{peso(freeValue)})</label>
                 )}
                 {!useReward && cart.length > 0 && (() => { const n = cart.reduce((a, l) => a + l.qty, 0); return <small className="muted">+{n} {n === 1 ? 'stamp' : 'stamps'} with this order</small>; })()}
+                {stampCust.canText ? (
+                  <label className="stamp-use"><input type="checkbox" checked={textReady} onChange={(e) => setTextReady(e.target.checked)} /> Text {stampCust.name.split(' ')[0]} when the drink is ready</label>
+                ) : <small className="muted">{stampCust.textsOff ? 'This customer turned off “ready” texts.' : 'Ready texts are off: no SMS service is set up.'}</small>}
               </div>
             )}
           </div>}

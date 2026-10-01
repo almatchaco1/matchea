@@ -1,7 +1,8 @@
 import { peso, pad } from '../lib/format';
 import { PAY_LABELS as PAY_METHODS } from '../shared/pricing.mjs';
 import { useRef, useState } from 'react';
-import { printSale } from '../lib/printer';
+import { printSale, printLabels } from '../lib/printer';
+import { cupLabels } from '../lib/escpos';
 import { STAMPS_PER_REWARD } from '../shared/loyalty.mjs';
 import Modal from './Modal';
 
@@ -70,13 +71,38 @@ const PRINT_CSS = `
 /** Print only the receipt, in a hidden frame, so the rest of the POS never shows up on paper. */
 export function printReceipt(node, title = 'Receipt') {
   if (!node) return;
+  printHtml(node.outerHTML, PRINT_CSS, title);
+}
+
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LABEL_CSS = `
+  @page { size: 58mm 40mm; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; color: #000; }
+  .lbl { width: 58mm; height: 40mm; padding: 2.5mm 3mm; display: flex; flex-direction: column; justify-content: center; text-align: center; page-break-after: always; break-after: page; overflow: hidden; }
+  .lbl:last-child { page-break-after: auto; break-after: auto; }
+  .top { font-size: 8pt; display: flex; justify-content: space-between; }
+  .nm { font-size: 20pt; font-weight: 800; line-height: 1.05; margin: 1mm 0; text-transform: uppercase; word-break: break-word; }
+  .dr { font-size: 10pt; font-weight: 700; }
+  .md { font-size: 8pt; line-height: 1.25; margin-top: .5mm; }
+`;
+/** Cup labels: on the receipt printer when set up, otherwise through the print window (58 × 40 mm stickers). */
+export async function printCupLabels(sale, settings) {
+  if (await printLabels(sale, settings)) return 'Labels sent to the printer.';
+  const html = cupLabels(sale).map((c) => `<div class="lbl"><div class="top"><span>#${pad(c.no)}${c.online ? ' · Online' : ''}</span><span>${c.n} of ${c.of}</span></div>`
+    + `<div class="nm">${esc(c.name || '—')}</div><div class="dr">${esc(c.drink)}</div>${c.mods ? `<div class="md">${esc(c.mods)}</div>` : ''}</div>`).join('');
+  printHtml(html, LABEL_CSS, `Cup labels #${pad(sale.no)}`);
+  return '';
+}
+
+function printHtml(body, css, title) {
   const frame = document.createElement('iframe');
   frame.setAttribute('aria-hidden', 'true');
   Object.assign(frame.style, { position: 'fixed', right: '0', bottom: '0', width: '0', height: '0', border: '0', visibility: 'hidden' });
   document.body.appendChild(frame);
   const doc = frame.contentDocument;
   doc.open();
-  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title.replace(/</g, '&lt;')}</title><style>${PRINT_CSS}</style></head><body>${node.outerHTML}</body></html>`);
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title.replace(/</g, '&lt;')}</title><style>${css}</style></head><body>${body}</body></html>`);
   doc.close();
   const go = () => {
     const w = frame.contentWindow;
@@ -109,7 +135,8 @@ export default function ReceiptModal({ sale, settings, onClose, justPaid, autoPr
       aside={justPaid && sale.pay.method === 'cash' ? <span className="pill ok">Change {peso(sale.pay.change)}</span> : sale.status === 'void' ? <span className="pill mute">Void</span> : null}
       onClose={onClose}
       footer={<>
-        {msg && <span className={`print-msg ${/^Sent|^Printed/.test(msg) ? 'ok' : 'bad'}`} role="status">{msg}{!/^Sent|^Printed/.test(msg) && <> <button className="linkbtn" onClick={browserPrint}>Use print window</button></>}</span>}
+        {msg && <span className={`print-msg ${/^Sent|^Printed|^Labels/.test(msg) ? 'ok' : 'bad'}`} role="status">{msg}{!/^Sent|^Printed|^Labels/.test(msg) && <> <button className="linkbtn" onClick={browserPrint}>Use print window</button></>}</span>}
+        {sale.status !== 'void' && sale.lines?.length > 0 && <button className="btn ghost" onClick={async () => { try { const m = await printCupLabels(sale, settings); if (m) setMsg(m); } catch (e) { setMsg(e.message); } }}>Cup labels</button>}
         <button className="btn" onClick={print} disabled={busy}>{busy ? 'Printing…' : 'Print receipt'}</button>
         <button className="btn primary" onClick={onClose} autoFocus>Close</button>
       </>}

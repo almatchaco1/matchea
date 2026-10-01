@@ -102,6 +102,32 @@ export function receiptBytes(sale, s = {}, { width = 32, drawer = false, copy = 
   return new Uint8Array(bytes);
 }
 
+/** One label per cup: the name to call out, the drink and how it's made. Cut between cups. */
+export function cupLabels(sale) {
+  const cups = [];
+  for (const l of sale.lines || []) for (let k = 0; k < (+l.qty || 1); k++) cups.push(l);
+  return cups.map((l, i) => ({ name: sale.customer || '', drink: l.name, mods: l.mods || '', no: sale.no, n: i + 1, of: cups.length,
+    online: sale.source === 'online', time: new Date(sale.createdAt || Date.now()) }));
+}
+export function labelBytes(sale, s = {}, { width = 32 } = {}) {
+  const w = width, bytes = [];
+  const cmd = (x) => bytes.push(...x);
+  const text = (t = '') => { for (const ch of plain(t)) bytes.push(ch.charCodeAt(0)); bytes.push(0x0a); };
+  cmd(CMD.init);
+  for (const c of cupLabels(sale)) {
+    cmd(CMD.center);
+    text(`${plain(s.name || 'AL Matcha Co')}  #${String(c.no).padStart(3, '0')}${c.online ? ' ONLINE' : ''}`);
+    cmd(CMD.boldOn); cmd(CMD.big); wrap((c.name || '-').toUpperCase(), Math.floor(w / 2)).forEach(text); cmd(CMD.normal);
+    wrap(c.drink.replace(/ Matcha Latte$/, ' Matcha'), w).forEach(text); cmd(CMD.boldOff);
+    cmd(CMD.left);
+    if (c.mods) wrap(c.mods, w).forEach(text);
+    cmd(CMD.center);
+    text(`${c.n} of ${c.of}  -  ${c.time.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}`);
+    cmd(CMD.feed(3)); cmd(CMD.cut);
+  }
+  return new Uint8Array(bytes);
+}
+
 /** End-of-day summary slip. c: data from /reports/closing */
 export function closingBytes(c, s = {}, { width = 32, cash = '', note = '' } = {}) {
   const w = width, bytes = [];

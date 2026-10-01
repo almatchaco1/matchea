@@ -48,6 +48,7 @@ export default function PrinterSettings({ onClose, toast }) {
           </div>
           <label className="check-row"><input type="checkbox" checked={s.logo !== false} onChange={(e) => save({ logo: e.target.checked })} /> Print the AL Matcha Co logo at the top</label>
           <label className="check-row"><input type="checkbox" checked={s.auto} onChange={(e) => save({ auto: e.target.checked })} /> Print the receipt automatically after each sale</label>
+          <label className="check-row"><input type="checkbox" checked={!!s.labels} onChange={(e) => save({ labels: e.target.checked })} /> Print cup labels automatically after each sale (one per drink, with the customer’s name)</label>
 
           {err && <div className="formerr" role="alert" style={{ marginTop: 10 }}>{err}</div>}
           <div className="ps-actions">

@@ -19,7 +19,7 @@ export async function sendSms(number, message) {
   return data;
 }
 
-/** Text the customer once when staff mark an online order ready. */
+/** Text the customer once when their order is ready (online orders, and counter orders with "Text when ready"). */
 export async function notifyReady(sale) {
   if (!sale?.phone) return;
   const claimed = await Sale.findOneAndUpdate({ _id: sale._id, readyNotified: { $ne: true } }, { readyNotified: true });
@@ -32,10 +32,12 @@ export async function notifyReady(sale) {
   const shop = s.name || 'AL Matcha Co';
   const first = String(sale.customer || '').split(' ')[0];
   const site = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  const paid = sale.paidOnline || sale.qrPay?.verified || ['paid', 'staff'].includes(sale.status);
   const msg = [
-    `${shop}: Hi${first ? ` ${first}` : ''}! Your order #${pad(sale.no)} is ready for pickup.`,
-    sale.paidOnline ? 'It\'s already paid.' : 'Please pay at the counter.',
-    site.startsWith('https://') ? `${site}/order/${sale.trackCode}` : '',
+    `${shop}: Hi${first ? ` ${first}` : ''}! Your ${sale.source === 'online' ? 'order' : 'drink'} #${pad(sale.no)} is ready for pickup.`,
+    sale.pickupCode ? `Pickup code: ${sale.pickupCode}.` : '',
+    sale.source === 'online' ? (paid ? 'It\'s already paid.' : 'Please pay at the counter.') : '',
+    site.startsWith('https://') && sale.trackCode ? `${site}/order/${sale.trackCode}` : '',
   ].filter(Boolean).join(' ');
   await sendSms(sale.phone, msg);
 }

@@ -3,10 +3,10 @@
 //   serial    - Bluetooth printer paired in System Settings, or a USB-serial printer (Web Serial)
 //   bluetooth - Bluetooth LE printer, e.g. from an Android tablet (Web Bluetooth)
 // Settings are saved per device. Without a printer, the normal browser print is used.
-import { receiptBytes, testBytes, logoRaster, closingBytes } from './escpos';
+import { receiptBytes, testBytes, logoRaster, closingBytes, labelBytes } from './escpos';
 
 const KEY = 'matchaPos.printer';
-const DEFAULTS = { kind: '', name: '', width: 32, auto: false, logo: true };
+const DEFAULTS = { kind: '', name: '', width: 32, auto: false, logo: true, labels: false };
 export const loadPrinterSettings = () => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return { ...DEFAULTS }; } };
 export const savePrinterSettings = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
 
@@ -108,6 +108,13 @@ export async function printSale(sale, shopSettings) {
   const s = loadPrinterSettings();
   if (!s.kind) return false;
   await send(receiptBytes(sale, shopSettings, { width: s.width, logo: s.logo ? await logoFor(s.width) : null }));
+  return true;
+}
+/** Print one label per cup on the receipt printer. Returns false when no printer is set up (use browser print). */
+export async function printLabels(sale, shopSettings) {
+  const s = loadPrinterSettings();
+  if (!s.kind) return false;
+  await send(labelBytes(sale, shopSettings, { width: s.width }));
   return true;
 }
 /** Print the end-of-day summary on the receipt printer. Returns false when no printer is set up. */

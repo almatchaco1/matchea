@@ -11,6 +11,7 @@ import { settleOnlinePayment } from './public.js';
 import { paymongoMode } from '../lib/paymongo.js';
 import { awardStamps, returnReward } from '../lib/loyalty.js';
 import { notifyReady } from '../lib/notify.js';
+import { checkOverride } from '../middleware/auth.js';
 
 const r = Router();
 r.param('id', checkId);
@@ -22,8 +23,13 @@ r.get('/', ah(async (_req, res) => {
   for (const s of await Sale.find({ source: 'online', status: 'awaiting_payment' }).limit(50)) await settleOnlinePayment(s);
   const orders = await Sale.find({ source: 'online', $or: [{ status: { $in: ['new', 'preparing', 'ready'] } }, { date, status: { $ne: 'awaiting_payment' } }] }).sort({ createdAt: 1 }).limit(300);
   const waiting = await Sale.countDocuments({ source: 'online', status: 'awaiting_payment' });
-  res.json({ orders, awaitingPayment: waiting, paymentMode: paymongoMode() });
+  // Staff never see the pickup code itself (the customer has to tell it), only that there is one
+  const list = orders.map(forStaff);
+  res.json({ orders: list, awaitingPayment: waiting, paymentMode: paymongoMode() });
 }));
+
+/** An online order as staff see it: without the customer's pickup code. */
+const forStaff = (o) => { const x = o.toJSON ? o.toJSON() : { ...o }; x.hasCode = !!x.pickupCode; delete x.pickupCode; return x; };
 
 async function move(id, from, update) {
   const sale = await Sale.findOneAndUpdate({ _id: id, source: 'online', status: { $in: from } }, update, { new: true });
@@ -45,19 +51,27 @@ r.post('/:id/accept', ah(async (req, res) => {
   }
   const sale = await move(req.params.id, ['new'], { status: 'preparing', acceptedAt: new Date(), cashier: req.user._id, cashierName: req.user.name, stockDeducted: true, ...extra });
   await applyUsage(usageMap(sale.usage), -1, { reason: 'sale', by: req.user.name, sale: sale._id, note: 'Online order' });
-  res.json(sale);
+  res.json(forStaff(sale));
 }));
 
 r.post('/:id/ready', ah(async (req, res) => {
   const sale = await move(req.params.id, ['preparing'], { status: 'ready', readyAt: new Date() });
   notifyReady(sale).catch((e) => console.error('Ready text failed:', e.message)); // don't make staff wait for the SMS
-  res.json(sale);
+  res.json(forStaff(sale));
 }));
 
 // Customer picked up and paid
 r.post('/:id/complete', ah(async (req, res) => {
   const cur = await Sale.findOne({ _id: req.params.id, source: 'online' });
   if (!cur) throw new HttpError(404, 'Order not found.');
+  // Pickup code: the customer tells it, so nobody else can take the order (an admin can let it go without)
+  let approvedBy;
+  if (cur.pickupCode && String(req.body?.code || '').replace(/\D/g, '') !== cur.pickupCode) {
+    const ov = checkOverride(req.body?.override, 'pickup', req.user._id);
+    if (!ov) throw new HttpError(400, req.body?.code ? 'That pickup code doesn’t match. Ask the customer to check their order page.' : 'Ask the customer for their 4-digit pickup code.', { code: req.body?.code ? 'Wrong code.' : 'Enter the pickup code.' });
+    approvedBy = ov.by;
+  }
+  if (approvedBy) await Sale.updateOne({ _id: cur._id }, { pickupApprovedBy: approvedBy });
   if (cur.paidOnline || cur.qrPay?.verified) { // already paid (PayMongo, or QR checked by staff): just hand it over
     const sale = await move(req.params.id, ['ready', 'preparing'], { status: 'paid', completedAt: new Date(), cashier: req.user._id, cashierName: req.user.name });
     if (!cur.stockDeducted) {

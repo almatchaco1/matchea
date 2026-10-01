@@ -66,6 +66,9 @@ const saleSchema = new mongoose.Schema(
     stampsBalance: Number,                          // customer's stamps right after this order
     stampsTakenBack: Boolean,
     readyNotified: Boolean,
+    textReady: Boolean, // counter order: text the customer (stamp-card number) when the barista marks it done
+    pickupCode: String, // online orders: 4 digits the customer tells staff at pickup
+    pickupApprovedBy: String, // admin who let the order go without the code
     // Barista screen
     lineDone: { type: [Number], default: undefined }, // drinks already made (line numbers)
     baristaDone: Boolean, madeAt: Date, madeBy: String,

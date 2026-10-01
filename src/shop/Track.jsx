@@ -11,7 +11,7 @@ import { ShareDrink } from './share';
 const STEPS = [
   ['new', 'Order received', 'The shop will confirm it shortly.'],
   ['preparing', 'Preparing', 'Your matcha is being whisked.'],
-  ['ready', 'Ready for pickup', 'Come to the counter, show your order number and pay.'],
+  ['ready', 'Ready for pickup', 'Come to the counter, tell your pickup code and pay.'],
   ['paid', 'Picked up', 'Enjoy! Good Matcha, Good Mood.'],
 ];
 
@@ -100,16 +100,23 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
           This order was cancelled{o.cancelReason ? `: ${o.cancelReason}` : '.'}{' '}
           {o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total + (o.onlineFee || 0))} will be refunded. The shop may contact you.` : o.qrPay ? '' : 'You were not charged.'}
         </div>
-      ) : (
+      ) : (<>
+        {o.pickupCode && (
+          <div className={`pk-code ${o.status === 'ready' ? 'ready' : ''}`}>
+            <span className="pk-l">Pickup code</span>
+            <span className="pk-d" aria-label={`Pickup code ${o.pickupCode.split('').join(' ')}`}>{o.pickupCode.split('').map((d, i) => <b key={i}>{d}</b>)}</span>
+            <small>{o.status === 'ready' ? 'Tell this code at the counter to get your order.' : 'You’ll tell this code at the counter when you pick up. Keep it to yourself.'}</small>
+          </div>
+        )}
         <ol className="steps">
           {STEPS.map(([k, title, text], i) => (
             <li key={k} className={i < idx ? 'done' : i === idx ? 'now' : ''}>
               <span className="dot" aria-hidden="true" />
-              <div><b>{title}</b>{i === idx && <small>{k === 'ready' && prepaid ? 'Come to the counter and show your order number. It’s already paid.' : k === 'new' && o.qrPay && !o.qrPay.verified ? (slowCheck ? `Still checking your ${qr} payment (ref ${o.qrPay.ref}). Sorry for the wait. If it takes much longer, please message the shop.` : `The shop is checking your ${qr} payment (ref ${o.qrPay.ref}). This usually takes a few minutes.`) : text}</small>}</div>
+              <div><b>{title}</b>{i === idx && <small>{k === 'ready' && prepaid ? 'Come to the counter and tell your pickup code. It’s already paid.' : k === 'new' && o.qrPay && !o.qrPay.verified ? (slowCheck ? `Still checking your ${qr} payment (ref ${o.qrPay.ref}). Sorry for the wait. If it takes much longer, please message the shop.` : `The shop is checking your ${qr} payment (ref ${o.qrPay.ref}). This usually takes a few minutes.`) : text}</small>}</div>
             </li>
           ))}
         </ol>
-      )}
+      </>)}
       <ul className="lines compact">
         {o.lines.map((l, i) => <li key={i}><div className="grow"><b>{l.qty}× {l.name}</b><small>{l.mods}</small></div><b>{peso(l.total)}</b></li>)}
       </ul>

@@ -31,7 +31,7 @@ export async function requireAuth(req, res, next) {
   }
 }
 
-/** Short-lived admin approval ("admin PIN") for one cashier action: 'discount' or 'void'. */
+/** Short-lived admin approval ("admin PIN") for one cashier action: 'discount', 'void' or 'pickup'. */
 export const signOverride = (admin, action, forUser) =>
   jwt.sign({ kind: 'override', action, by: admin.name, byId: String(admin._id), for: String(forUser) }, secret(), { expiresIn: '3m' });
 export function checkOverride(token, action, forUser) {

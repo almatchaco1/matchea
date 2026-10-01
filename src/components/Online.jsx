@@ -7,7 +7,8 @@ import PayPicker from './PayPicker';
 import { checkCheckout, LIMITS } from '../shared/rules.mjs';
 import Modal from './Modal';
 import { Field, useErrors } from './Field';
-import ReceiptModal from './Receipt';
+import ReceiptModal, { printCupLabels } from './Receipt';
+import AdminPin from './AdminPin';
 import { QrHint, ShowQr, QR_LABEL } from './PayQr';
 import { useFlip } from '../lib/motion';
 
@@ -23,6 +24,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
   useFlip(board); // cards glide to their new column
   const [busy, setBusy] = useState(null);
   const [paying, setPaying] = useState(null);
+  const [handing, setHanding] = useState(null); // already paid: hand over after checking the pickup code
   const [cancelling, setCancelling] = useState(null);
   const [shot, setShot] = useState(null); // order whose receipt screenshot is open
   const [receipt, setReceipt] = useState(null);
@@ -105,8 +107,9 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                       : <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'accept', {}, `Order #${pad(o.no)} accepted`)}>Accept</button>)}
                     {st === 'preparing' && <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'ready', {}, `Order #${pad(o.no)} is ready`)}>Mark ready</button>}
                     {st === 'ready' && (o.paidOnline || o.qrPay?.verified
-                      ? <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'complete', {}, `Order #${pad(o.no)} picked up`)}>Picked up</button>
+                      ? <button className="btn primary" disabled={!!busy} onClick={() => (o.hasCode ? setHanding(o) : act(o, 'complete', {}, `Order #${pad(o.no)} picked up`))}>Picked up</button>
                       : <button className="btn primary" onClick={() => setPaying(o)}>Picked up · Take payment</button>)}
+                    {st === 'preparing' && <button className="btn ghost sm" onClick={async () => { try { const m = await printCupLabels(o, s); if (m) toast(m); } catch (e) { toast(e.message); } }}>Cup labels</button>}
                     {!(st === 'new' && o.qrPay?.method && !o.qrPay.verified) && <button className="btn ghost sm" onClick={() => setCancelling(o)}>Cancel</button>}
                   </div>
                 </article>
@@ -139,6 +142,8 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
         </div>
       </div>
 
+      {handing && <HandoverModal order={handing} onClose={() => setHanding(null)} toast={toast}
+        onDone={(sale) => { setHanding(null); toast(`Order #${pad(sale.no)} picked up`); reload(); refresh(); }} />}
       {paying && <PayModal order={paying} settings={s} onClose={() => setPaying(null)} toast={toast}
         onDone={(sale) => { setPaying(null); reload(); refresh(); setReceipt(sale); }} />}
       {cancelling && <CancelModal order={cancelling} onClose={() => setCancelling(null)}
@@ -149,24 +154,65 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
   );
 }
 
+/** The customer's 4-digit pickup code, or an admin's OK when they lost it. */
+function PickupCode({ order, code, setCode, err, onAdmin }) {
+  if (!order.hasCode) return null;
+  return (
+    <Field id="pkCode" label="Pickup code (ask the customer)" error={err} hint="It’s on their order page and in the ready text.">
+      <div className="pk-row">
+        <input id="pkCode" className="pk-in num" inputMode="numeric" autoComplete="off" maxLength={4} placeholder="••••" value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))} />
+        <button type="button" className="linkbtn" onClick={onAdmin}>No code? Ask an admin</button>
+      </div>
+    </Field>
+  );
+}
+
+function HandoverModal({ order, onClose, onDone, toast }) {
+  const [code, setCode] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const go = async (override) => {
+    if (!override && code.length !== 4) { setErr('Enter the 4-digit code.'); return; }
+    setBusy(true); setErr('');
+    try { onDone(await api.post(`/online/${order._id}/complete`, override ? { override } : { code })); }
+    catch (e) { setErr(e.fields?.code || e.message); }
+    finally { setBusy(false); }
+  };
+  return (<>
+    <Modal title={`Hand over #${pad(order.no)}`} aside={<span className="pill ok">Paid</span>} onClose={onClose}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={() => go()}>{busy ? 'Saving…' : 'Code matches · Hand over'}</button></>}>
+      <p className="muted" style={{ margin: 0 }}>{order.customer} · {order.lines.reduce((a, l) => a + l.qty, 0)} items</p>
+      <PickupCode order={order} code={code} setCode={(v) => { setCode(v); setErr(''); }} err={err} onAdmin={() => setAsking(true)} />
+    </Modal>
+    {asking && <AdminPin action="pickup" detail={`Order #${pad(order.no)}`} onClose={() => setAsking(false)} onApproved={(tok, by) => { setAsking(false); toast(`Approved by ${by}`); go(tok); }} />}
+  </>);
+}
+
 function PayModal({ order, settings, onClose, onDone, toast }) {
   const [pay, setPay] = useState({ method: 'cash', tendered: '', ref: '' });
+  const [code, setCode] = useState('');
+  const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showQr, setShowQr] = useState(null);
   const { errs, check, fromServer } = useErrors();
   const tendered = +pay.tendered || 0;
   const quick = [...new Set([Math.ceil(order.total), 100, 200, 500, 1000].filter((n) => n >= order.total))].slice(0, 4);
-  const save = async () => {
-    if (!check(checkCheckout({ lineCount: order.lines.length, total: order.total, pay }))) return;
+  const save = async (override) => {
+    const e = checkCheckout({ lineCount: order.lines.length, total: order.total, pay });
+    if (order.hasCode && !override && code.length !== 4) e.code = 'Enter the 4-digit code.';
+    if (!check(e)) return;
     setBusy(true);
-    try { onDone(await api.post(`/online/${order._id}/complete`, { pay: { ...pay, tendered: pay.method === 'cash' ? tendered : undefined } })); toast(`Order #${pad(order.no)} paid`); }
+    try { onDone(await api.post(`/online/${order._id}/complete`, { pay: { ...pay, tendered: pay.method === 'cash' ? tendered : undefined }, ...(override ? { override } : { code }) })); toast(`Order #${pad(order.no)} paid`); }
     catch (e) { fromServer(e, toast); }
     finally { setBusy(false); }
   };
-  return (
+  return (<>
     <Modal title={`Take payment · #${pad(order.no)}`} aside={<b className="num">{peso(order.total)}</b>} onClose={onClose}
-      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Mark as paid'}</button></>}>
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={() => save()}>{busy ? 'Saving…' : 'Mark as paid'}</button></>}>
       <p className="muted" style={{ margin: 0 }}>{order.customer} · {order.lines.reduce((a, l) => a + l.qty, 0)} items</p>
+      <PickupCode order={order} code={code} setCode={setCode} err={errs.code} onAdmin={() => setAsking(true)} />
       <PayPicker value={pay.method} onChange={(k) => setPay({ ...pay, method: k })} />
       {pay.method === 'cash' ? <>
         <Field id="oTend" label="Cash received" error={errs.tendered}>
@@ -182,7 +228,8 @@ function PayModal({ order, settings, onClose, onDone, toast }) {
       </>)}
       {showQr && <ShowQr kind={showQr} settings={settings} amount={order.total} onClose={() => setShowQr(null)} />}
     </Modal>
-  );
+    {asking && <AdminPin action="pickup" detail={`Order #${pad(order.no)}`} onClose={() => setAsking(false)} onApproved={(tok, by) => { setAsking(false); toast(`Approved by ${by}`); save(tok); }} />}
+  </>);
 }
 
 function CancelModal({ order, onClose, onDone }) {

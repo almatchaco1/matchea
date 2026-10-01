@@ -193,6 +193,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
   try { sale = await Sale.create({
     no, date, hour, source: 'online', status: payNow ? 'awaiting_payment' : 'new', stockDeducted: false, customerId: cust._id,
     trackCode: crypto.randomBytes(9).toString('base64url'),
+    pickupCode: String(crypto.randomInt(1000, 10000)), // told to staff at pickup
     customer: String(b.customer).trim().replace(/\s+/g, ' '), phone, pickupNote: String(b.pickupNote || '').trim(),
     lines: priced, subtotal: t.subtotal, discount: t.discount, total: t.total, vat: t.vat, vatExempt: t.vatExempt,
     onlineFee: payNow ? withOnlineFee(t.total, payType).fee : 0,
@@ -293,6 +294,7 @@ const publicView = (s) => ({
   refundDue: !!s.refundDue,
   qrPay: s.qrPay?.method ? { method: s.qrPay.method, ref: s.qrPay.ref, verified: !!s.qrPay.verified, at: s.qrPay.at || s.createdAt, shot: !!s.qrPay.shot } : null,
   cancelReason: s.status === 'cancelled' ? s.cancelReason || '' : '',
+  pickupCode: ['new', 'preparing', 'ready'].includes(s.status) ? s.pickupCode || '' : '',
   subtotal: s.subtotal, discount: s.discount?.amount > 0 ? { type: s.discount.type, amount: s.discount.amount } : null,
   freeDrink: s.stampsUsed > 0, stampsAwarded: s.stampsAwarded ?? null, stampsBalance: s.stampsBalance ?? null,
 });

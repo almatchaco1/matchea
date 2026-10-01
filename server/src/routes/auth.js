@@ -123,7 +123,7 @@ r.get('/users', requireAuth, requireAdmin, ah(async (_req, res) => {
 const overrideTries = new Map();
 r.post('/override', requireAuth, ah(async (req, res) => {
   const action = String(req.body?.action || '');
-  if (!['discount', 'void'].includes(action)) throw new HttpError(400, 'Unknown action.');
+  if (!['discount', 'void', 'pickup'].includes(action)) throw new HttpError(400, 'Unknown action.');
   const key = String(req.user._id), now = Date.now();
   const tries = (overrideTries.get(key) || []).filter((t) => now - t < 10 * 60000);
   if (tries.length >= 5) throw new HttpError(429, 'Too many wrong admin PINs. Try again in 10 minutes.', { pin: 'Too many tries. Wait 10 minutes.' });
@@ -138,7 +138,7 @@ r.post('/override', requireAuth, ah(async (req, res) => {
     throw new HttpError(403, `That isn’t an admin PIN. ${left} ${left === 1 ? 'try' : 'tries'} left.`, { pin: `Not an admin PIN. ${left} ${left === 1 ? 'try' : 'tries'} left.` });
   }
   overrideTries.delete(key);
-  logStaff(ok, 'approved', { by: req.user.name, note: action === 'void' ? `Approved a void for ${req.user.name}` : `Approved a big discount for ${req.user.name}` });
+  logStaff(ok, 'approved', { by: req.user.name, note: action === 'void' ? `Approved a void for ${req.user.name}` : action === 'pickup' ? `Let ${req.user.name} hand over an order without its pickup code` : `Approved a big discount for ${req.user.name}` });
   res.json({ token: signOverride(ok, action, req.user._id), by: ok.name });
 }));
 

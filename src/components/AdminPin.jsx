@@ -1,10 +1,10 @@
-// "Ask an admin" pop-up: an admin types their PIN to approve one cashier action (big discount, void).
+// "Ask an admin" pop-up: an admin types their PIN to approve one cashier action (big discount, void, pickup without code).
 import { useState } from 'react';
 import { api } from '../lib/api';
 import Modal from './Modal';
 import { Field } from './Field';
 
-const WHAT = { discount: 'give this discount', void: 'void this sale' };
+const WHAT = { discount: 'give this discount', void: 'void this sale', pickup: 'hand over this order without its pickup code' };
 
 export default function AdminPin({ action, detail, onApproved, onClose }) {
   const [pin, setPin] = useState('');
