@@ -27,6 +27,11 @@ export default function Landing({ menu, err, go, me }) {
             <a href={start} className="sh-btn" onClick={nav(go, start)}>{me ? 'Start your order' : 'Create an account'}</a>
             {!me && <a href="/signin" className="sh-btn ghost" onClick={nav(go, '/signin')}>I already have one</a>}
           </div>
+          <ul className="ld-perks">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8Z M9 8a3 3 0 0 1 6 0" /></svg><span><b>Pickup only</b>Skip the line</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 5 6.5 5 10a5 5 0 0 1-10 0c0-3.5 2-6 5-10Z" /></svg><span><b>Oatside milk</b>In every latte</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.3 6L12 16.4 6.6 19.4l1.3-6L3.4 9.3l6-.7Z" /></svg><span><b>10th drink free</b>With your stamp card</span></li>
+          </ul>
           {rating?.avg != null && (
             <p className="ld-rating" aria-label={`Rated ${rating.avg} out of 5 by ${rating.count} customers`}>
               <span className="ld-rating-stars" aria-hidden="true"><i style={{ width: `${(rating.avg / 5) * 100}%` }}>★★★★★</i>★★★★★</span>
