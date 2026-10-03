@@ -179,3 +179,101 @@
   .ld-season{background:#1A2013}
   .track-no{color:#EEDDB0}
 }
+
+/* ===== Round 2: a richer light look ===== */
+/* Flavor backdrops behind the drink photos */
+.mn-card .mn-photo.has-scene,.sheet-hero.has-scene{background:var(--scene) center/cover no-repeat}
+.mn-card .mn-photo.has-scene img{padding:7% 7% 4%;filter:drop-shadow(0 16px 14px rgba(40,30,10,.3))}
+.mn-photo.has-scene::after{background:radial-gradient(closest-side,rgba(40,30,10,.28),rgba(40,30,10,0))}
+.sheet-hero.has-scene img{filter:drop-shadow(0 18px 18px rgba(40,30,10,.32))}
+.shop img.scene-bg{background-size:cover !important;background-position:center !important;background-repeat:no-repeat !important}
+
+/* Paper with a faint gold leaf pattern (from the logo's two leaves) */
+.shop{background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='132' viewBox='0 0 132 132'%3E%3Cg fill='none' stroke='%23B8924A' stroke-width='1.1' stroke-linecap='round' opacity='.22'%3E%3Cpath d='M33 44c-6-1.5-9.5-6-9.5-12.5 5.6.9 9 5.2 9.5 12.5Z'/%3E%3Cpath d='M33 44c.3-7.6 4.8-12.6 11.6-14.2.2 7.6-4.6 12.9-11.6 14.2Z'/%3E%3Cpath d='M99 110c-6-1.5-9.5-6-9.5-12.5 5.6.9 9 5.2 9.5 12.5Z'/%3E%3Cpath d='M99 110c.3-7.6 4.8-12.6 11.6-14.2.2 7.6-4.6 12.9-11.6 14.2Z'/%3E%3C/g%3E%3Cg fill='%23B8924A' opacity='.18'%3E%3Ccircle cx='99' cy='30' r='1.6'/%3E%3Ccircle cx='33' cy='96' r='1.6'/%3E%3C/g%3E%3C/svg%3E") 0 0/132px 132px,
+  radial-gradient(120% 60% at 100% 0,rgba(226,200,142,.32),transparent 60%),
+  radial-gradient(100% 60% at 0 30%,rgba(196,208,150,.28),transparent 60%),
+  var(--pink)}
+
+/* Gold ornament under section titles */
+.ld-steps h2,.ld-menu-h h2,.mn-top h1,.ck-h h1,.shop .panel>h1:first-child{padding-bottom:10px}
+.ld-steps h2::after,.ld-menu-h h2::after,.mn-top h1::after,.ck-h h1::after,.shop .panel>h1:first-child::after{content:"";position:absolute;left:0;bottom:0;width:86px;height:10px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 86 10'%3E%3Cpath d='M0 5h30M56 5h30' stroke='%23C29B54' stroke-width='1.4'/%3E%3Cpath d='M43 9c-4-1-6.4-4-6.4-8.4 3.8.6 6 3.5 6.4 8.4Z M43 9c.2-5 3.2-8.4 7.8-9.5.1 5.1-3.1 8.6-7.8 9.5Z' fill='%23C29B54'/%3E%3C/svg%3E") left center/contain no-repeat}
+.shop .panel.center>h1:first-child::after{left:50%;transform:translateX(-50%)}
+
+/* Hero: cups on a deep green arch with a gold rim */
+.ld-arch{background:radial-gradient(120% 70% at 50% 16%,#3E5427 0,#2B3A1C 48%,#1E2913 100%) !important;box-shadow:inset 0 -40px 70px -40px rgba(0,0,0,.6),0 34px 60px -34px rgba(34,42,20,.75),0 0 0 1.5px rgba(194,155,84,.75)}
+.ld-arch::before{border:1.5px solid rgba(226,200,142,.55)}
+.ld-arch::after{background:radial-gradient(circle,rgba(241,223,176,.55),rgba(241,223,176,0) 65%)}
+.ld-arch i{background:repeating-linear-gradient(90deg,rgba(226,200,142,.07) 0 2px,transparent 2px 18px)}
+.ld-floor{background:radial-gradient(closest-side,#FFF8E6 0,#F3E6C6 60%,rgba(243,230,198,0) 100%)}
+.ld-kanji{color:var(--gold);opacity:.14}
+.ld-hero h1{font-size:clamp(40px,7vw,68px);line-height:1.02}
+.ld-lede{color:#4E5240}
+.shop .ld-cap{background:linear-gradient(180deg,#2C3B1D,var(--forest));color:var(--on-forest);box-shadow:0 18px 30px -18px rgba(20,24,10,.8),inset 0 0 0 1px rgba(194,155,84,.6)}
+.ld-cap b{color:#F1DFB0}
+.ld-cap small{color:var(--gold-2)}
+.ld-cap span{color:#F5EBD3}
+.shop .ld-feat button{background:var(--card);border-color:rgba(194,155,84,.6);color:var(--green)}
+
+/* "How it works" cards: cream with a gold frame, green number seal */
+.ld-steps li{background:linear-gradient(180deg,#FFFDF7,#FAF3E2);box-shadow:0 18px 36px -24px rgba(34,42,20,.45),inset 0 0 0 1px rgba(194,155,84,.45)}
+.ld-steps li::before{content:"";position:absolute;inset:6px;border-radius:calc(var(--r) - 5px);border:1px dashed rgba(194,155,84,.35);pointer-events:none}
+.ld-ico{background:var(--forest) !important;color:#F1DFB0 !important;box-shadow:0 0 0 1px rgba(194,155,84,.7)}
+
+/* Menu header: a forest-green banner with the greeting */
+.mn-top{background:linear-gradient(135deg,#2C3B1D,var(--forest));color:var(--on-forest);border-radius:24px;padding:20px 22px 18px;margin-bottom:14px;overflow:hidden;
+  box-shadow:0 22px 40px -26px rgba(20,24,10,.8),inset 0 0 0 1px rgba(194,155,84,.55)}
+.mn-top::before{content:"";position:absolute;right:-40px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(226,200,142,.22),transparent 70%);pointer-events:none}
+.mn-top h1{color:#F1DFB0}
+.mn-hi{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--gold-2)}
+.mn-kanji{color:var(--gold);opacity:.16}
+.mn-top .mn-active{background:var(--gold) !important;color:var(--forest) !important;box-shadow:0 10px 20px -12px rgba(0,0,0,.6)}
+.mn-top h1::after{filter:brightness(1.25)}
+
+/* Menu cards: gold hairline + price tag */
+.mn-card{border-radius:22px}
+.mn-card .mn-body{background:linear-gradient(180deg,var(--card),#FBF5E7)}
+.mn-card .mn-body h3{color:#25331B}
+.mn-price{display:inline-block;padding:3px 11px;border-radius:999px;background:#F4EAD2;color:var(--gold-ink);box-shadow:inset 0 0 0 1px rgba(194,155,84,.45);font-weight:800}
+
+/* Drink sheet */
+.sheet-hero{height:280px}
+.sheet .sheet-b h2{color:#25331B}
+.shop .choice{background:#FFFDF8;border-radius:16px}
+.shop .choice.on{background:linear-gradient(180deg,#FBF4E2,#F3E7C8);border-color:var(--gold-ink);box-shadow:inset 0 0 0 1px var(--gold-ink),0 8px 16px -12px rgba(138,106,44,.7)}
+
+/* Panels (cart, order, account): gold-edged cards */
+.shop .panel{border-radius:24px;background:linear-gradient(180deg,#FFFDF8,#FBF6EA);box-shadow:0 22px 44px -30px rgba(34,42,20,.55),inset 0 0 0 1px rgba(194,155,84,.4)}
+.shop .panel.track::before,.au-card::before{background:repeating-linear-gradient(45deg,rgba(194,155,84,.55) 0 8px,rgba(226,200,142,.5) 8px 16px)}
+.ck-total b,.track-no{color:var(--green)}
+.pay label{background:#FFFDF8;border-color:var(--line)}
+.pay label.on{background:linear-gradient(180deg,#FBF4E2,#F2E6C6);border-color:var(--gold-ink);box-shadow:inset 0 0 0 1px var(--gold-ink),0 10px 20px -14px rgba(138,106,44,.8)}
+.pay input{accent-color:var(--green)}
+.mn-top .stamp-pill{background:rgba(255,255,255,.08);color:var(--on-forest);border-color:rgba(226,200,142,.55)}
+.mn-top .stamp-mini i{border-color:rgba(226,200,142,.7)}
+.mn-top .stamp-mini i.on{background:var(--gold);border-color:var(--gold)}
+
+@media (prefers-color-scheme: dark){
+  .shop{background:radial-gradient(120% 60% at 100% 0,rgba(211,178,107,.1),transparent 60%),var(--pink)}
+  .mn-card .mn-body{background:transparent}
+  .mn-price{background:rgba(211,178,107,.14);color:var(--gold-2)}
+  .ld-steps li{background:linear-gradient(180deg,#1C2215,#171C11)}
+  .shop .panel{background:linear-gradient(180deg,#1C2215,#171C11);box-shadow:0 22px 44px -26px rgba(0,0,0,.95),inset 0 0 0 1px rgba(211,178,107,.18)}
+  .shop .choice{background:#1A2013}
+  .shop .choice.on{background:#252C19;border-color:var(--gold)}
+  .pay label{background:#151A0F}
+  .pay label.on{background:#232A17;border-color:var(--gold)}
+  .mn-card .mn-body h3,.sheet .sheet-b h2{color:#EEDDB0}
+  .mn-top{background:linear-gradient(135deg,#1C2414,#0E120A)}
+  .ld-lede{color:var(--ink-2)}
+}
+
+/* Header controls on the green bar */
+.shop .sh-head .sh-cart{background:rgba(255,255,255,.08);color:#F1DFB0;box-shadow:inset 0 0 0 1px rgba(226,200,142,.4)}
+.shop .sh-head .sh-cart:hover{background:rgba(255,255,255,.16)}
+.shop .sh-head .sh-avatar{background:#F1DFB0;color:var(--forest);border-color:var(--gold)}
+.shop .sh-head .sh-nav>a.on{background:rgba(226,200,142,.16) !important;color:#F1DFB0 !important;box-shadow:inset 0 0 0 1px rgba(226,200,142,.55)}
+.shop .sh-head .sh-nav>a:not(.sh-btn):not(.on):hover{background:rgba(255,255,255,.07)}
+.mn-cats{background:linear-gradient(rgba(244,236,220,.82) 75%,rgba(244,236,220,0));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask:linear-gradient(#000 calc(100% - 8px),transparent);mask:linear-gradient(#000 calc(100% - 8px),transparent)}
+@media (prefers-color-scheme: dark){.mn-cats{background:linear-gradient(rgba(16,20,11,.85) 75%,rgba(16,20,11,0))}}

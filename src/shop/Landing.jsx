@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { sceneBg } from '../lib/drinkImages';
 import { calm } from './fx';
 import { greetIcon } from '../lib/decor';
 import { peso } from '../lib/format';
@@ -72,7 +73,7 @@ export default function Landing({ menu, err, go, me }) {
           <div className="ld-strip">
             {strip.map((it, i) => (
               <a key={it._id} href={start} className={`ld-drink ${it.soldOut ? 'off' : ''}`} onClick={nav(go, start)} data-reveal style={{ '--i': Math.min(i, 8) }}>
-                <img src={it.image} alt="" loading="lazy" />
+                <img src={it.image} alt="" loading="lazy" className={sceneBg(it.image) ? 'scene-bg' : undefined} style={sceneBg(it.image)} />
                 {it.soldOut ? <i className="ld-best ld-na">{it.notAvailable ? 'Not available' : 'Sold out'}</i> : it.bestSeller && <i className="ld-best hanko"><b lang="ja">人気</b>Best seller</i>}
                 <b>{it.name.replace(/ Matcha Latte$/, '')}</b>
                 <span>{peso(priceOf(it))}</span>

@@ -5,6 +5,7 @@ import { peso, pad } from '../lib/format';
 import StampCard from './StampCard';
 import { CountUp, photoFrom, morphIn, morphOut, useScrollIn } from './fx';
 import { TabInk } from '../lib/motion';
+import { sceneVar, sceneBg } from '../lib/drinkImages';
 import { Doodle, LiveCup } from './art';
 import { ShareDrink } from './share';
 
@@ -61,7 +62,7 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
               const off = it.soldOut || !menu.shop.open;
               return (
                 <div key={f._id} className="fav-card">
-                  {it.image && <img src={it.image} alt="" />}
+                  {it.image && <img src={it.image} alt="" className={sceneBg(it.image) ? 'scene-bg' : undefined} style={sceneBg(it.image)} />}
                   <div className="fav-b">
                     <b>{f.label || it.name}</b>
                     <small>{x.mods || 'Regular'}</small>
@@ -84,7 +85,7 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
       <div className="mn-grid" key={cat} ref={gridRef}>
         {shown.map((it, i) => (
           <article key={it._id} className={`mn-card ${it.soldOut ? 'out' : ''}`} style={{ '--i': Math.min(i, 10) }}>
-            <button className="mn-photo" disabled={it.soldOut || !menu.shop.open} onClick={(e) => { photoFrom(e.currentTarget.querySelector('img')); onPick(it); }} aria-label={`Choose ${it.name}`}>
+            <button className={`mn-photo ${sceneVar(it.image) ? 'has-scene' : ''}`} style={sceneVar(it.image)} disabled={it.soldOut || !menu.shop.open} onClick={(e) => { photoFrom(e.currentTarget.querySelector('img')); onPick(it); }} aria-label={`Choose ${it.name}`}>
               {it.image && <img src={it.image} alt="" loading="lazy" />}
               {it.soldOut ? <span className="mn-tag">{it.notAvailable ? 'Not available' : 'Sold out'}</span> : it.bestSeller && <span className="mn-best hanko"><b lang="ja">人気</b>Best seller</span>}
             </button>
@@ -127,7 +128,7 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
     <div className="shop-scrim" onMouseDown={(e) => !sharing && e.target === e.currentTarget && close()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={item.name}>
         <button className="sheet-x" onClick={close} aria-label="Close">×</button>
-        <div className={`sheet-hero size-${sizeAt}`}>
+        <div className={`sheet-hero size-${sizeAt} ${sceneVar(item.image) ? 'has-scene' : ''}`} style={sceneVar(item.image)}>
           {item.image && <img ref={hero} src={item.image} alt="" />}
           {item.hasSizes && menu.sizes.length > 1 && <span className="sh-size" key={x.sizeId}>{menu.sizes[sizeAt]?.label}</span>}
           <span className="sh-tags">{picked.map((a) => <i key={a._id}>+ {a.label}</i>)}</span>

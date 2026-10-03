@@ -8,7 +8,7 @@ import Modal from './Modal';
 import ReceiptModal from './Receipt';
 import { printSale, printLabels, loadPrinterSettings } from '../lib/printer';
 import { Field } from './Field';
-import { allowedAddons, imageOf } from '../lib/drinkImages';
+import { allowedAddons, imageOf, sceneBg } from '../lib/drinkImages';
 import { SwipeRow } from '../lib/motion';
 import { checkCheckout, LIMITS, normPhone, DISC_PIN_OVER } from '../shared/rules.mjs';
 import AdminPin from './AdminPin';
@@ -215,7 +215,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
                   {a === 'out' && <span className="pill bad">Out</span>}
                   {a === 'low' && <span className="pill warn">Low</span>}
                   {imageOf(p)
-                    ? <img className="thumb" src={imageOf(p)} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                    ? <img className={`thumb ${sceneBg(imageOf(p)) ? 'scene-bg' : ''}`} style={sceneBg(imageOf(p))} src={imageOf(p)} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
                     : <span className="cup" style={{ background: toneFor(p.name) }} />}
                   {p.bestSeller && <span className="best-tag hanko"><b lang="ja">人気</b>Best seller</span>}
                   <span className="nm">{p.name}</span>
@@ -371,7 +371,7 @@ function ItemModal({ product: p, settings: s, initial, stock, otherUsage, onClos
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={() => onSave({ ...L, note: L.note.trim() })}>{initial ? 'Update' : 'Add'} · {peso(x.total)}</button></>}>
       {(imageOf(p) || p.desc) && (
         <div className="item-head">
-          {imageOf(p) && <img src={imageOf(p)} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+          {imageOf(p) && <img src={imageOf(p)} alt="" className={sceneBg(imageOf(p)) ? 'scene-bg' : undefined} style={sceneBg(imageOf(p))} onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
           {p.desc && <p>{p.desc}</p>}
         </div>
       )}

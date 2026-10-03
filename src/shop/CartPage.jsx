@@ -5,6 +5,7 @@ import { peso } from '../lib/format';
 import { rewardsReady, rewardValue } from '../shared/loyalty.mjs';
 import { computeTotals } from '../shared/pricing.mjs';
 import { RollNum } from './fx';
+import { sceneBg } from '../lib/drinkImages';
 import { Doodle } from './art';
 import { useAmountQr, saveQr, openGcash, isPhone } from '../lib/payqr';
 
@@ -105,7 +106,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         <ul className="lines">
           {priced.map((l, i) => (
             <li key={i} className={l.missing || l.soldOut ? 'gone' : ''}>
-              {l.image && <img src={l.image} alt="" />}
+              {l.image && <img src={l.image} alt="" className={sceneBg(l.image) ? 'scene-bg' : undefined} style={sceneBg(l.image)} />}
               <div className="grow">
                 <b>{l.name || 'Item no longer on the menu'}</b>
                 <small>{l.missing ? 'No longer available' : l.soldOut ? (l.notAvailable ? 'Not available right now' : 'Sold out right now') : l.mods}</small>

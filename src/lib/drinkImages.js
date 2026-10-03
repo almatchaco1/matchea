@@ -1,4 +1,4 @@
-import { BUNDLED, imageFor, hasBundledImage, addonLabelsFor, photoUrl } from '../shared/menu-defaults.mjs';
+import { BUNDLED, imageFor, hasBundledImage, addonLabelsFor, photoUrl, sceneUrl } from '../shared/menu-defaults.mjs';
 
 // Photos in public/drinks, for the picker in the drink editor.
 export const DRINK_IMAGES = BUNDLED.map((s) => ({
@@ -16,3 +16,7 @@ export const allowedAddons = (product, settings) => {
   const labels = addonLabelsFor(product?.name || '').map((l) => l.toLowerCase());
   return all.filter((a) => labels.includes(a.label.toLowerCase()));
 };
+
+/** Flavor backdrop for a bundled drink photo: style for a box (as --scene) or for the <img> itself. */
+export const sceneVar = (src) => { const u = sceneUrl(src); return u ? { '--scene': `url("${u}")` } : undefined; };
+export const sceneBg = (src) => { const u = sceneUrl(src); return u ? { backgroundImage: `url("${u}")` } : undefined; };

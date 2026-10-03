@@ -68,3 +68,38 @@ h1,h2,h3,.sec{font-family:var(--display);letter-spacing:-.01em}
   :root:not([data-theme="light"]) .prod .thumb{background:radial-gradient(circle at 50% 58%,#2A3220 0,#20271A 50%,#181D12 85%)}
   :root:not([data-theme="light"]) .chip[aria-pressed="true"],:root:not([data-theme="light"]) .cats button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#17190D}
 }
+
+/* ===== Round 2: a richer light look ===== */
+body{background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='132' viewBox='0 0 132 132'%3E%3Cg fill='none' stroke='%23B8924A' stroke-width='1.1' stroke-linecap='round' opacity='.2'%3E%3Cpath d='M33 44c-6-1.5-9.5-6-9.5-12.5 5.6.9 9 5.2 9.5 12.5Z'/%3E%3Cpath d='M33 44c.3-7.6 4.8-12.6 11.6-14.2.2 7.6-4.6 12.9-11.6 14.2Z'/%3E%3Cpath d='M99 110c-6-1.5-9.5-6-9.5-12.5 5.6.9 9 5.2 9.5 12.5Z'/%3E%3Cpath d='M99 110c.3-7.6 4.8-12.6 11.6-14.2.2 7.6-4.6 12.9-11.6 14.2Z'/%3E%3C/g%3E%3C/svg%3E") 0 0/132px 132px,
+  radial-gradient(120% 70% at 100% 0,rgba(226,200,142,.3),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(186,198,140,.24),transparent 60%),var(--bg);background-attachment:fixed}
+
+/* Drink tiles: flavor backdrop, gold frame, serif name */
+.prod .thumb.scene-bg,.item-head img.scene-bg{background-size:cover !important;background-position:center !important;background-repeat:no-repeat !important;padding:6% 6% 3% !important;filter:drop-shadow(0 6px 8px rgba(40,30,10,.18))}
+.prod{background:linear-gradient(180deg,#FFFDF8,#FAF3E3);border-color:rgba(194,155,84,.35);border-radius:18px;box-shadow:0 14px 26px -22px rgba(34,42,20,.6)}
+.prod:hover{border-color:var(--gold);box-shadow:0 20px 34px -22px rgba(34,42,20,.65),0 0 0 1px rgba(194,155,84,.5)}
+.prod .nm{color:#25331B}
+
+/* Panels with a gold edge */
+.panel{background:linear-gradient(180deg,#FFFDF8,#FBF6EA);border-color:rgba(194,155,84,.35)}
+.stat{border-top:3px solid var(--gold)}
+.stat::after{background:color-mix(in srgb,var(--gold) 14%,transparent)}
+.stat .k{color:var(--gold-ink)}
+.cart-h{background:linear-gradient(135deg,#2C3B1D,var(--forest));color:#F1DFB0;border-bottom:1px solid rgba(194,155,84,.55);border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.cart-h h2,.cart-h .sec{color:#F1DFB0}
+.cart-h .ord{color:var(--forest);background:var(--gold-2)}
+.sum .r.tot{border-top:1px dashed rgba(194,155,84,.6)}
+.sum .r.tot b{color:var(--matcha)}
+
+/* Section titles: small gold leaf + serif */
+h2.sec{color:#25331B}
+.chip{border-color:rgba(194,155,84,.45);background:#FFFDF8}
+.ticket{background:linear-gradient(180deg,#FFFDF8,#FBF5E8)}
+
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) body{background:radial-gradient(120% 70% at 100% 0,rgba(211,178,107,.1),transparent 60%),var(--bg)}
+  :root:not([data-theme="light"]) .prod,:root:not([data-theme="light"]) .panel,:root:not([data-theme="light"]) .chip{background:var(--surface);border-color:var(--line)}
+  :root:not([data-theme="light"]) .prod .nm,:root:not([data-theme="light"]) h2.sec{color:var(--ink)}
+  :root:not([data-theme="light"]) .ticket{background:linear-gradient(180deg,#18251D,#15211A)}
+  :root:not([data-theme="light"]) .cart-h{background:linear-gradient(135deg,#1C2414,#0E120A)}
+}
