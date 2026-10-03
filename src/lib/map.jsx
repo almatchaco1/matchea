@@ -1,4 +1,4 @@
-// Real map for delivery (OpenStreetMap data, CARTO map style), loaded only when a map is shown.
+// Real map for delivery (OpenStreetMap, no API key needed), loaded only when a map is shown.
 //  mode="pick": the pin stays in the middle and the map moves under it (like Grab); onPick({lat,lng}) after each move.
 //  mode="view": shows the shop, the customer's place and the road between them.
 import { useEffect, useRef, useState } from 'react';
@@ -7,8 +7,8 @@ import './map.css';
 let loading;
 const loadLeaflet = () => (loading ||= Promise.all([import('./vendor/leaflet/leaflet-src.esm.js'), import('./vendor/leaflet/leaflet.css')]).then(([m]) => m));
 
-const TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-const ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
+const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 
 const shopIcon = (L) => L.divIcon({ className: 'mp-shop', html: '<span><img src="/brand/matchea-seal.webp" alt=""></span>', iconSize: [44, 44], iconAnchor: [22, 22] });
 const homeIcon = (L) => L.divIcon({ className: 'mp-home', html: '<span><svg viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>', iconSize: [40, 48], iconAnchor: [20, 46] });
@@ -32,7 +32,7 @@ export default function MapView({ mode = 'view', center, shop, dest, route, onPi
       L.current = Lf;
       const start = center || dest || shop || { lat: 14.5995, lng: 120.9842 };
       const m = Lf.map(box.current, { zoomControl: mode === 'pick', attributionControl: true, scrollWheelZoom: mode === 'pick' ? 'center' : false, tap: true }).setView([start.lat, start.lng], zoom);
-      Lf.tileLayer(TILES, { subdomains: 'abcd', maxZoom: 20, detectRetina: true, attribution: ATTR }).addTo(m);
+      Lf.tileLayer(TILES, { maxZoom: 19, attribution: ATTR, referrerPolicy: 'strict-origin-when-cross-origin', className: 'mp-tiles' }).addTo(m);
       if (mode === 'pick') {
         m.on('movestart', () => setMoving(true));
         m.on('moveend', () => {

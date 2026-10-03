@@ -5,6 +5,8 @@
 .mp-view{height:220px}
 @media (min-width:860px){.mp-pick{height:340px}}
 .mp .leaflet-container{background:#EDE6D4;font-family:inherit}
+/* soften OpenStreetMap colors to the cream + green look */
+.mp .mp-tiles{filter:sepia(.18) saturate(.82) brightness(1.02)}
 .mp .leaflet-control-attribution{font-size:9.5px;background:rgba(255,252,245,.82);border-radius:8px 0 0 0}
 .mp .leaflet-control-zoom a{color:#222A14;border-color:rgba(194,155,84,.45)}
 .mp .leaflet-bar{border:0;box-shadow:0 6px 16px -8px rgba(20,24,10,.6);border-radius:12px;overflow:hidden}
@@ -29,6 +31,6 @@
 .mp-loading{position:absolute;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;gap:10px;color:#5E604C;font-size:14px;background:#EDE6D4}
 @media (prefers-color-scheme:dark){
   .mp,.mp .leaflet-container,.mp-loading{background:#1A2013;color:#B7B09A}
-  .mp .leaflet-tile-pane{filter:brightness(.82) saturate(.85)}
+  .mp .mp-tiles{filter:sepia(.18) saturate(.75) brightness(.8)}
 }
 @media (prefers-reduced-motion:reduce){.mp-view .mp-route{animation:none}.mp-pin{transition:none}}
