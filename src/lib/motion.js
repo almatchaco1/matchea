@@ -197,3 +197,44 @@ export function useHeaderFit(ref, dep) {
     return () => { ro?.disconnect(); window.removeEventListener('resize', fit); };
   }, [ref, dep]);
 }
+
+/** Gold and green leaves bursting from an element (daily goal reached). */
+export function leafBurst(from, n = 34) {
+  if (calm() || !from?.getBoundingClientRect) return;
+  const r = from.getBoundingClientRect();
+  const colors = ['#C29B54', '#E2C88E', '#2D4320', '#8DA35C', '#F1DFB0'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('i');
+    const size = 9 + Math.random() * 9;
+    Object.assign(p.style, { position: 'fixed', left: `${r.left + r.width * (0.2 + Math.random() * 0.6)}px`, top: `${r.top + r.height / 2}px`, width: `${size}px`, height: `${size * 0.55}px`,
+      background: colors[i % colors.length], borderRadius: '0 100% 0 100%', zIndex: 9999, pointerEvents: 'none' });
+    document.body.appendChild(p);
+    const ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, dist = 120 + Math.random() * 220;
+    const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+    p.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx}px,${dy}px) rotate(${360 + Math.random() * 360}deg)`, opacity: 1, offset: 0.55 },
+      { transform: `translate(${dx * 1.15}px,${dy + 260}px) rotate(${720 + Math.random() * 360}deg)`, opacity: 0 },
+    ], { duration: 1500 + Math.random() * 900, easing: 'cubic-bezier(.2,.7,.4,1)' }).onfinish = () => p.remove();
+  }
+}
+
+/** A copy of an element flies into a target (an accepted online order flies into the Barista tab). */
+export function flyInto(el, target) {
+  if (calm() || !el?.getBoundingClientRect || !target?.getBoundingClientRect) return;
+  const a = el.getBoundingClientRect(), b = target.getBoundingClientRect();
+  const ghost = el.cloneNode(true);
+  Object.assign(ghost.style, { position: 'fixed', left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, height: `${a.height}px`, margin: 0, zIndex: 9999, pointerEvents: 'none', transformOrigin: '0 0', overflow: 'hidden' });
+  ghost.removeAttribute('data-flip');
+  document.body.appendChild(ghost);
+  const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+  const k = Math.max(0.06, Math.min(0.2, b.width / a.width));
+  ghost.animate([
+    { transform: 'translate(0,0) scale(1)', opacity: 1, borderRadius: '16px' },
+    { transform: `translate(${dx * 0.35}px,${dy * 0.35 - 40}px) scale(.6)`, opacity: 0.95, offset: 0.4 },
+    { transform: `translate(${dx + (a.width * (1 - k)) / 2}px,${dy + (a.height * (1 - k)) / 2}px) scale(${k})`, opacity: 0.2, borderRadius: '40px' },
+  ], { duration: 750, easing: 'cubic-bezier(.5,0,.3,1)' }).onfinish = () => {
+    ghost.remove();
+    target.animate?.([{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  };
+}

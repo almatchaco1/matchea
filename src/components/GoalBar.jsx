@@ -2,12 +2,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { peso } from '../lib/format';
+import { leafBurst } from '../lib/motion';
 
 export default function GoalBar({ refreshKey, isAdmin, toast, big = false }) {
   const [d, setD] = useState(null);
   const [edit, setEdit] = useState(null); // goal being typed
   const load = useCallback(() => api.get('/reports/today').then(setD).catch(() => {}), []);
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, [load, refreshKey]);
+  // Goal reached: a burst of gold and green leaves, once a day on this device
+  const reached = !!d?.goal && d.net >= d.goal;
+  useEffect(() => {
+    if (!reached) return;
+    const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+    try { if (localStorage.getItem('matchaPos.goalParty') === day) return; localStorage.setItem('matchaPos.goalParty', day); } catch {}
+    setTimeout(() => leafBurst(document.querySelector('.goal.done')), 300);
+  }, [reached]);
   if (!d) return null;
 
   const save = async () => {

@@ -10,6 +10,9 @@ import { Doodle, Avatar } from './art';
 import { Field, CodeStep, PasswordBox } from './Auth';
 
 const LABEL = { awaiting_payment: 'Waiting for payment', new: 'Order received', preparing: 'Preparing', ready: 'Ready for pickup', paid: 'Picked up', cancelled: 'Cancelled' };
+// Delivery orders: the rider's step instead
+const DLABEL = { waiting: 'Preparing', booked: 'Waiting for a rider', picked: 'On the way', delivered: 'Delivered' };
+const labelOf = (o) => (o.fulfil === 'delivery' && ['preparing', 'ready', 'paid'].includes(o.status) ? DLABEL[o.status === 'paid' ? 'delivered' : o.riderState] : LABEL[o.status]) || o.status;
 
 export function OrdersPage({ orders, go, reload }) {
   const { pull, busy } = usePullRefresh(reload);
@@ -28,11 +31,11 @@ export function OrdersPage({ orders, go, reload }) {
             <li key={o.code}>
               <button className="olist-row" onClick={() => go('/order/' + o.code)}>
                 <div>
-                  <b>#{pad(o.no)}</b> <span className="muted">· {new Date(o.createdAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} {new Date(o.createdAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</span>
+                  <b>#{pad(o.no)}</b>{o.fulfil === 'delivery' && <i className="olist-dl">Delivery</i>} <span className="muted">· {new Date(o.createdAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} {new Date(o.createdAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</span>
                   <small>{o.items}</small>
                 </div>
                 <div className="olist-r">
-                  <span className={`pill s-${o.status}`}>{LABEL[o.status] || o.status}</span>
+                  <span className={`pill s-${o.status}`}>{labelOf(o)}</span>
                   {o.rating ? <Stars value={o.rating.stars} small /> : o.canRate && <span className="rate-link">Rate ★</span>}
                   <b>{peso(o.total)}</b>
                 </div>

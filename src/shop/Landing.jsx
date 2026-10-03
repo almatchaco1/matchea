@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { sceneBg } from '../lib/drinkImages';
 import { calm } from './fx';
 import { greetIcon } from '../lib/decor';
@@ -125,14 +125,23 @@ function Showcase({ items, priceOf, start, go, count }) {
     const t = setTimeout(() => setCur((c) => ((c ?? first) + 1) % n), 4200);
     return () => clearTimeout(t);
   }, [at, n, paused, first]);
+  const swipe = useRef(null);
   if (!n) return <div className="ld-show"><div className="ld-stage"><div className="ld-arch"><i /></div><div className="ld-floor" /></div></div>;
   const pos = (i) => { const d = (((i - at) % n) + n) % n; return d === 0 ? 'c' : d === 1 ? 'r' : d === n - 1 ? 'l' : 'h'; };
   const move = (k) => setCur((((at + k) % n) + n) % n);
   const it = list[at];
   const name = it.name.replace(/ Matcha Latte$/, '');
+  // Swipe left / right on the cups (phones)
+  const down = (e) => { swipe.current = { x: e.clientX, y: e.clientY, t: Date.now() }; };
+  const up = (e) => {
+    const s0 = swipe.current; swipe.current = null;
+    if (!s0) return;
+    const dx = e.clientX - s0.x, dy = e.clientY - s0.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - s0.t < 800) { setPaused(true); move(dx < 0 ? 1 : -1); }
+  };
   return (
     <div className="ld-show" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="ld-stage">
+      <div className="ld-stage" onPointerDown={down} onPointerUp={up} onPointerCancel={() => { swipe.current = null; }}>
         <div className="ld-arch" aria-hidden="true"><i /></div>
         <span className="ld-kanji" lang="ja" aria-hidden="true">抹茶</span>
         <div className="ld-floor" aria-hidden="true" />

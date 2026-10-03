@@ -210,7 +210,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               const a = availability(p);
               const from = p.price + (p.hasSizes !== false ? +settings?.sizes?.[0]?.price || 0 : 0);
               return (
-                <button key={p._id} className={`prod ${a === 'out' || a === 'na' ? 'out' : ''} ${p.bestSeller ? 'best' : ''}`} disabled={a === 'na'} title={a === 'na' ? 'Not available. Turn it back on in the Menu tab.' : undefined} onClick={() => setEditing({ product: p })}>
+                <button key={p._id} style={{ '--tone': toneFor(p.name) }} className={`prod ${a === 'out' || a === 'na' ? 'out' : ''} ${p.bestSeller ? 'best' : ''}`} disabled={a === 'na'} title={a === 'na' ? 'Not available. Turn it back on in the Menu tab.' : undefined} onClick={() => setEditing({ product: p })}>
                   {a === 'na' && <span className="pill mute">Not available</span>}
                   {a === 'out' && <span className="pill bad">Out</span>}
                   {a === 'low' && <span className="pill warn">Low</span>}

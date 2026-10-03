@@ -28,6 +28,12 @@ function PaperCard({ ready, extra, have }) {
     const t = setTimeout(() => setFlipped(true), 1100);
     return () => clearTimeout(t);
   }, [ready]);
+  // Stamps added since the last visit get pressed in like a real ink stamp
+  const [fresh] = useState(() => {
+    let prev = have;
+    try { const v = localStorage.getItem('alm.stampsSeen'); prev = v == null ? have : Math.min(+v, have); localStorage.setItem('alm.stampsSeen', String(have)); } catch {}
+    return prev < have ? prev : have;
+  });
   const label = `Stamp card: ${have} of ${STAMPS_PER_REWARD} stamps${ready ? `, ${ready} free drink ready` : ''}`;
   return (
     <section className={`stampcard paper ${flipped ? 'flipped' : ''} ${ready ? 'has-free' : ''}`} aria-label={label}>
@@ -39,7 +45,7 @@ function PaperCard({ ready, extra, have }) {
           </div>
           <ol className="stamps">
             {Array.from({ length: STAMPS_PER_REWARD }, (_, i) => (
-              <li key={i} className={i < have ? 'on' : ''} style={{ '--i': i, '--r': `${((i * 37) % 22) - 11}deg` }}><span aria-hidden="true">{i < have ? <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 21c-5-1-8-5.5-8-11 4.8.8 7.6 4.6 8 11Z" fill="currentColor" /><path d="M12 21c.3-6.6 4.2-11 10-12.4.2 6.6-4 11.3-10 12.4Z" fill="currentColor" /></svg> : i + 1}</span></li>
+              <li key={i} className={`${i < have ? 'on' : ''} ${i >= fresh && i < have ? 'press' : ''}`} style={{ '--i': i, '--r': `${((i * 37) % 22) - 11}deg`, '--k': i - fresh }}><span aria-hidden="true">{i < have ? <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 21c-5-1-8-5.5-8-11 4.8.8 7.6 4.6 8 11Z" fill="currentColor" /><path d="M12 21c.3-6.6 4.2-11 10-12.4.2 6.6-4 11.3-10 12.4Z" fill="currentColor" /></svg> : i + 1}</span></li>
             ))}
             <li className={`free ${ready ? 'on' : ''}`}><span>FREE</span></li>
           </ol>

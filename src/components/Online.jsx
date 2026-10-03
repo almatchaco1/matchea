@@ -7,15 +7,17 @@ import PayPicker from './PayPicker';
 import { checkCheckout, LIMITS } from '../shared/rules.mjs';
 import Modal from './Modal';
 import { Field, useErrors } from './Field';
-import ReceiptModal, { printCupLabels } from './Receipt';
+import ReceiptModal, { printCupLabels, printHtml } from './Receipt';
+import { qrPng } from '../lib/payqr';
+import { mapsLink } from '../shared/delivery.mjs';
 import AdminPin from './AdminPin';
 import { QrHint, ShowQr, QR_LABEL } from './PayQr';
-import { useFlip } from '../lib/motion';
+import { useFlip, flyInto } from '../lib/motion';
 
 const COLS = [
   ['new', 'New', 'Accept to start making it. Stock is taken when you accept.'],
   ['preparing', 'Preparing', 'Mark ready when the drinks are done.'],
-  ['ready', 'Ready for pickup', 'Take payment when the customer arrives.'],
+  ['ready', 'Ready · pickup or on the way', 'Pickups: take payment when the customer arrives. Deliveries: tap Delivered when Lalamove drops it off.'],
 ];
 const ago = (d) => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : timeOf(d); };
 
@@ -28,10 +30,13 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
   const [cancelling, setCancelling] = useState(null);
   const [shot, setShot] = useState(null); // order whose receipt screenshot is open
   const [receipt, setReceipt] = useState(null);
+  const [booking, setBooking] = useState(null); // delivery: booking Lalamove
+  const [rider, setRider] = useState(null);     // delivery: the rider picked up the drinks
   const s = data.settings;
 
   const act = async (o, step, body, msg) => {
     setBusy(o._id + step);
+    if (step === 'accept') flyInto(document.querySelector(`.kcard[data-flip="${o._id}"]`), document.querySelector('.tabs [data-tab="barista"]'));
     try { await api.post(`/online/${o._id}/${step}`, body); toast(msg); await reload(); if (step === 'accept') refresh(); }
     catch (e) { toast(e.message); reload(); }
     finally { setBusy(null); }
@@ -68,9 +73,10 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
             <section key={st} className={`kcol k-${st}`}>
               <div className="kcol-h"><h3>{title}</h3><span className="pill mute">{list.length}</span></div>
               {!list.length ? <p className="muted kempty">{hint}</p> : list.map((o) => (
-                <article key={o._id} data-flip={o._id} className="kcard panel">
+                <article key={o._id} data-flip={o._id} className={`kcard panel ${o.fulfil === 'delivery' ? 'is-deliv' : ''}`}>
                   <header>
                     <span className="kno num">#{pad(o.no)}</span>
+                    {o.fulfil === 'delivery' && <span className="dtag">Delivery · {o.delivery?.km} km</span>}
                     <span className="muted" style={{ fontSize: 12 }}>{o.date !== new Date().toISOString().slice(0, 10) && st === 'new' ? o.date + ' · ' : ''}{ago(o.createdAt)}</span>
                   </header>
                   <div className="kcust"><b>{o.customer}</b> <span className="muted num">{o.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span></div>
@@ -78,6 +84,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                     {o.lines.map((l, i) => <li key={i}><b>{l.qty}×</b> {l.name}{l.mods && <small>{l.mods}</small>}</li>)}
                   </ul>
                   {o.pickupNote && <div className="knote">“{o.pickupNote}”</div>}
+                  {o.fulfil === 'delivery' && o.delivery && <DeliveryInfo o={o} />}
                   <div className="ktotal">
                     {o.paidOnline
                       ? <><span className="pill ok">Paid online · {PAY_LABELS[o.pay.method] || 'Online'}</span><b className="num">{peso(o.total)}</b></>
@@ -106,7 +113,14 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                         <button className="btn ghost sm" onClick={() => setCancelling({ ...o, notFound: true })}>Not received</button></>
                       : <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'accept', {}, `Order #${pad(o.no)} accepted`)}>Accept</button>)}
                     {st === 'preparing' && <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'ready', {}, `Order #${pad(o.no)} is ready`)}>Mark ready</button>}
-                    {st === 'ready' && (o.paidOnline || o.qrPay?.verified
+                    {o.fulfil === 'delivery' && st !== 'new' && <>
+                      {(o.delivery?.state || 'waiting') === 'waiting' && <button className="btn primary" disabled={!!busy} onClick={() => setBooking(o)}>Book Lalamove</button>}
+                      {o.delivery?.state === 'booked' && <button className="btn primary" disabled={!!busy} onClick={() => setRider(o)}>Rider picked up</button>}
+                      {o.delivery?.state === 'picked' && <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'delivery/delivered', {}, `Order #${pad(o.no)} delivered`)}>Delivered</button>}
+                      {['booked', 'picked'].includes(o.delivery?.state) && <button className="btn ghost sm" disabled={!!busy} onClick={() => act(o, 'delivery/rebook', {}, `Order #${pad(o.no)}: book a new rider`)}>Rider cancelled</button>}
+                      <button className="btn ghost sm" onClick={() => printSlip(o, s)}>Delivery slip</button>
+                    </>}
+                    {st === 'ready' && o.fulfil !== 'delivery' && (o.paidOnline || o.qrPay?.verified
                       ? <button className="btn primary" disabled={!!busy} onClick={() => (o.hasCode ? setHanding(o) : act(o, 'complete', {}, `Order #${pad(o.no)} picked up`))}>Picked up</button>
                       : <button className="btn primary" onClick={() => setPaying(o)}>Picked up · Take payment</button>)}
                     {st === 'preparing' && <button className="btn ghost sm" onClick={async () => { try { const m = await printCupLabels(o, s); if (m) toast(m); } catch (e) { toast(e.message); } }}>Cup labels</button>}
@@ -150,6 +164,9 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
         onDone={async (reason, noShow) => { await act(cancelling, 'cancel', { reason, noShow }, `Order #${pad(cancelling.no)} cancelled`); setCancelling(null); }} />}
       {shot && <ShotModal order={shot} onClose={() => setShot(null)} />}
       {receipt && <ReceiptModal sale={receipt} settings={s} onClose={() => setReceipt(null)} />}
+      {booking && <BookModal order={booking} settings={s} onClose={() => setBooking(null)}
+        onDone={async (cost) => { await act(booking, 'delivery/booked', { cost }, `Order #${pad(booking.no)}: waiting for the rider`); setBooking(null); }} />}
+      {rider && <RiderModal order={rider} onClose={() => setRider(null)} toast={toast} onDone={() => { setRider(null); toast(`Order #${pad(rider.no)} is on the way`); reload(); }} />}
     </>
   );
 }
@@ -284,4 +301,107 @@ function ShotModal({ order, onClose }) {
       {err ? <div className="banner">{err}</div> : url ? <img className="shot-img" src={url} alt="Customer's payment screenshot" /> : <p className="muted">Loading…</p>}
     </Modal>
   );
+}
+
+const STATE_PILL = { waiting: ['warn', 'Book a rider'], booked: ['mute', 'Waiting for the rider'], picked: ['ok', 'On the way'], delivered: ['ok', 'Delivered'] };
+const addrText = (d) => [d.detail, d.landmark && `Landmark: ${d.landmark}`, d.label].filter(Boolean).join('\n');
+
+/** Delivery address and rider status on an order card. */
+function DeliveryInfo({ o }) {
+  const d = o.delivery;
+  const [cls, label] = STATE_PILL[d.state || 'waiting'];
+  return (
+    <div className="kdeliv">
+      <div className="kdeliv-h"><span className={`pill ${cls}`}>{label}</span>
+        <span className="num">{d.free ? <>Free delivery <small className="muted">(shop pays ~{peso(d.fee)})</small></> : <>Fee paid {peso(o.deliveryFee)}</>}</span></div>
+      <b>{d.detail}</b>
+      <small>{d.landmark && <>Landmark: {d.landmark}<br /></>}{d.label}</small>
+      {d.note && <small className="knote-r">Rider note: “{d.note}”</small>}
+      {d.state === 'picked' && d.rider?.name && <small>Rider: <b>{d.rider.name}</b>{d.rider.plate ? ` · ${d.rider.plate}` : ''}{d.rider.phone ? ` · ${d.rider.phone}` : ''}</small>}
+      <a className="linkbtn" href={mapsLink(d.lat, d.lng)} target="_blank" rel="noopener noreferrer">Open pin in Google Maps ↗</a>
+    </div>
+  );
+}
+
+const copy = async (text, setMsg) => { try { await navigator.clipboard.writeText(text); setMsg('Copied'); } catch { setMsg('Select and copy it by hand'); } setTimeout(() => setMsg(''), 1600); };
+
+/** Booking Lalamove: everything to type into the Lalamove app, then "I booked it". */
+function BookModal({ order, settings, onClose, onDone }) {
+  const d = order.delivery;
+  const [cost, setCost] = useState('');
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const drop = `${order.customer} · ${order.phone}\n${addrText(d)}`;
+  return (
+    <Modal title={`Book Lalamove · #${pad(order.no)}`} aside={<span className="pill">{d.km} km</span>} onClose={onClose}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={async () => { setBusy(true); await onDone(cost); setBusy(false); }}>{busy ? 'Saving…' : 'I booked it · Waiting for rider'}</button></>}>
+      <ol className="book-steps">
+        <li>Open the <b>Lalamove</b> app and choose <b>Motorcycle</b>.</li>
+        <li><b>Pick-up:</b> {settings?.name || 'your shop'}{settings?.delivery?.label ? ` (${settings.delivery.label})` : ''}.</li>
+        <li><b>Drop-off:</b> paste the pin link, then add the details below for the rider.</li>
+        <li>Book it, then tap <b>I booked it</b>. The customer sees “Waiting for a rider”.</li>
+      </ol>
+      <div className="book-box">
+        <div><small>Drop-off pin</small><span className="num">{(+d.lat).toFixed(6)}, {(+d.lng).toFixed(6)}</span></div>
+        <button className="btn sm" onClick={() => copy(mapsLink(d.lat, d.lng), setMsg)}>Copy pin link</button>
+      </div>
+      <div className="book-box">
+        <div><small>Details for the rider</small><span style={{ whiteSpace: 'pre-line' }}>{drop}{d.note ? `\nNote: ${d.note}` : ''}</span></div>
+        <button className="btn sm" onClick={() => copy(`${drop}${d.note ? `\nNote: ${d.note}` : ''}`, setMsg)}>Copy</button>
+      </div>
+      {msg && <span className="pill ok">{msg}</span>}
+      <p className="muted" style={{ margin: 0 }}>{d.free ? <>Free delivery for the customer (5+ drinks): <b>the shop pays</b> Lalamove (about {peso(d.fee)}).</> : <>The customer already paid {peso(order.deliveryFee)} for delivery.</>}</p>
+      <Field id="bkCost" label="Lalamove fee you were charged (optional)" hint="For your reports. Leave empty if you don’t know yet.">
+        <input id="bkCost" type="number" inputMode="decimal" min="0" step="any" value={cost} onChange={(e) => setCost(e.target.value)} placeholder={String(d.fee || '')} />
+      </Field>
+    </Modal>
+  );
+}
+
+/** The rider came: their details from the Lalamove app, so the customer can see who is coming. */
+function RiderModal({ order, onClose, onDone, toast }) {
+  const [f, setF] = useState({ name: '', phone: '', plate: '', trackUrl: '' });
+  const { errs, check, clear, fromServer } = useErrors();
+  const [busy, setBusy] = useState(false);
+  const set = (k, v) => { setF({ ...f, [k]: v }); clear(k); };
+  const save = async () => {
+    if (!check(f.name.trim().length < 2 ? { name: 'Enter the rider’s name (from the Lalamove app).' } : {})) return;
+    setBusy(true);
+    try { await api.post(`/online/${order._id}/delivery/picked`, f); onDone(); }
+    catch (e) { fromServer(e, toast); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Modal title={`Rider picked up · #${pad(order.no)}`} onClose={onClose}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'On the way'}</button></>}>
+      <p className="muted" style={{ margin: 0 }}>Copy these from the Lalamove app. The customer sees the rider and can follow them.</p>
+      <div className="row">
+        <Field id="rdName" label="Rider’s name" error={errs.name} style={{ flex: '2 1 180px' }}><input id="rdName" autoFocus maxLength={40} value={f.name} onChange={(e) => set('name', e.target.value)} /></Field>
+        <Field id="rdPlate" label="Plate no. (optional)" error={errs.plate}><input id="rdPlate" maxLength={12} value={f.plate} onChange={(e) => set('plate', e.target.value.toUpperCase())} placeholder="ABC 1234" /></Field>
+      </div>
+      <Field id="rdPhone" label="Rider’s mobile (optional)" error={errs.phone}><input id="rdPhone" inputMode="tel" maxLength={20} value={f.phone} onChange={(e) => set('phone', e.target.value)} placeholder="0917 123 4567" /></Field>
+      <Field id="rdLink" label="Lalamove tracking link (optional)" error={errs.trackUrl} hint="In the Lalamove app: your order → Share. The customer can watch the rider live."><input id="rdLink" maxLength={300} value={f.trackUrl} onChange={(e) => set('trackUrl', e.target.value.trim())} placeholder="https://…lalamove…" /></Field>
+    </Modal>
+  );
+}
+
+const SLIP_CSS = `
+  @page { size: 80mm auto; margin: 4mm; }
+  body { margin: 0; font: 12px/1.4 "Helvetica Neue", Arial, sans-serif; color: #000; }
+  .slip { width: 72mm; }
+  h1 { font-size: 20px; margin: 0; } h2 { font-size: 13px; margin: 8px 0 2px; text-transform: uppercase; letter-spacing: .08em; }
+  .big { font-size: 15px; font-weight: 700; }
+  .qr { display: flex; gap: 8px; align-items: center; margin-top: 8px; } .qr img { width: 30mm; height: 30mm; }
+  hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; } ul { margin: 0; padding-left: 16px; }
+`;
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+/** Delivery slip for the rider / the bag: address, landmark, mobile, drinks and a QR that opens the pin in Google Maps. */
+function printSlip(o, s) {
+  const d = o.delivery;
+  const qr = qrPng(mapsLink(d.lat, d.lng));
+  printHtml(`<div class="slip"><h1>${esc(s?.name || 'Matchéa')} · #${pad(o.no)}</h1><div>Delivery by Lalamove · ${esc(d.km)} km</div><hr>
+    <h2>Deliver to</h2><div class="big">${esc(o.customer)} · ${esc(o.phone)}</div><div>${esc(d.detail)}</div>${d.landmark ? `<div>Landmark: <b>${esc(d.landmark)}</b></div>` : ''}<div>${esc(d.label)}</div>${d.note ? `<div>Note: ${esc(d.note)}</div>` : ''}
+    <div class="qr"><img src="${qr}" alt=""><div>Scan to open the pin in Google Maps</div></div><hr>
+    <h2>Drinks</h2><ul>${o.lines.map((l) => `<li>${l.qty}× ${esc(l.name)}${l.mods ? ` <small>(${esc(l.mods)})</small>` : ''}</li>`).join('')}</ul><hr>
+    <div class="big">PAID${d.free ? ' · Free delivery' : ''}</div></div>`, SLIP_CSS, `Delivery slip #${pad(o.no)}`);
 }

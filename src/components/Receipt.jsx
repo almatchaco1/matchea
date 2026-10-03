@@ -114,7 +114,7 @@ export async function printCupLabels(sale, settings) {
   return '';
 }
 
-function printHtml(body, css, title) {
+export function printHtml(body, css, title) {
   const frame = document.createElement('iframe');
   frame.setAttribute('aria-hidden', 'true');
   Object.assign(frame.style, { position: 'fixed', right: '0', bottom: '0', width: '0', height: '0', border: '0', visibility: 'hidden' });

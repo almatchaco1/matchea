@@ -12,7 +12,7 @@ const WINDOW_H = 3;
 
 const ticket = (s) => ({
   _id: s._id, no: s.no, source: s.status === 'staff' ? 'staff' : s.source, customer: s.customer || '', note: s.pickupNote || '',
-  createdAt: s.source === 'online' ? s.acceptedAt || s.createdAt : s.createdAt, paidOnline: !!s.paidOnline,
+  createdAt: s.source === 'online' ? s.acceptedAt || s.createdAt : s.createdAt, paidOnline: !!s.paidOnline, delivery: s.fulfil === 'delivery',
   lines: s.lines.map((l, i) => ({ i, name: l.name, mods: l.mods || '', qty: l.qty, done: (s.lineDone || []).includes(i),
     product: l.product ? String(l.product) : null, sizeId: l.sizeId || null, milkId: l.milkId || null, addonIds: l.addonIds?.length ? l.addonIds : null })),
 });

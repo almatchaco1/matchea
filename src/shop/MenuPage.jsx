@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { priceLine } from '../shared/pricing.mjs';
 import { ONLINE } from '../shared/rules.mjs';
-import { peso, pad } from '../lib/format';
+import { peso, pad, toneFor } from '../lib/format';
 import StampCard from './StampCard';
 import { CountUp, photoFrom, morphIn, morphOut, useScrollIn } from './fx';
 import { TabInk } from '../lib/motion';
@@ -42,7 +42,7 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
         {active[0] && (
           <button className="mn-active" onClick={() => go('/order/' + active[0].code)}>
             <span className="pulse" aria-hidden="true" />
-            <span><b>Order #{pad(active[0].no)}</b> · {STATUS[active[0].status]}</span>
+            <span><b>Order #{pad(active[0].no)}</b> · {active[0].fulfil === 'delivery' && active[0].status !== 'new' ? { booked: 'Waiting for a rider', picked: 'On the way' }[active[0].riderState] || 'Preparing' : STATUS[active[0].status]}</span>
             <span aria-hidden="true">›</span>
           </button>
         )}
@@ -84,7 +84,7 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
       </nav>
       <div className="mn-grid" key={cat} ref={gridRef}>
         {shown.map((it, i) => (
-          <article key={it._id} className={`mn-card ${it.soldOut ? 'out' : ''}`} style={{ '--i': Math.min(i, 10) }}>
+          <article key={it._id} className={`mn-card ${it.soldOut ? 'out' : ''}`} style={{ '--i': Math.min(i, 10), '--tone': toneFor(it.name) }}>
             <button className={`mn-photo ${sceneVar(it.image) ? 'has-scene' : ''}`} style={sceneVar(it.image)} disabled={it.soldOut || !menu.shop.open} onClick={(e) => { photoFrom(e.currentTarget.querySelector('img')); onPick(it); }} aria-label={`Choose ${it.name}`}>
               {it.image && <img src={it.image} alt="" loading="lazy" />}
               {it.soldOut ? <span className="mn-tag">{it.notAvailable ? 'Not available' : 'Sold out'}</span> : it.bestSeller && <span className="mn-best hanko"><b lang="ja">人気</b>Best seller</span>}

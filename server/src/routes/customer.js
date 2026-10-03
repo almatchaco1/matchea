@@ -313,6 +313,7 @@ r.get('/orders', requireCustomer, ah(async (req, res) => {
   res.json(list.map((s) => ({
     code: s.trackCode, no: s.no, date: s.date, status: s.status === 'void' ? 'cancelled' : s.status, total: s.total,
     createdAt: s.createdAt, paidOnline: !!s.paidOnline, items: s.lines.map((l) => `${l.qty}× ${l.name}`).join(', '),
+    fulfil: s.fulfil || 'pickup', riderState: s.fulfil === 'delivery' ? s.delivery?.state || 'waiting' : null,
     pickupCode: ['new', 'preparing', 'ready'].includes(s.status) ? s.pickupCode || '' : '',
     lines: s.lines.map(({ product, name, mods, qty }) => ({ product, name, mods, qty })),
     rating: s.rating?.stars ? { stars: s.rating.stars, comment: s.rating.comment || '' } : null,

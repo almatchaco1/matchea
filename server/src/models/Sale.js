@@ -27,6 +27,17 @@ const saleSchema = new mongoose.Schema(
     phone: { type: String, default: '' }, // online orders: customer's mobile number
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', index: true, sparse: true },
     pickupNote: { type: String, default: '' },
+    fulfil: { type: String, enum: ['pickup', 'delivery'], default: 'pickup' }, // online orders
+    deliveryFee: { type: Number, default: 0 }, // part of total: what the customer paid for delivery
+    delivery: {
+      lat: Number, lng: Number, label: String, detail: String, landmark: String, note: String,
+      km: Number, approx: Boolean, fee: Number, free: Boolean, // fee: Lalamove estimate; free: 5+ drinks, the shop pays
+      from: { lat: Number, lng: Number }, route: String, // shop pin and the road ("lat,lng;lat,lng;…"), for the map on the order page
+      state: { type: String, enum: ['waiting', 'booked', 'picked', 'delivered'] },
+      bookedAt: Date, bookedBy: String, cost: Number, // cost: what Lalamove actually charged the shop
+      rider: { name: String, phone: String, plate: String }, trackUrl: String,
+      pickedAt: Date, deliveredAt: Date,
+    },
     trackCode: { type: String, index: true, sparse: true }, // secret code in the customer's tracking link
     acceptedAt: Date, readyAt: Date, completedAt: Date, cancelledAt: Date,
     cancelReason: String,

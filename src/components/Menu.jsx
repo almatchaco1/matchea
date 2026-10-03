@@ -11,6 +11,7 @@ import { starterSteps, toSteps } from '../lib/recipe';
 import { AdminBtn } from './Locked';
 import { QrSettingsModal } from './PayQr';
 import DecorPicker from './DecorPicker';
+import DeliverySettings from './DeliverySettings';
 
 export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
   const [switching, setSwitching] = useState('');
@@ -258,6 +259,7 @@ function ShopModal({ s, ingredients, onClose, done, toast }) {
           <input id="sOnMsg" value={f.onlineMessage || ''} maxLength={160} onChange={(e) => set('onlineMessage', e.target.value)} />
         </Field>
       </div>
+      <DeliverySettings f={f} setF={setF} errs={errs} />
       <DecorPicker f={f} set={set} />
       <div className="opt-group">
         <h4>Store info <span className="muted" style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· shown at the bottom of the website. Leave blank what you don’t have yet.</span></h4>

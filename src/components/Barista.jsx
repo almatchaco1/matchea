@@ -119,6 +119,7 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
               <header>
                 <span className="t-no"><i>#</i>{pad(t.no)}</span>
                 <span className={`t-src ${t.source}`}>{t.source === 'online' ? 'Online' : t.source === 'training' ? 'Practice' : t.source === 'staff' ? 'Staff' : 'Counter'}</span>
+                {t.delivery && <span className="dtag">Delivery</span>}
                 <span className="t-time" title="Minutes since ordered">{m < 1 ? 'now' : `${m} min`}</span>
               </header>
               {t.customer && <div className="t-name">{t.customer}</div>}

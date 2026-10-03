@@ -174,7 +174,7 @@ export default function App() {
             {TABS.map(([k, n, who]) => {
               const blocked = (who && !isAdmin) ? 'Admins only' : (training && !TRAIN_TABS.includes(k)) ? 'Not open during training' : '';
               return (
-              <button key={k} role="tab" aria-selected={shownTab === k} onClick={() => !blocked && go(k)} disabled={!!blocked} className={blocked ? 'locked' : undefined} title={blocked || undefined}>
+              <button key={k} data-tab={k} role="tab" aria-selected={shownTab === k} onClick={() => !blocked && go(k)} disabled={!!blocked} className={blocked ? 'locked' : undefined} title={blocked || undefined}>
                 {blocked && <LockIcon />}{n}{k === 'inventory' && lowCount > 0 && <span className="dot">{lowCount}</span>}{k === 'online' && newCount > 0 && <span className="dot new">{newCount}</span>}
               </button>
               );

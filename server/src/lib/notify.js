@@ -22,6 +22,7 @@ export async function sendSms(number, message) {
 /** Text the customer once when staff mark an online order ready. */
 export async function notifyReady(sale) {
   if (!sale?.phone) return;
+  if (sale.fulfil === 'delivery') return; // delivery orders: the customer follows the rider on the order page instead
   const claimed = await Sale.findOneAndUpdate({ _id: sale._id, readyNotified: { $ne: true } }, { readyNotified: true });
   if (!claimed) return; // already texted
   if (sale.customerId) {

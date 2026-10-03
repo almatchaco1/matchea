@@ -8,6 +8,8 @@ import { RollNum } from './fx';
 import { sceneBg } from '../lib/drinkImages';
 import { Doodle } from './art';
 import { useAmountQr, saveQr, openGcash, isPhone } from '../lib/payqr';
+import { checkAddress } from '../shared/delivery.mjs';
+import AddressPicker from './AddressPicker';
 
 export default function CartPage({ menu, me, payFirst, cart, setCart, priced, total: subtotal, go, onEdit, onPlaced }) {
   const payOnline = !!menu?.shop?.payOnline;
@@ -16,7 +18,17 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const noShowRule = !!payFirst && canPayFirst; // 2 recent orders weren't picked up → pay first this time
   const drinkCount = cart.reduce((a, l) => a + (+l.qty || 0), 0);
   const bigOrder = canPayFirst && (subtotal > ONLINE.payFirstOver || drinkCount > ONLINE.payFirstDrinks); // big orders are paid first
-  const pickupOk = menu?.shop?.payAtPickup !== false && !noShowRule && !bigOrder;
+  // Pickup or delivery (delivery is always paid first, so it needs a way to pay first)
+  const dcfg = menu?.shop?.delivery || null;
+  const canDeliver = !!dcfg && canPayFirst;
+  const [fulfil, setFulfil] = useState(() => { try { return sessionStorage.getItem('alm.fulfil') === 'delivery' ? 'delivery' : 'pickup'; } catch { return 'pickup'; } });
+  const delivering = canDeliver && fulfil === 'delivery';
+  const chooseFulfil = (v) => { setFulfil(v); try { sessionStorage.setItem('alm.fulfil', v); } catch {} };
+  const [addr, setAddr] = useState(() => (me.address?.lat ? { ...me.address, pinned: true } : { pinned: false }));
+  const [quote, setQuote] = useState(null);
+  const [addrErrs, setAddrErrs] = useState({});
+  const deliveryCharge = delivering && quote && !quote.tooFar ? quote.charge : 0;
+  const pickupOk = menu?.shop?.payAtPickup !== false && !noShowRule && !bigOrder && !delivering;
   // How to pay: 'gcash' | 'maya' (scan the shop's QR) | 'pm:gcash' | 'pm:paymaya' (PayMongo, opens the app) | 'pickup'
   const pmTypes = payOnline ? (menu?.shop?.payTypes || []).filter((t) => ONLINE_FEE_PCT[t]) : [];
   const options = [...Object.keys(qrs), ...pmTypes.map((t) => 'pm:' + t), ...(pickupOk ? ['pickup'] : [])];
@@ -37,7 +49,8 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const live = priced.filter((l) => !l.missing);
   const freeValue = rewardValue(live.map((l) => menu?.items.find((i) => i._id === l.productId)?.price));
   const freeItem = live.map((l) => menu?.items.find((i) => i._id === l.productId)).filter(Boolean).sort((a, b) => b.price - a.price)[0];
-  const total = useReward && canReward ? computeTotals(subtotal, { type: 'reward', amount: freeValue }).total : subtotal;
+  const itemsTotal = useReward && canReward ? computeTotals(subtotal, { type: 'reward', amount: freeValue }).total : subtotal;
+  const total = Math.round((itemsTotal + deliveryCharge) * 100) / 100; // what the customer pays (with delivery)
   const payable = payOnline && payNow && total > 0;
   const fee = payable ? withOnlineFee(total, payType) : { total, fee: 0 }; // PayMongo's fee, paid by the customer
   const PM_NAME = { gcash: 'GCash', paymaya: 'Maya' };
@@ -55,6 +68,13 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
     setMsg('');
     if (bad.length) { setMsg('Remove the items that are no longer available first.'); return; }
     if (note.length > ONLINE.pickupNote) { setMsg(`The note can be at most ${ONLINE.pickupNote} characters.`); return; }
+    if (delivering) {
+      const e = { ...checkAddress(addr), ...(addr.pinned ? {} : { pin: 'Move the map so the pin is on your place.' }) };
+      setAddrErrs(e);
+      if (Object.keys(e).length) { setMsg('Check your delivery address.'); return; }
+      if (!quote) { setMsg('Please wait for the delivery fee, then try again.'); return; }
+      if (quote.tooFar) { setMsg(`Sorry, we only deliver up to ${dcfg.maxKm} km away. Please choose pickup.`); return; }
+    }
     const cleanRef = cleanQrRef(ref);
     if (needQr) {
       const e = checkQrRef(qrMethod, cleanRef), te = checkPaidTime(paidTime).err || '';
@@ -66,7 +86,8 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
     setBusy(true);
     try {
       const o = await call('POST', '/public/orders', {
-        pickupNote: note, payNow: payable, ...(payable ? { payType } : {}), useReward: useReward && canReward,
+        pickupNote: note, payNow: payable,
+        ...(delivering ? { fulfil: 'delivery', delivery: { lat: addr.lat, lng: addr.lng, label: addr.label || '', detail: addr.detail, landmark: addr.landmark, note: addr.note || '' } } : {}), ...(payable ? { payType } : {}), useReward: useReward && canReward,
         qrPay: needQr ? { method: qrMethod, ref: cleanRef, paidTime, ...(shot ? { shot, shotPrint } : {}) } : undefined,
         lines: cart.map(({ productId, sizeId, addonIds, sweet, note: n, qty }) => ({ productId, sizeId, addonIds, sweet, note: n, qty })),
       });
@@ -79,6 +100,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
       if (e.fields?.qrRef) setRefErr(e.fields.qrRef);
       if (e.fields?.qrShot) setShotMsg(e.fields.qrShot);
       if (e.fields?.qrTime) setTimeErr(e.fields.qrTime);
+      if (e.fields?.pin || e.fields?.detail || e.fields?.landmark) setAddrErrs(e.fields);
       setMsg(e.fields?.phone ? e.fields.phone : e.message);
     } finally { setBusy(false); }
   };
@@ -129,14 +151,23 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
       </section>
 
       <aside className="panel ck-side">
+        {canDeliver && (
+          <div className="ck-fulfil" role="radiogroup" aria-label="Pickup or delivery">
+            <button type="button" role="radio" aria-checked={!delivering} className={!delivering ? 'on' : ''} onClick={() => chooseFulfil('pickup')}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16l-1.5 9.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5Z M8 10V7a4 4 0 0 1 8 0v3" /></svg><span><b>Pickup</b><small>At the shop</small></span></button>
+            <button type="button" role="radio" aria-checked={delivering} className={delivering ? 'on' : ''} onClick={() => chooseFulfil('delivery')}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg><span><b>Delivery</b><small>{dcfg.freeDrinks ? `Free from ${dcfg.freeDrinks} drinks` : 'By Lalamove'}</small></span></button>
+          </div>
+        )}
+        {delivering && <AddressPicker cfg={dcfg} drinks={drinkCount} value={addr} onChange={(a) => { setAddr(a); setAddrErrs({}); }} quote={quote} onQuote={setQuote} errs={addrErrs} />}
         <div className="ck-who">
-          <div><span className="muted">Pickup for</span><b>{me.name}</b>{me.phone ? <span className="num">{me.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span> : me.email ? <span>{me.email}</span> : null}</div>
+          <div><span className="muted">{delivering ? 'Deliver to' : 'Pickup for'}</span><b>{me.name}</b>{me.phone ? <span className="num">{me.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span> : me.email ? <span>{me.email}</span> : null}</div>
           <button className="shop-link" onClick={() => go('/account')}>Change</button>
         </div>
-        <label className="au-field">
+        {!delivering && <label className="au-field">
           <span>Note for the shop <i className="opt">optional</i></span>
           <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={ONLINE.pickupNote} placeholder="Picking up at 3pm" />
-        </label>
+        </label>}
         {canReward && live.length > 0 && (
           <label className={`reward ${useReward ? 'on' : ''}`}>
             <input type="checkbox" checked={useReward} onChange={(e) => setUseReward(e.target.checked)} />
@@ -165,7 +196,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
             <img className="qrpay-img" src={qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`} alt={`Our ${appName} QR code for ${peso(total)}`} />
             {qrImg && <span className="qrpay-auto">✓ {peso(total)} is already in this QR</span>}
             <div className="qrpay-btns">
-              <button type="button" className="sh-btn ghost sm" onClick={async () => { const r = await saveQr(qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`, `al-matcha-${qrMethod}-${Math.round(total)}.png`); if (r !== 'cancelled') setSaved(r); }}>{saved ? 'Saved ✓' : 'Save QR'}</button>
+              <button type="button" className="sh-btn ghost sm" onClick={async () => { const r = await saveQr(qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`, `matchea-${qrMethod}-${Math.round(total)}.png`); if (r !== 'cancelled') setSaved(r); }}>{saved ? 'Saved ✓' : 'Save QR'}</button>
               {phone && qrMethod === 'gcash' && <button type="button" className="sh-btn sm" onClick={openGcash}>Open GCash app</button>}
             </div>
             <ol className="qrpay-steps">
@@ -211,7 +242,10 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
             <p className="muted small" style={{ margin: 0 }}>The shop checks your payment, then starts your drinks.</p>
           </div>
         )}
-        {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - total)}</b></div>}
+        {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - itemsTotal)}</b></div>}
+        {delivering && quote && !quote.tooFar && (
+          <div className="ck-disc ck-deliv"><span>Delivery · {quote.km} km{quote.free ? ` · free from ${dcfg.freeDrinks} drinks` : ''}</span><b>{quote.free ? <><s>{peso(quote.fee)}</s> Free</> : `+${peso(quote.charge)}`}</b></div>
+        )}
         {fee.fee > 0 && <div className="ck-disc ck-fee"><span>Online payment fee ({PM_NAME[payType]})</span><b>+{peso(fee.fee)}</b></div>}
         <div className="ck-total"><span>Total</span><b className="num"><RollNum value={fee.total} format={peso} /></b></div>
         {msg && <div className="shop-alert" role="alert">{msg}</div>}
@@ -219,7 +253,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         <button className="sh-btn big" disabled={busy || !menu.shop.open} onClick={place}>
           {busy ? (payable ? 'Opening secure payment…' : 'Placing order…') : payable ? `Pay ${peso(fee.total)} with ${PM_NAME[payType]}` : needQr ? `I’ve paid · Place order` : `Place order · ${peso(total)}`}
         </button>
-        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your reference number.' : 'Pay at the counter by cash, GCash or Maya.'} Pickup only.</p>
+        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your reference number.' : 'Pay at the counter by cash, GCash or Maya.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
       </aside>
     </div>
   );

@@ -64,6 +64,7 @@ r.post('/:id/ready', ah(async (req, res) => {
 r.post('/:id/complete', ah(async (req, res) => {
   const cur = await Sale.findOne({ _id: req.params.id, source: 'online' });
   if (!cur) throw new HttpError(404, 'Order not found.');
+  if (cur.fulfil === 'delivery') throw new HttpError(400, 'This is a delivery: tap “Delivered” when Lalamove has dropped it off.');
   // Pickup code: the customer tells it, so nobody else can take the order (an admin can let it go without)
   let approvedBy;
   if (cur.pickupCode && String(req.body?.code || '').replace(/\D/g, '') !== cur.pickupCode) {
@@ -89,6 +90,64 @@ r.post('/:id/complete', ah(async (req, res) => {
     pay: { method: pay.method, tendered, change: r2(tendered - cur.total), ref: String(pay.ref || '').trim() },
   });
   if (!cur.stockDeducted) { // completed straight from "new": take the stock now
+    await applyUsage(usageMap(sale.usage), -1, { reason: 'sale', by: req.user.name, sale: sale._id, note: 'Online order' });
+    await Sale.updateOne({ _id: sale._id }, { stockDeducted: true });
+  }
+  res.json(await awardStamps(sale));
+}));
+
+// ---------- Delivery (staff books Lalamove in the Lalamove app, then follows it here) ----------
+const clean = (v, max) => String(v ?? '').trim().replace(/\s+/g, ' ').slice(0, max);
+async function deliveryOrder(id) {
+  const cur = await Sale.findOne({ _id: id, source: 'online' });
+  if (!cur) throw new HttpError(404, 'Order not found.');
+  if (cur.fulfil !== 'delivery') throw new HttpError(400, 'This is a pickup order.');
+  return cur;
+}
+const STATE_LABEL = { waiting: 'waiting to be booked', booked: 'waiting for the rider', picked: 'on the way', delivered: 'delivered' };
+async function step(id, from, update, statuses = ['preparing', 'ready']) {
+  const sale = await Sale.findOneAndUpdate({ _id: id, source: 'online', fulfil: 'delivery', status: { $in: statuses }, 'delivery.state': { $in: from } }, update, { new: true });
+  if (sale) return sale;
+  const cur = await deliveryOrder(id);
+  if (!statuses.includes(cur.status)) throw new HttpError(409, cur.status === 'new' ? 'Accept the order first.' : `This order is ${cur.status === 'paid' ? 'completed' : cur.status}. The list will refresh.`);
+  throw new HttpError(409, `The delivery is ${STATE_LABEL[cur.delivery?.state] || cur.delivery?.state}, so that step isn't available. The list will refresh.`);
+}
+
+// Booked Lalamove: the customer sees "Waiting for a rider". cost (optional) = what Lalamove charged.
+r.post('/:id/delivery/booked', ah(async (req, res) => {
+  const b = req.body || {};
+  const cost = b.cost === '' || b.cost == null ? undefined : +b.cost;
+  if (cost != null && (!Number.isFinite(cost) || cost < 0 || cost > 5000)) throw new HttpError(400, 'Enter the Lalamove fee in pesos, or leave it empty.', { cost: 'Enter the fee in pesos.' });
+  const sale = await step(req.params.id, ['waiting', 'booked'], { 'delivery.state': 'booked', 'delivery.bookedAt': new Date(), 'delivery.bookedBy': req.user.name, ...(cost != null ? { 'delivery.cost': r2(cost) } : {}) });
+  res.json(forStaff(sale));
+}));
+
+// Rider picked up the drinks: the customer sees "On the way" with the rider's details and the Lalamove tracking link
+r.post('/:id/delivery/picked', ah(async (req, res) => {
+  const b = req.body || {};
+  const rider = { name: clean(b.name, 40), phone: clean(b.phone, 20), plate: clean(b.plate, 12).toUpperCase() };
+  const trackUrl = clean(b.trackUrl, 300);
+  const e = {};
+  if (rider.name.length < 2) e.name = 'Enter the rider’s name (from the Lalamove app).';
+  if (rider.phone && !/^(\+?63|0)9\d{9}$/.test(rider.phone.replace(/[\s-]/g, ''))) e.phone = 'Enter a mobile number like 0917 123 4567, or leave it empty.';
+  if (trackUrl && !/^https:\/\/([\w-]+\.)*(lalamove\.com|llm\.ph|lalamove\.ph)(\/|$)/i.test(trackUrl)) e.trackUrl = 'Paste the share link from the Lalamove app (https://…lalamove…), or leave it empty.';
+  assertValid(e);
+  const sale = await step(req.params.id, ['booked'], { status: 'ready', readyAt: new Date(), 'delivery.state': 'picked', 'delivery.pickedAt': new Date(), 'delivery.rider': rider, 'delivery.trackUrl': trackUrl });
+  res.json(forStaff(sale));
+}));
+
+// Rider cancelled: book again
+r.post('/:id/delivery/rebook', ah(async (req, res) => {
+  const sale = await step(req.params.id, ['booked', 'picked'], { 'delivery.state': 'waiting', 'delivery.rider': {}, 'delivery.trackUrl': '' });
+  res.json(forStaff(sale));
+}));
+
+// Delivered: the order is completed (it was paid before it was sent)
+r.post('/:id/delivery/delivered', ah(async (req, res) => {
+  const cur = await deliveryOrder(req.params.id);
+  if (!(cur.paidOnline || cur.qrPay?.verified || cur.total <= 0)) throw new HttpError(400, 'This delivery isn’t marked paid yet. Check the payment first.');
+  const sale = await step(req.params.id, ['picked'], { status: 'paid', completedAt: new Date(), cashier: req.user._id, cashierName: req.user.name, 'delivery.state': 'delivered', 'delivery.deliveredAt': new Date() }, ['ready']);
+  if (!cur.stockDeducted) {
     await applyUsage(usageMap(sale.usage), -1, { reason: 'sale', by: req.user.name, sale: sale._id, note: 'Online order' });
     await Sale.updateOne({ _id: sale._id }, { stockDeducted: true });
   }

@@ -34,6 +34,12 @@ const settingsSchema = new mongoose.Schema(
     decor: { type: [String], default: [] }, // decorations picked by the owner (ids from src/shared/decor.mjs)
     decorGreeting: { type: String, default: '', maxlength: 80 }, // greeting shown on the website home page
     decorPos: { type: Boolean, default: true }, // also show the top string (lights, flags…) on the POS
+    // Delivery by Lalamove (the shop books it). Fee by road distance; free from freeDrinks drinks (the shop pays).
+    delivery: {
+      enabled: { type: Boolean, default: false }, lat: Number, lng: Number, label: { type: String, default: '' },
+      baseFee: { type: Number, default: 49 }, baseKm: { type: Number, default: 2 }, perKm: { type: Number, default: 10 },
+      maxKm: { type: Number, default: 10 }, freeDrinks: { type: Number, default: 5 },
+    },
     backupCopyDir: { type: String, default: '' }, // extra copy of each backup (e.g. Google Drive folder)
     migrations: { type: [String], default: [] }, // one-time setup steps already done (e.g. the default GCash QR)
   },

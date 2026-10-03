@@ -40,7 +40,20 @@ export function Doodle({ kind = 'cart', size = 150 }) {
 export function Loader({ label = 'Whisking…', small }) {
   return (
     <div className={`loader ${small ? 'sm' : ''}`} role="status" aria-live="polite">
-      <div className="loader-art"><Doodle kind="cart" size={small ? 90 : 120} /></div>
+      <div className="loader-art">
+        <svg className="wk" viewBox="0 0 120 120" width={small ? 80 : 110} height={small ? 80 : 110} aria-hidden="true">
+          <defs><linearGradient id="wkGold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#B8913F" /><stop offset=".5" stopColor="#F1DFB0" /><stop offset="1" stopColor="#A57D33" /></linearGradient></defs>
+          <ellipse className="wk-bowl" cx="60" cy="92" rx="44" ry="13" />
+          <ellipse className="wk-tea" cx="60" cy="90" rx="36" ry="9" />
+          <ellipse className="wk-foam" cx="60" cy="90" rx="24" ry="5.5" />
+          <g className="wk-whisk">
+            <rect x="54" y="6" width="12" height="40" rx="5" fill="url(#wkGold)" />
+            <path d="M54 22h12M54 30h12" stroke="#8A6A2C" strokeWidth="1.2" />
+            <path className="wk-tines" d="M55 46c-10 10-14 22-12 36M58 46c-5 12-7 24-5 37M60 46v38M62 46c5 12 7 24 5 37M65 46c10 10 14 22 12 36" />
+          </g>
+          <g className="wk-drops"><circle cx="38" cy="78" r="2" /><circle cx="84" cy="76" r="1.6" /><circle cx="72" cy="70" r="1.3" /></g>
+        </svg>
+      </div>
       <span>{label}</span>
     </div>
   );
@@ -119,6 +132,7 @@ export function LiveCup({ name, sweet, sizeAt = 0, sizes = 1, addons = [] }) {
         {extraMatcha && <span className="lc-dust">{Array.from({ length: 10 }, (_, i) => <b key={i} style={{ '--i': i }} />)}</span>}
         {tops.has('sprinkles') && <span className="lc-sprinkle">{Array.from({ length: 8 }, (_, i) => <b key={i} style={{ '--i': i }} />)}</span>}
         {pct >= 75 && <span className="lc-spark" key={pct}><b /><b /><b /></span>}
+        {pct != null && pct > 0 && <span className="lc-drip" key={`d${pct}`} aria-hidden="true"><b /><b /></span>}
       </div>
       <span className="lc-cap">{sweetWord || 'Your cup'}</span>
     </div>

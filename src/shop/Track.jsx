@@ -7,6 +7,8 @@ import RateOrder from './RateOrder';
 import { confetti } from './fx';
 import { Loader, Doodle, TrackCup } from './art';
 import { ShareDrink } from './share';
+import { createPortal } from 'react-dom';
+import MapView from '../lib/map';
 
 const STEPS = [
   ['new', 'Order received', 'The shop will confirm it shortly.'],
@@ -14,6 +16,15 @@ const STEPS = [
   ['ready', 'Ready for pickup', 'Come to the counter, show your order number and pay.'],
   ['paid', 'Picked up', 'Enjoy! Good Matcha, Good Mood.'],
 ];
+// Delivery orders: the shop books a Lalamove rider, then follows the rider here
+const DSTEPS = [
+  ['new', 'Order received', 'The shop will confirm your payment shortly.'],
+  ['preparing', 'Preparing', 'Your matcha is being whisked.'],
+  ['booked', 'Waiting for a rider', 'We booked a Lalamove rider. They’ll pick up your drinks soon.'],
+  ['picked', 'On the way', 'Your rider is bringing your drinks.'],
+  ['delivered', 'Delivered', 'Enjoy! Good Matcha, Good Mood.'],
+];
+const dStep = (o) => (o.status === 'paid' ? 4 : o.status === 'new' ? 0 : { booked: 2, picked: 3, delivered: 4 }[o.delivery?.state] ?? 1);
 
 // Order status page. Public by code, so PayMongo's return link always works.
 export default function Track({ code, go, onChange, signedIn, mine, onReorder, menu, who }) {
@@ -30,14 +41,16 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
     .then((x) => { setO((prev) => { if (prev && prev.status !== x.status) { onChange?.(); if (['ready', 'paid'].includes(x.status)) setTimeout(() => confetti(document.querySelector('.track-no')), 60); } return x; }); setErr(''); })
     .catch((e) => setErr(e.status === 404 ? 'We couldn’t find this order. Check the link, or ask at the counter.' : e.message)),
   [code]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [splash, setSplash] = useState(false); // thank-you moment right after placing the order
   const loaded = !!o;
   useEffect(() => { // a little celebration right after placing the order (once)
     if (!loaded) return undefined;
     let fresh = false;
     try { fresh = !!sessionStorage.getItem('alm.new.' + code); sessionStorage.removeItem('alm.new.' + code); } catch {}
     if (!fresh) return undefined;
-    setTimeout(() => confetti(document.querySelector('.track-no'), 48), 250);
-    return undefined;
+    setSplash(true);
+    const t1 = setTimeout(() => confetti(document.querySelector('.track-no'), 48), 2300), t2 = setTimeout(() => setSplash(false), 2600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [loaded, code]);
   const waiting = o?.status === 'awaiting_payment';
   // The pickup code card flips open the first time this order shows as ready
@@ -85,6 +98,14 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
 
   return (
     <section className="panel track">
+      {splash && createPortal(
+        <div className="thanks" aria-hidden="true" onClick={() => setSplash(false)}>
+          <div className="thanks-burst">{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ '--a': `${i * (360 / 14)}deg`, '--d': `${(i % 3) * 60}ms` }} />)}</div>
+          <svg className="thanks-no" viewBox="0 0 300 120"><text x="150" y="92" textAnchor="middle">#{pad(o.no)}</text></svg>
+          <b>{o.customer ? `Thank you, ${o.customer}!` : 'Thank you!'}</b>
+          <small>{o.fulfil === 'delivery' ? 'We’ll bring it to you.' : 'We’ll start whisking soon.'}</small>
+        </div>, document.querySelector('.shop') || document.body,
+      )}
       <p className="muted center">Order number <span className="jp" lang="ja">ご注文番号</span></p>
       <div className="track-no-wrap">{o.status === 'ready' && <span className="hanko-stamp" lang="ja" aria-hidden="true">完成</span>}<div className={`track-no ${o.status === 'ready' ? 'is-ready' : ''}`}>#{pad(o.no)}</div></div>
       <p className="center">{o.customer ? `Thanks, ${o.customer}!` : 'Thank you!'}</p>
@@ -100,7 +121,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
             <b>Waiting for payment</b>
             <p>Your order goes to the shop as soon as you pay.{mins > 0 ? ` Please pay within ${mins} minute${mins === 1 ? '' : 's'}.` : ''}</p>
             {o.checkoutUrl && <a className="sh-btn big" href={o.checkoutUrl}>Pay {peso(o.total + (o.onlineFee || 0))} now</a>}
-            <button className="sh-btn ghost" disabled={!!busy} onClick={() => post('pay-later')}>{busy === 'pay-later' ? 'Switching…' : 'Pay at pickup instead'}</button>
+            {o.fulfil !== 'delivery' && <button className="sh-btn ghost" disabled={!!busy} onClick={() => post('pay-later')}>{busy === 'pay-later' ? 'Switching…' : 'Pay at pickup instead'}</button>}
           </div>
         )
       ) : cancelled ? (
@@ -117,14 +138,27 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
             <small>{o.status === 'ready' ? 'Tell this code at the counter to get your order.' : 'You’ll tell this code at the counter when you pick up. Keep it to yourself.'}</small>
           </div>
         )}
-        <ol className="steps">
+        {o.fulfil === 'delivery' && o.delivery && <DeliveryBox o={o} />}
+        {o.fulfil === 'delivery' ? (
+          <ol className="steps">
+            {DSTEPS.map(([k, title, text], i) => {
+              const at = dStep(o);
+              return (
+                <li key={k} className={i < at ? 'done' : i === at ? 'now' : ''}>
+                  <span className="dot" aria-hidden="true" />
+                  <div><b>{title}</b>{i === at && <small>{k === 'new' && o.qrPay && !o.qrPay.verified ? `The shop is checking your ${qr} payment (ref ${o.qrPay.ref}).` : k === 'preparing' && o.status === 'ready' ? 'Your drinks are ready. We’re booking a rider.' : text}</small>}</div>
+                </li>
+              );
+            })}
+          </ol>
+        ) : <ol className="steps">
           {STEPS.map(([k, title, text], i) => (
             <li key={k} className={i < idx ? 'done' : i === idx ? 'now' : ''}>
               <span className="dot" aria-hidden="true" />
               <div><b>{title}</b>{i === idx && <small>{k === 'ready' && o.pickupCode ? `Come to the counter and tell your pickup code.${prepaid ? ' It’s already paid.' : ' Pay when you pick up.'}` : k === 'ready' && prepaid ? 'Come to the counter and show your order number. It’s already paid.' : k === 'new' && o.qrPay && !o.qrPay.verified ? (slowCheck ? `Still checking your ${qr} payment (ref ${o.qrPay.ref}). Sorry for the wait. If it takes much longer, please message the shop.` : `The shop is checking your ${qr} payment (ref ${o.qrPay.ref}). This usually takes a few minutes.`) : text}</small>}</div>
             </li>
           ))}
-        </ol>
+        </ol>}
       </>)}
       <ul className="lines compact">
         {o.lines.map((l, i) => <li key={i}><div className="grow"><b>{l.qty}× {l.name}</b><small>{l.mods}</small></div><b>{peso(l.total)}</b></li>)}
@@ -133,6 +167,9 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
         <div className="ck-disc">
           <span>{o.freeDrink ? 'Free drink (stamp card)' : 'Discount'}</span><b>−{peso(o.discount.amount)}</b>
         </div>
+      )}
+      {o.fulfil === 'delivery' && o.delivery && (
+        <div className="ck-disc ck-deliv"><span>Delivery · {o.delivery.km} km</span><b>{o.delivery.free ? 'Free' : `+${peso(o.deliveryFee)}`}</b></div>
       )}
       {o.onlineFee > 0 && <div className="ck-disc ck-fee"><span>Online payment fee</span><b>+{peso(o.onlineFee)}</b></div>}
       <div className="ck-total">
@@ -170,5 +207,28 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
           : <button className="shop-link center-link" onClick={() => setConfirmCancel(true)}>Cancel order</button>
       )}
     </section>
+  );
+}
+
+/** Delivery address, map with the rider's road, and the rider once they have the drinks. */
+function DeliveryBox({ o }) {
+  const d = o.delivery;
+  const dest = { lat: d.lat, lng: d.lng };
+  return (
+    <div className="dl-box">
+      <MapView mode="view" shop={d.from} dest={dest} route={d.route?.length > 1 ? d.route : null} />
+      {d.state === 'picked' && d.rider && (
+        <div className="dl-rider">
+          <span className="dl-av" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg></span>
+          <div><b>{d.rider.name || 'Your Lalamove rider'}</b><small>{[d.rider.plate && `Plate ${d.rider.plate}`, 'Lalamove'].filter(Boolean).join(' · ')}</small></div>
+          {d.rider.phone && <a className="sh-btn sm ghost" href={`tel:${d.rider.phone.replace(/[^\d+]/g, '')}`}>Call</a>}
+        </div>
+      )}
+      {d.state === 'picked' && d.trackUrl && <a className="sh-btn" href={d.trackUrl} target="_blank" rel="noopener noreferrer">Follow the rider on Lalamove</a>}
+      <div className="dl-addr">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="10" r="2.6" /></svg>
+        <div><b>{d.detail}</b><small>{[d.landmark && `Landmark: ${d.landmark}`, d.label].filter(Boolean).join(' · ')}</small>{d.note && <small>Note: {d.note}</small>}</div>
+      </div>
+    </div>
   );
 }

@@ -133,7 +133,7 @@
 
 /* ---------- Order tracking, account, stamps ---------- */
 .track-no{color:var(--green)}
-.track-no.is-ready{background:linear-gradient(90deg,var(--gold-ink),var(--gold-2),var(--gold-ink))}
+.track-no.is-ready{background-image:linear-gradient(90deg,var(--gold-ink),var(--gold-2),var(--gold-ink))}
 .pk-code{background:#FBF5E6;border-color:rgba(194,155,84,.6)}
 .pk-code .pk-d b{background:var(--card);box-shadow:inset 0 0 0 1.5px rgba(194,155,84,.7);color:var(--green);font-family:var(--serif)}
 .pk-code.ready{background:#F3EBD2;border-color:var(--gold)}
@@ -309,3 +309,134 @@
 @media (prefers-reduced-motion:reduce){.ld-hero h1 em{animation:none}}
 .sh-foot-logo{width:124px}
 .sh-foot .sf-brand .sh-script{font-size:21px;line-height:1.2}
+
+/* ===== Delivery ===== */
+.ck-fulfil{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ck-fulfil button{display:flex;align-items:center;gap:10px;text-align:left;padding:12px 14px;border-radius:16px;border:1.5px solid var(--line);background:#FFFDF8;transition:border-color .2s,background .2s,transform .25s var(--spring),box-shadow .2s}
+.ck-fulfil button:hover{transform:translateY(-2px)}
+.ck-fulfil button svg{width:30px;height:30px;flex:none;padding:5px;border-radius:50%;fill:none;stroke:var(--green);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;background:#F3EAD3;transition:background .2s,stroke .2s}
+.ck-fulfil button span{display:flex;flex-direction:column;line-height:1.2}
+.ck-fulfil button b{font-size:15px}
+.ck-fulfil button small{font-size:12px;color:var(--ink-2)}
+.ck-fulfil button.on{border-color:var(--gold-ink);background:linear-gradient(180deg,#FBF4E2,#F2E6C6);box-shadow:inset 0 0 0 1px var(--gold-ink),0 10px 20px -14px rgba(138,106,44,.8)}
+.ck-fulfil button.on svg{background:var(--forest);stroke:#F1DFB0}
+.ap{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;animation:rise .45s var(--ease-out)}
+.ap-search{position:relative;display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;border-radius:999px;background:#FFFDF8;box-shadow:inset 0 0 0 1.5px var(--line)}
+.ap-search:focus-within{box-shadow:inset 0 0 0 1.5px var(--gold),0 0 0 3px rgba(194,155,84,.2)}
+.ap-search>svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round}
+.ap-search input{flex:1;min-width:0;border:0;background:transparent;padding:9px 2px;outline:0;font-size:15px}
+.shop .ap-locate{width:38px;height:38px;flex:none;border-radius:50%;border:0;background:var(--forest);display:grid;place-items:center}
+.ap-locate svg{width:20px;height:20px;fill:none;stroke:#F1DFB0;stroke-width:1.8;stroke-linecap:round}
+.ap-locate:disabled svg{animation:spin 1s linear infinite}
+.ap-hits{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:700;list-style:none;margin:0;padding:6px;border-radius:16px;background:var(--card);box-shadow:0 18px 40px -16px rgba(20,24,10,.55),inset 0 0 0 1px var(--line);max-height:260px;overflow:auto}
+.ap-hits li{padding:0}
+.ap-hits li.muted{padding:10px 12px;font-size:14px}
+.shop .ap-hits button{width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.3}
+.shop .ap-hits button:hover{background:#F4EAD2}
+.ap-where{display:flex;flex-direction:column;gap:1px;padding:10px 14px;border-radius:14px;background:#F6EEDB;font-size:13.5px}
+.ap-where b{font-size:14px;color:#25331B}
+.ap-where span{color:var(--ink-2);font-size:12.5px}
+.ap-where.hint{background:transparent;border:1.5px dashed rgba(194,155,84,.6);text-align:center}
+.ap-where.hint b{color:var(--gold-ink)}
+.ap-fee{padding:10px 14px;border-radius:14px;background:var(--forest);color:var(--on-forest);font-size:14px;animation:rise .4s var(--ease-out)}
+.ap-fee b{color:#F1DFB0}
+.ap-fee s{opacity:.6;margin-left:4px}
+.ap-fee.free{background:linear-gradient(135deg,#8A6A2C,#C29B54);color:#fff}
+.ap-fee.free b{color:#fff}
+.ap-fee.far{background:var(--bad-bg);color:var(--bad)}
+.ck-deliv b s{opacity:.55;margin-right:4px;font-weight:600}
+.dl-box{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.dl-rider{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--forest);color:var(--on-forest);animation:rise .5s var(--ease-out)}
+.dl-rider b{color:#F1DFB0;display:block}
+.dl-rider small{opacity:.8}
+.dl-rider>div{flex:1;min-width:0}
+.dl-av{width:42px;height:42px;flex:none;border-radius:50%;background:var(--gold);display:grid;place-items:center}
+.dl-av svg{width:24px;height:24px;fill:none;stroke:var(--forest);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;animation:ride 1.4s ease-in-out infinite}
+@keyframes ride{0%,100%{transform:translateX(-1px)}50%{transform:translateX(2px) translateY(-1px)}}
+.shop .dl-rider .sh-btn.ghost{color:#F1DFB0;border-color:rgba(226,200,142,.6)}
+.dl-addr{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:#F6EEDB}
+.dl-addr svg{width:22px;height:22px;flex:none;fill:none;stroke:var(--gold-ink);stroke-width:1.8}
+.dl-addr small{display:block;color:var(--ink-2);font-size:12.5px}
+@media (prefers-color-scheme: dark){
+  .ck-fulfil button,.ap-search,.ap-hits{background:#151A0F}
+  .ck-fulfil button.on{background:#232A17;border-color:var(--gold)}
+  .ck-fulfil button svg{background:#232A17;stroke:var(--gold-2)}
+  .ck-fulfil button.on svg{background:var(--gold);stroke:#16190D}
+  .ap-where,.dl-addr{background:#1C2215}
+  .ap-where b{color:#EEDDB0}
+  .shop .ap-hits button:hover{background:#232A17}
+}
+
+/* ===== Round 4 motion & design ===== */
+/* Gold bamboo whisk loader */
+.wk{overflow:visible}
+.wk-bowl{fill:#2D4320}
+.wk-tea{fill:#8DA35C}
+.wk-foam{fill:#D9E3B4;transform-origin:60px 90px;animation:wkFoam 1.1s ease-in-out infinite}
+.wk-whisk{transform-origin:60px 10px;animation:wkWhisk .5s ease-in-out infinite alternate}
+.wk-tines{fill:none;stroke:#C29B54;stroke-width:2.2;stroke-linecap:round}
+.wk-drops circle{fill:#A9C06E;animation:wkDrop 1s ease-out infinite}
+.wk-drops circle:nth-child(2){animation-delay:.33s}.wk-drops circle:nth-child(3){animation-delay:.66s}
+@keyframes wkWhisk{from{transform:translateX(-9px) rotate(-12deg)}to{transform:translateX(9px) rotate(12deg)}}
+@keyframes wkFoam{0%,100%{transform:scale(1)}50%{transform:scale(1.12,.9)}}
+@keyframes wkDrop{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-16px);opacity:0}}
+.loader{color:var(--gold-ink)}
+
+/* Sweetness: a gold syrup drop falls when you change it */
+.lc-syrup{background:linear-gradient(180deg,#F2D48A,#C99A3E) !important;transition:height .6s cubic-bezier(.34,1.56,.64,1),bottom .6s cubic-bezier(.34,1.56,.64,1)}
+.lc-l{transition:height .6s cubic-bezier(.34,1.56,.64,1),bottom .6s cubic-bezier(.34,1.56,.64,1)}
+.lc-drip{position:absolute;left:50%;top:6%;z-index:4;pointer-events:none}
+.lc-drip b{position:absolute;width:9px;height:12px;margin-left:-4.5px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:linear-gradient(180deg,#F6DE9C,#C99A3E);animation:syrupDrop .8s cubic-bezier(.5,0,.8,.5) both}
+.lc-drip b:nth-child(2){left:10px;width:6px;height:8px;animation-delay:.12s}
+@keyframes syrupDrop{0%{transform:translateY(-20px) scale(.6);opacity:0}25%{opacity:1}100%{transform:translateY(110px) scale(1);opacity:0}}
+
+/* Swipe the home page cups */
+.ld-stage{touch-action:pan-y}
+
+/* Stamp press: new stamps land like an ink stamp */
+.stamps li.press{animation:stampPress .7s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.6s + var(--k,0) * 180ms)}
+.stamps li.press::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(194,155,84,.7);animation:stampRing .7s ease-out both;animation-delay:calc(.8s + var(--k,0) * 180ms);pointer-events:none}
+.stamps li{position:relative}
+@keyframes stampPress{0%{transform:translateY(-34px) scale(1.8) rotate(var(--r,0deg));opacity:0}55%{transform:translateY(0) scale(.88) rotate(var(--r,0deg));opacity:1}100%{transform:scale(1) rotate(var(--r,0deg))}}
+@keyframes stampRing{0%{transform:scale(.6);opacity:0}30%{opacity:1}100%{transform:scale(1.5);opacity:0}}
+
+/* Thank-you moment after ordering */
+.thanks{position:fixed;inset:0;z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:radial-gradient(circle at 50% 45%,rgba(44,59,29,.97),rgba(18,22,10,.98));color:#F5EBD3;animation:thanksIn .35s ease-out,thanksOut .4s ease-in 2.2s forwards;cursor:pointer}
+.thanks b{font-family:var(--serif);font-size:30px;color:#F1DFB0;animation:rise .6s var(--ease-out) 1s both}
+.thanks small{font-size:15px;opacity:.85;animation:rise .6s var(--ease-out) 1.2s both}
+.thanks-no{width:min(82vw,360px);height:auto;overflow:visible}
+.thanks-no text{font-family:var(--serif);font-weight:700;font-size:96px;fill:transparent;stroke:#E2C88E;stroke-width:1.6;stroke-dasharray:420;stroke-dashoffset:420;animation:writeNo 1.1s ease-out .25s forwards,fillNo .5s ease-out 1.1s forwards}
+@keyframes writeNo{to{stroke-dashoffset:0}}
+@keyframes fillNo{to{fill:#F1DFB0}}
+.thanks-burst{position:absolute;left:50%;top:44%;width:0;height:0}
+.thanks-burst i{position:absolute;width:16px;height:9px;margin:-4.5px 0 0 -8px;border-radius:0 100% 0 100%;background:#C29B54;transform:rotate(var(--a)) translateX(0);animation:leafOut 1.2s cubic-bezier(.2,.7,.3,1) both;animation-delay:var(--d)}
+.thanks-burst i:nth-child(3n){background:#8DA35C}.thanks-burst i:nth-child(4n){background:#F1DFB0}
+@keyframes leafOut{0%{transform:rotate(var(--a)) translateX(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:rotate(var(--a)) translateX(min(40vw,190px)) rotate(200deg) scale(1);opacity:0}}
+@keyframes thanksIn{from{opacity:0}}
+@keyframes thanksOut{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){.thanks{display:none}}
+
+/* Flavor color along the bottom of each menu card */
+.mn-card{position:relative}
+.mn-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--tone,#617940),color-mix(in srgb,var(--tone,#617940) 55%,#F1DFB0));pointer-events:none;transform-origin:left;transform:scaleX(.18);transition:transform .5s var(--spring)}
+.mn-card:hover::after,.mn-card:focus-within::after{transform:scaleX(1)}
+@media (hover:none){.mn-card::after{transform:scaleX(1)}}
+
+/* Pickup code: a café ticket with side notches and a gold seal */
+.pk-code{border-style:solid;border-width:1.5px;-webkit-mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat;mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat}
+.pk-code::after{content:"";position:absolute;top:-12px;right:14px;width:46px;height:46px;border-radius:50%;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 19c-4-.8-6.4-4.4-6.4-8.8 3.8.6 6.1 3.7 6.4 8.8Z' fill='%23FFF6DF'/%3E%3Cpath d='M12 19c.2-5.3 3.4-8.8 8-9.9.2 5.3-3.2 9-8 9.9Z' fill='%23FFF6DF'/%3E%3C/svg%3E") center/24px no-repeat,radial-gradient(circle at 35% 30%,#E9D29C,#C29B54 55%,#8A6A2C);
+  box-shadow:0 0 0 3px rgba(194,155,84,.35),0 6px 12px -4px rgba(34,42,20,.5);transform:rotate(-12deg);z-index:3}
+.pk-code.ready::after{animation:sealIn .7s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes sealIn{from{transform:rotate(-40deg) scale(1.8);opacity:0}}
+
+/* My orders: little paper receipts with a torn bottom edge */
+.shop .olist .olist-row{position:relative;background:linear-gradient(180deg,#FFFDF7,#FBF5E6);border:0;border-radius:14px 14px 0 0;padding-bottom:18px;box-shadow:0 10px 22px -18px rgba(34,42,20,.6),inset 0 0 0 1px rgba(194,155,84,.35);
+  -webkit-mask:linear-gradient(#000 calc(100% - 8px),transparent 0),radial-gradient(circle 6px at 8px 100%,transparent 96%,#000) 0 100%/16px 8px repeat-x;mask:linear-gradient(#000 calc(100% - 8px),transparent 0),radial-gradient(circle 6px at 8px 100%,transparent 96%,#000) 0 100%/16px 8px repeat-x}
+.shop .olist .olist-row>div:first-child{position:relative;padding-left:12px;border-left:2px dashed rgba(194,155,84,.45)}
+.shop .olist .olist-row b{font-variant-numeric:tabular-nums}
+.olist-dl{font-style:normal;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--forest);color:#F1DFB0;font-size:11px;font-weight:700;vertical-align:2px}
+@media (prefers-color-scheme: dark){
+  .shop .olist .olist-row{background:linear-gradient(180deg,#1C2215,#171C11);box-shadow:inset 0 0 0 1px rgba(211,178,107,.2)}
+}

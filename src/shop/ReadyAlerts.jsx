@@ -22,8 +22,9 @@ export function chime() {
 /** Tell the customer their order is ready, whichever page they're on. */
 export function alertReady(order, shopName, onClick) {
   chime();
-  const title = `Order #${pad(order.no)} is ready!`;
-  const body = `${shopName || 'Matchéa'}: come to the counter and ${order.pickupCode ? `tell your pickup code ${order.pickupCode}` : 'show your order number'}.${order.paidOnline ? ' It’s already paid.' : ''}`;
+  const dl = order.fulfil === 'delivery';
+  const title = dl ? `Order #${pad(order.no)} is on the way!` : `Order #${pad(order.no)} is ready!`;
+  const body = dl ? `${shopName || 'Matchéa'}: your Lalamove rider has your drinks.` : `${shopName || 'Matchéa'}: come to the counter and ${order.pickupCode ? `tell your pickup code ${order.pickupCode}` : 'show your order number'}.${order.paidOnline ? ' It’s already paid.' : ''}`;
   if (supported() && Notification.permission === 'granted') {
     try {
       const n = new Notification(title, { body, tag: `ready-${order.code}`, icon: '/logo192.png' });

@@ -17,17 +17,19 @@ r.get('/summary', ah(async (req, res) => {
   const { from, to } = dayRange(req.query, shopTime().date, LIMITS.reportDays);
   // added up here rather than in the database, so it works the same on every MongoDB host
   const [sales, voids] = await Promise.all([
-    Sale.find({ date: { $gte: from, $lte: to }, status: 'paid' }, 'date hour subtotal total vat discount.amount pay.method lines.name lines.qty lines.total').lean(),
+    Sale.find({ date: { $gte: from, $lte: to }, status: 'paid' }, 'date hour subtotal total vat discount.amount pay.method lines.name lines.qty lines.total fulfil deliveryFee delivery.fee delivery.cost delivery.free').lean(),
     Sale.countDocuments({ date: { $gte: from, $lte: to }, status: 'void' }),
   ]);
   const add = (a, b) => Math.round((a + (+b || 0)) * 100) / 100;
   const t = { gross: 0, net: 0, disc: 0, vat: 0 };
   const byDay = {}, pay = {}, items = {}, hours = Array(24).fill(0);
+  const del = { orders: 0, fees: 0, cost: 0, free: 0 }; // delivery: fees customers paid, what Lalamove cost the shop
   for (const x of sales) {
     t.gross = add(t.gross, x.subtotal); t.net = add(t.net, x.total); t.disc = add(t.disc, x.discount?.amount); t.vat = add(t.vat, x.vat);
     const d = (byDay[x.date] ||= { date: x.date, net: 0, orders: 0 }); d.net = add(d.net, x.total); d.orders++;
     if (x.hour != null) hours[x.hour] = add(hours[x.hour], x.total);
     const m = x.pay?.method || 'cash'; const p = (pay[m] ||= { method: m, net: 0, orders: 0 }); p.net = add(p.net, x.total); p.orders++;
+    if (x.fulfil === 'delivery') { del.orders++; del.fees = add(del.fees, x.deliveryFee); del.cost = add(del.cost, x.delivery?.cost ?? x.delivery?.fee); if (x.delivery?.free) del.free++; }
     for (const l of x.lines || []) { const it = (items[l.name] ||= { name: l.name, qty: 0, sales: 0 }); it.qty += l.qty || 0; it.sales = add(it.sales, l.total); }
   }
   const list = Object.values(items).sort((a, b) => b.qty - a.qty || b.sales - a.sales);
@@ -38,6 +40,7 @@ r.get('/summary', ah(async (req, res) => {
     hours,
     pay: Object.values(pay).sort((a, b) => b.net - a.net),
     items: list,
+    delivery: del,
   });
 }));
 
@@ -88,7 +91,7 @@ function staffSummary(list, cost) {
 // ---------- End-of-day closing: ?date=YYYY-MM-DD ----------
 async function closing(date) {
   const [sales, close, waste] = await Promise.all([
-    Sale.find({ date }, 'no source status createdAt cashierName customer lines subtotal discount total vat pay voidedBy voidReason voidedAt refundDue stampsUsed qrPay paidOnline staffForName cost usage').sort({ createdAt: 1 }).lean(),
+    Sale.find({ date }, 'no source status createdAt cashierName customer lines subtotal discount total vat pay voidedBy voidReason voidedAt refundDue stampsUsed qrPay paidOnline staffForName cost usage fulfil deliveryFee delivery').sort({ createdAt: 1 }).lean(),
     DayClose.findOne({ date }).lean(),
     movesInDays('waste', date, date),
   ]);
@@ -120,6 +123,7 @@ async function closing(date) {
     unfinished: sales.filter((x) => ['new', 'preparing', 'ready'].includes(x.status)).length,
     top: Object.values(items).sort((a, b) => b.qty - a.qty || b.sales - a.sales).slice(0, 5),
     cashiers: Object.values(cashiers).sort((a, b) => b.net - a.net),
+    delivery: { orders: paid.filter((x) => x.fulfil === 'delivery').length, fees: sum(paid, (x) => (x.fulfil === 'delivery' ? x.deliveryFee : 0)), cost: sum(paid, (x) => (x.fulfil === 'delivery' ? x.delivery?.cost ?? x.delivery?.fee : 0)) },
     waste: { count: waste.length, value: r2(waste.reduce((a, m) => a + moveValue(m), 0)) },
     staff: staffSummary(sales.filter((x) => x.status === 'staff'), await costMap()),
     closed: close?.closedAt ? { at: close.closedAt, by: close.closedBy, cashCounted: close.cashCounted, cashExpected: close.cashExpected, note: close.note, net: close.net, orders: close.orders } : null,
