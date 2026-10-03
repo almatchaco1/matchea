@@ -16,6 +16,7 @@ import { Loader, Avatar } from './art';
 import { Privacy, Terms } from './Legal';
 import { DecorString, DecorHang, DecorBg } from '../lib/decor';
 import './shop.css';
+import './matchea.css';
 
 const PROTECTED = /^\/(menu|cart|account|orders|welcome)(\/|$)/;
 const CART = 'alm.cart';
@@ -231,8 +232,8 @@ function Header({ me, go, path, count, shop, activeCount, decor }) {
       <DecorString decor={decor} />
       <DecorHang decor={decor} />
       <a href="/" className="sh-brand" onClick={brandClick}>
-        <img className="sh-logo" src="/brand/logo-small.svg" alt="" width="44" height="44" />
-        <span className="sh-name">{shop?.name || 'AL Matcha Co'}</span>
+        <img className="sh-logo" src="/brand/matchea-seal.webp" alt="" width="44" height="44" />
+        <span className="sh-name">{shop?.name || 'Matchéa'}</span>
       </a>
       {me ? (
         <nav className="sh-nav">
@@ -267,9 +268,9 @@ function Footer({ shop }) {
     <footer className="sh-foot">
       <svg className="sf-wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 34c120-22 240-30 360-18s240 40 360 38 240-34 360-40 240 14 360 22v24H0Z" /></svg>
       <div className="sf-brand">
-        <img className="sh-foot-logo" src="/brand/logo-light.svg" alt="" width="64" height="64" />
+        <img className="sh-foot-logo" src="/brand/matchea-word.webp" alt="" width="150" height="85" />
         <div>
-          <b>{s.name || 'AL Matcha Co'}</b>
+          <b>{s.name || 'Matchéa'}</b>
           <span className="sh-script">Good Matcha, Good Mood</span>
         </div>
       </div>
@@ -296,7 +297,7 @@ function Footer({ shop }) {
           )}
         </div>
       )}
-      <p className="sf-copy">© {new Date().getFullYear()} {s.name || 'AL Matcha Co'} · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms</a></p>
+      <p className="sf-copy">© {new Date().getFullYear()} {s.name || 'Matchéa'} · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms</a></p>
     </footer>
   );
 }

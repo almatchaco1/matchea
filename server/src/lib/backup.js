@@ -53,7 +53,7 @@ async function copyDir() {
 }
 export function checkCopyDir(dir) {
   if (!dir) return '';
-  if (!path.isAbsolute(dir)) return 'Use the full folder path, like /Users/you/Google Drive/My Drive/AL Matcha backups';
+  if (!path.isAbsolute(dir)) return 'Use the full folder path, like /Users/you/Google Drive/My Drive/Matchea backups';
   try { if (!fs.statSync(dir).isDirectory()) return 'That is a file, not a folder.'; } catch { return 'That folder doesn’t exist on the computer running the server. Create it first.'; }
   try { fs.accessSync(dir, fs.constants.W_OK); } catch { return 'The server can’t save files in that folder.'; }
   if (path.resolve(dir) === BACKUP_DIR) return 'Choose a different folder from the main backups folder.';
@@ -91,7 +91,7 @@ function prune() {
 
 export function readBackup(file) {
   const doc = EJSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8'), { relaxed: false });
-  if (doc?.app !== 'al-matcha-pos' || !doc.collections) throw new Error('This is not an AL Matcha Co backup file.');
+  if (doc?.app !== 'al-matcha-pos' || !doc.collections) throw new Error('This is not a Matchéa backup file.');
   return doc;
 }
 

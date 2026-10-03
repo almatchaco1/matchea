@@ -13,7 +13,7 @@ export const mask = (kind, to) => kind === 'email'
   ? to.replace(/^(.)(.*?)(.?)@/, (_, a, mid, b) => `${a}${'•'.repeat(Math.min(6, Math.max(2, mid.length)))}${b}@`)
   : to.replace(/^(\d{4})\d{3}(\d{4})$/, '$1 ••• $2');
 
-async function deliver(kind, to, code, pending = {}, shopName = 'AL Matcha Co') {
+async function deliver(kind, to, code, pending = {}, shopName = 'Matchéa') {
   const reset = pending?.type === 'reset', confirmEmail = pending?.type === 'email';
   if (kind === 'sms') {
     const r = await sendSms(to, `${code} is your ${shopName} code. It expires in ${CODE_MIN} minutes. Never share it with anyone.`);

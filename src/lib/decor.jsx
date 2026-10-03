@@ -1,5 +1,5 @@
 // Decorations picked by the owner (Menu → Shop & options → Decorations), for the website and the POS.
-// Colors stay in the AL Matcha palette: matcha green, blush pink, cream and a little gold.
+// Colors stay in the Matchéa palette: deep matcha green, gold and cream.
 import { DECOR, decorKind } from '../shared/decor.mjs';
 import './decor.css';
 

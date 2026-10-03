@@ -1,4 +1,4 @@
-// Starter data: the AL Matcha Co menu. Run once: `npm run seed`
+// Starter data: the Matchéa menu. Run once: `npm run seed`
 // Safe to re-run: it only fills an empty database (use --reset to wipe menu + stock first).
 import 'dotenv/config';
 import mongoose from 'mongoose';
@@ -50,7 +50,7 @@ if (await Ingredient.estimatedDocumentCount()) {
 
   await Settings.create({
     key: 'shop',
-    name: 'AL Matcha Co',
+    name: 'Matchéa',
     footer: 'Good Matcha, Good Mood. Thank you!',
     vat: 0, // not VAT-registered
     sizes: [
@@ -85,7 +85,7 @@ if (await Ingredient.estimatedDocumentCount()) {
     image: imageFor(name), addons: addonIdsFor(name, shopAddons), bestSeller: /putobumbong|s'mores/i.test(name),
     recipe: [['matcha', M], ...extra].map(([ing, qty]) => ({ ing: I[ing], qty })),
   })));
-  console.log(`Seeded ${ings.length} ingredients, ${drinks.length} drinks and shop options for AL Matcha Co.`);
+  console.log(`Seeded ${ings.length} ingredients, ${drinks.length} drinks and shop options for Matchéa.`);
 }
 
 const adminName = (process.env.ADMIN_NAME || 'Owner').trim();

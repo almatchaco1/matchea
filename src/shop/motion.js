@@ -21,7 +21,7 @@ export function flyToCart(img) {
   Object.assign(ghost.style, {
     position: 'fixed', left: `${a.left + a.width / 2 - size / 2}px`, top: `${a.top + a.height / 2 - size / 2}px`,
     width: `${size}px`, height: `${size}px`, objectFit: 'contain', zIndex: 1000, pointerEvents: 'none', margin: 0, padding: 0,
-    filter: 'drop-shadow(0 10px 12px rgba(29,46,24,.3))',
+    filter: 'drop-shadow(0 10px 12px rgba(30,36,24,.3))',
   });
   document.body.appendChild(ghost);
   const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);

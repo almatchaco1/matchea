@@ -25,12 +25,12 @@ export const DECOR = [
 ];
 
 export const GREETINGS = [
-  'Maligayang Pasko! Merry Christmas from AL Matcha',
+  'Maligayang Pasko! Merry Christmas from Matchéa',
   'Happy New Year! Manigong Bagong Taon',
   'Happy Valentine’s! Share a matcha with someone sweet',
   'Sakura season: spring matcha days',
   'Tag-ulan? Stay cozy with a warm matcha',
-  'Mabuhay! Happy fiesta from AL Matcha',
+  'Mabuhay! Happy fiesta from Matchéa',
   'Happy anniversary to us! Thank you for your support',
 ];
 

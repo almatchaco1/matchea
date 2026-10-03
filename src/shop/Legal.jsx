@@ -2,7 +2,7 @@
 const UPDATED = 'September 25, 2026';
 
 export function Privacy({ shop }) {
-  const name = shop?.name || 'AL Matcha Co';
+  const name = shop?.name || 'Matchéa';
   const email = shop?.email || 'almatchaco1@gmail.com';
   return (
     <article className="panel legal">
@@ -50,7 +50,7 @@ export function Privacy({ shop }) {
 }
 
 export function Terms({ shop }) {
-  const name = shop?.name || 'AL Matcha Co';
+  const name = shop?.name || 'Matchéa';
   const email = shop?.email || 'almatchaco1@gmail.com';
   return (
     <article className="panel legal">

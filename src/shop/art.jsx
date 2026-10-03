@@ -60,7 +60,7 @@ export function TrackCup({ status }) {
       <svg viewBox="0 0 120 150">
         <defs>
           <clipPath id="tcupClip"><path d="M20 22h80l-9.5 112a6 6 0 0 1-6 5.5h-49a6 6 0 0 1-6-5.5Z" /></clipPath>
-          <linearGradient id="tcupTea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9CC46A" /><stop offset=".55" stopColor="#6E9E3E" /><stop offset="1" stopColor="#F6E9EC" /></linearGradient>
+          <linearGradient id="tcupTea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9DB777" /><stop offset=".55" stopColor="#637C41" /><stop offset="1" stopColor="#F5F0E5" /></linearGradient>
         </defs>
         <path className="tc-straw" d="M72 2l-6 40" />
         <g clipPath="url(#tcupClip)">
@@ -73,7 +73,7 @@ export function TrackCup({ status }) {
         <path className="tc-cup" d="M20 22h80l-9.5 112a6 6 0 0 1-6 5.5h-49a6 6 0 0 1-6-5.5Z" />
         <rect className="tc-lid" x="14" y="14" width="92" height="10" rx="5" />
         <circle className="tc-seal" cx="60" cy="86" r="15" />
-        <text className="tc-al" x="60" y="92">AL</text>
+        <g className="tc-al"><path d="M60 95c-7.5-1.6-12-7.5-12-15.5 7 1.2 11.4 6.6 12 15.5Z" /><path d="M60 95c.4-9.6 6.2-16 15-18 .2 9.6-6 16.4-15 18Z" /></g>
       </svg>
       {status === 'ready' && <><i className="tc-spark a">✦</i><i className="tc-spark b">✦</i><i className="tc-spark c">✧</i></>}
     </div>

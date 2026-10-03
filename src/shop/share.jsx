@@ -39,23 +39,23 @@ export async function makeDrinkCard({ item, size, sweet, addons = [], who, shop 
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
 
-  // Background: blush paper with soft matcha + pink glows and paper specks
-  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#FCF1F2'); bg.addColorStop(1, '#F4DCE0'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  // Background: cream paper with soft matcha + gold glows and paper specks
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#F9F6EF'); bg.addColorStop(1, '#F1E9DA'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
   const glow = (x, y, r, col) => { const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, H); };
-  glow(980, 160, 520, 'rgba(196,224,160,.55)'); glow(80, 1180, 560, 'rgba(236,170,186,.45)');
+  glow(980, 160, 520, 'rgba(196,215,169,.55)'); glow(80, 1180, 560, 'rgba(222,209,184,.45)');
   let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${rnd() > .5 ? '120,90,80' : '255,255,255'},${0.05 + rnd() * 0.08})`; g.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2.5, 1 + rnd() * 2.5); }
 
   // Header: logo + shop name
-  try { const logo = await loadImg('/brand/logo-small.svg'); g.drawImage(logo, 72, 64, 92, 92); } catch {}
-  g.fillStyle = '#1F3A1B'; g.font = `700 44px ${serif}`; g.textBaseline = 'middle'; g.fillText(shop?.name || 'AL Matcha Co', 184, 98);
-  g.fillStyle = '#5A6852'; g.font = `700 22px ${sans}`; g.fillText('GOOD MATCHA, GOOD MOOD', 186, 140);
+  try { const logo = await loadImg('/brand/matchea-seal.png'); g.drawImage(logo, 72, 64, 92, 92); } catch {}
+  g.fillStyle = '#232E1B'; g.font = `700 44px ${serif}`; g.textBaseline = 'middle'; g.fillText(shop?.name || 'Matchéa', 184, 98);
+  g.fillStyle = '#505749'; g.font = `700 22px ${sans}`; g.fillText('GOOD MATCHA, GOOD MOOD', 186, 140);
 
   // Arch with the drink photo
   const ax = 190, ay = 200, aw = 700, ah = 700;
   g.save(); g.beginPath(); g.moveTo(ax, ay + ah); g.lineTo(ax, ay + aw / 2); g.arc(ax + aw / 2, ay + aw / 2, aw / 2, Math.PI, 0); g.lineTo(ax + aw, ay + ah); g.closePath();
-  const ag = g.createRadialGradient(W / 2, ay + 230, 40, W / 2, ay + 380, 520); ag.addColorStop(0, '#3F7A2C'); ag.addColorStop(1, '#1C3F15');
-  g.fillStyle = ag; g.shadowColor = 'rgba(31,58,27,.35)'; g.shadowBlur = 60; g.shadowOffsetY = 30; g.fill(); g.restore();
+  const ag = g.createRadialGradient(W / 2, ay + 230, 40, W / 2, ay + 380, 520); ag.addColorStop(0, '#46602F'); ag.addColorStop(1, '#223117');
+  g.fillStyle = ag; g.shadowColor = 'rgba(35,46,27,.35)'; g.shadowBlur = 60; g.shadowOffsetY = 30; g.fill(); g.restore();
   g.save(); g.beginPath(); g.moveTo(ax + 22, ay + ah); g.lineTo(ax + 22, ay + aw / 2); g.arc(ax + aw / 2, ay + aw / 2, aw / 2 - 22, Math.PI, 0); g.lineTo(ax + aw - 22, ay + ah);
   g.strokeStyle = 'rgba(255,255,255,.22)'; g.lineWidth = 3; g.stroke(); g.restore();
   // big 抹茶 in the arch
@@ -75,16 +75,16 @@ export async function makeDrinkCard({ item, size, sweet, addons = [], who, shop 
 
   // Hanko stamp
   g.save(); g.translate(868, 830); g.rotate(-0.16);
-  roundRect(g, -64, -64, 128, 128, 18); g.fillStyle = 'rgba(252,241,242,.96)'; g.fill(); g.lineWidth = 7; g.strokeStyle = '#C0475F'; g.stroke();
-  g.fillStyle = '#C0475F'; g.textAlign = 'center'; g.font = `800 40px ${serif}`; g.fillText('私の', 0, -20); g.fillText('一杯', 0, 28); g.restore();
+  roundRect(g, -64, -64, 128, 128, 18); g.fillStyle = 'rgba(249,246,239,.96)'; g.fill(); g.lineWidth = 7; g.strokeStyle = '#AD915A'; g.stroke();
+  g.fillStyle = '#AD915A'; g.textAlign = 'center'; g.font = `800 40px ${serif}`; g.fillText('私の', 0, -20); g.fillText('一杯', 0, 28); g.restore();
 
   // Who it belongs to
   g.textAlign = 'center';
-  g.fillStyle = '#C0475F'; g.font = `700 50px ${script}`;
+  g.fillStyle = '#AD915A'; g.font = `700 50px ${script}`;
   g.fillText(who ? `Made ${who}’s way` : 'Made my way', W / 2, 960);
 
   // Drink name
-  g.fillStyle = '#1F3A1B';
+  g.fillStyle = '#232E1B';
   const fs = fitText(g, item.name, 900, 78, 800, serif);
   const lines = fs < 58 ? (g.font = `800 64px ${serif}`, twoLines(g, item.name, 900)) : [item.name];
   if (lines.length > 1) g.font = `800 ${fitText(g, lines.reduce((a, b) => (a.length > b.length ? a : b)), 900, 64, 800, serif)}px ${serif}`;
@@ -102,7 +102,7 @@ export async function makeDrinkCard({ item, size, sweet, addons = [], who, shop 
       let x = W / 2 - rw[ri] / 2; const y = 1130 + ri * 70 - (lines.length > 1 ? -18 : 0);
       row.forEach((i) => {
         const w = widths[i], add = chips[i].startsWith('+');
-        roundRect(g, x, y, w, 56, 28); g.fillStyle = add ? '#F3C94A' : '#2B5A20'; g.fill();
+        roundRect(g, x, y, w, 56, 28); g.fillStyle = add ? '#F3C94A' : '#324623'; g.fill();
         g.fillStyle = add ? '#3A2A00' : '#fff'; g.textAlign = 'left'; g.fillText(chips[i], x + pads, y + 29); x += w + gap;
       });
     });
@@ -113,7 +113,7 @@ export async function makeDrinkCard({ item, size, sweet, addons = [], who, shop 
   const host = /localhost|127\.0\.0\.1|trycloudflare/.test(window.location.host) ? '' : window.location.host;
   const ig = (shop?.instagram || '').match(/instagram\.com\/([^/?#]+)/i)?.[1];
   const foot = [host && `Order ahead at ${host}`, ig && `@${ig}`].filter(Boolean).join('   ·   ') || 'Order ahead on our website';
-  g.fillStyle = '#5A6852'; g.font = `700 26px ${sans}`; g.fillText(foot, W / 2, 1290);
+  g.fillStyle = '#505749'; g.font = `700 26px ${sans}`; g.fillText(foot, W / 2, 1290);
 
   return new Promise((ok, bad) => c.toBlob((b) => (b ? ok(b) : bad(new Error('Could not make the picture.'))), 'image/png'));
 }
@@ -140,7 +140,7 @@ export function ShareDrink({ card, onClose }) {
   const file = blob ? new File([blob], fileName(card.item.name), { type: 'image/png' }) : null;
   const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
   const share = async () => {
-    try { await navigator.share({ files: [file], title: card.item.name, text: `My ${card.item.name} from ${card.shop?.name || 'AL Matcha Co'} 🍵` }); }
+    try { await navigator.share({ files: [file], title: card.item.name, text: `My ${card.item.name} from ${card.shop?.name || 'Matchéa'} 🍵` }); }
     catch (e) { if (e?.name !== 'AbortError') setNote('Sharing didn’t work here. Use Save picture instead.'); }
   };
   const save = () => {

@@ -73,7 +73,7 @@ export default function Reports({ data, toast, isAdmin, refresh, goInventory }) 
         isAdmin ? api.get(`/reports/profit?from=${from}&to=${to}`) : null, api.get(`/reports/busy?from=${from}&to=${to}`),
       ]);
       const list = o.filter((x) => ['paid', 'void', 'staff'].includes(x.status)).reverse();
-      const title = `${data.settings?.name || 'AL Matcha Co'} · ${label(from, to)}`;
+      const title = `${data.settings?.name || 'Matchéa'} · ${label(from, to)}`;
       const sheets = [
         { name: 'Summary', title, columns: [{ header: 'What', width: 30 }, { header: 'Amount', type: 'peso', width: 16 }], rows: [
           ['Net sales', s.net], ['Orders', { v: s.orders }], ['Average order', s.orders ? s.net / s.orders : 0], ['Discounts given', s.disc],

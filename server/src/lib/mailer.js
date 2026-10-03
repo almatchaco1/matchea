@@ -28,7 +28,7 @@ async function withFallback(fn) {
 }
 
 export async function sendMail({ to, subject, text, html }) {
-  const from = process.env.MAIL_FROM || `AL Matcha Co <${String(process.env.SMTP_USER || '').trim()}>`;
+  const from = process.env.MAIL_FROM || `Matchéa <${String(process.env.SMTP_USER || '').trim()}>`;
   if (process.env.MAIL_LOG) { // testing only: write the email to a file instead of sending it
     fs.appendFileSync(process.env.MAIL_LOG, JSON.stringify({ at: new Date(), to, subject, text }) + '\n');
     return { logged: true };

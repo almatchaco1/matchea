@@ -180,7 +180,7 @@ const ClosingSlip = ({ ref, c, s = {}, cash, note }) => {
   const diff = cash !== '' ? Math.round((+cash - c.cashExpected) * 100) / 100 : null;
   return (
     <div className="receipt" ref={ref}>
-      <div className="c big">{s.name || 'AL Matcha Co'}</div>
+      <div className="c big">{s.name || 'Matchéa'}</div>
       <div className="c">End of day · {nice(c.date)}</div>
       {c.closed && <div className="c">Closed by {c.closed.by}</div>}
       <hr />

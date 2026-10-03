@@ -34,12 +34,12 @@ function PaperCard({ ready, extra, have }) {
       <div className="sc-inner">
         <div className="sc-face sc-front" aria-hidden={flipped}>
           <div className="stampcard-h">
-            <div><p className="sc-kicker">AL Matcha Co · Loyalty card</p><h2>Stamp card</h2><p>Buy {STAMPS_PER_REWARD} drinks, get the 10th free.</p></div>
+            <div><p className="sc-kicker">Matchéa · Loyalty card</p><h2>Stamp card</h2><p>Buy {STAMPS_PER_REWARD} drinks, get the 10th free.</p></div>
             {ready > 0 && <button type="button" className="stamp-ready" onClick={() => setFlipped(true)}>{ready === 1 ? '1 free drink ready' : `${ready} free drinks ready`} ↻</button>}
           </div>
           <ol className="stamps">
             {Array.from({ length: STAMPS_PER_REWARD }, (_, i) => (
-              <li key={i} className={i < have ? 'on' : ''} style={{ '--i': i, '--r': `${((i * 37) % 22) - 11}deg` }}><span aria-hidden="true">{i < have ? 'AL' : i + 1}</span></li>
+              <li key={i} className={i < have ? 'on' : ''} style={{ '--i': i, '--r': `${((i * 37) % 22) - 11}deg` }}><span aria-hidden="true">{i < have ? <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 21c-5-1-8-5.5-8-11 4.8.8 7.6 4.6 8 11Z" fill="currentColor" /><path d="M12 21c.3-6.6 4.2-11 10-12.4.2 6.6-4 11.3-10 12.4Z" fill="currentColor" /></svg> : i + 1}</span></li>
             ))}
             <li className={`free ${ready ? 'on' : ''}`}><span>FREE</span></li>
           </ol>

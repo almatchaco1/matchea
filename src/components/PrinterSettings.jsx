@@ -46,7 +46,7 @@ export default function PrinterSettings({ onClose, toast }) {
             <div className="field"><label htmlFor="psW">Paper width</label>
               <select id="psW" value={s.width} onChange={(e) => save({ width: +e.target.value })}><option value={32}>58 mm (small)</option><option value={48}>80 mm (wide)</option></select></div>
           </div>
-          <label className="check-row"><input type="checkbox" checked={s.logo !== false} onChange={(e) => save({ logo: e.target.checked })} /> Print the AL Matcha Co logo at the top</label>
+          <label className="check-row"><input type="checkbox" checked={s.logo !== false} onChange={(e) => save({ logo: e.target.checked })} /> Print the Matchéa logo at the top</label>
           <label className="check-row"><input type="checkbox" checked={s.auto} onChange={(e) => save({ auto: e.target.checked })} /> Print the receipt automatically after each sale</label>
           <label className="check-row"><input type="checkbox" checked={!!s.labels} onChange={(e) => save({ labels: e.target.checked })} /> Print cup labels automatically after each sale (one per drink, with the customer’s name)</label>
 

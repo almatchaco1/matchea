@@ -273,9 +273,9 @@ function ShopModal({ s, ingredients, onClose, done, toast }) {
           <textarea id="sHours" rows={3} maxLength={160} value={f.hours || ''} placeholder={'Mon–Sat 10:00 AM – 8:00 PM\nSunday 12:00 – 6:00 PM'} onChange={(e) => set('hours', e.target.value)} />
         </Field>
         <div className="row">
-          <Field id="sFb" label="Facebook" error={errs.facebook} hint="Page link or @name"><input id="sFb" value={f.facebook || ''} placeholder="facebook.com/almatchaco" onChange={(e) => set('facebook', e.target.value)} /></Field>
-          <Field id="sIg" label="Instagram" error={errs.instagram} hint="Page link or @name"><input id="sIg" value={f.instagram || ''} placeholder="@almatchaco" onChange={(e) => set('instagram', e.target.value)} /></Field>
-          <Field id="sTt" label="TikTok" error={errs.tiktok} hint="Page link or @name"><input id="sTt" value={f.tiktok || ''} placeholder="@almatchaco" onChange={(e) => set('tiktok', e.target.value)} /></Field>
+          <Field id="sFb" label="Facebook" error={errs.facebook} hint="Page link or @name"><input id="sFb" value={f.facebook || ''} placeholder="facebook.com/matchea" onChange={(e) => set('facebook', e.target.value)} /></Field>
+          <Field id="sIg" label="Instagram" error={errs.instagram} hint="Page link or @name"><input id="sIg" value={f.instagram || ''} placeholder="@matchea" onChange={(e) => set('instagram', e.target.value)} /></Field>
+          <Field id="sTt" label="TikTok" error={errs.tiktok} hint="Page link or @name"><input id="sTt" value={f.tiktok || ''} placeholder="@matchea" onChange={(e) => set('tiktok', e.target.value)} /></Field>
         </div>
       </div>
 

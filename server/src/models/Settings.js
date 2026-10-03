@@ -5,7 +5,7 @@ const { ObjectId } = mongoose.Schema.Types;
 const settingsSchema = new mongoose.Schema(
   {
     key: { type: String, default: 'shop', unique: true },
-    name: { type: String, default: 'AL Matcha Co' },
+    name: { type: String, default: 'Matchéa' },
     address: { type: String, default: '' },
     tin: { type: String, default: '' },
     footer: { type: String, default: 'Thank you! Come back soon.' },

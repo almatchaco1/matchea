@@ -15,7 +15,7 @@ const FLAVOR_TONES = [
   [/banana/i, '#E6CF7A'], [/cr[eè]me br[uû]l[eé]e|caramel/i, '#C58B3C'], [/kinako|hojicha|cinnamon/i, '#A0673A'],
   [/s'?mores|chocolate|cocoa/i, '#6B4630'],
 ];
-export const toneFor = (name) => FLAVOR_TONES.find(([re]) => re.test(name))?.[1] || '#6E9A3E';
+export const toneFor = (name) => FLAVOR_TONES.find(([re]) => re.test(name))?.[1] || '#617940';
 export const ingStatus = (i) => (i.stock <= 0 ? 'bad' : i.stock <= (i.reorder || 0) ? 'warn' : 'ok');
 
 /** Save text as a file in the browser. */

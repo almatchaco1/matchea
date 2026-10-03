@@ -11,7 +11,7 @@ export function Receipt({ sale, settings: s = {} }) {
   const R = ({ l, r, big }) => <div className={`r ${big ? 'big' : ''}`}><span>{l}</span><span>{r}</span></div>;
   return (
     <div className="receipt">
-      <img className="r-logo" src="/brand/logo.svg" alt="" width="72" height="72" />
+      <img className="r-logo" src="/brand/matchea-print.png" alt="" width="120" height="62" />
       <div className="c big">{s.name}</div>
       {s.address && <div className="c">{s.address}</div>}
       {s.tin && <div className="c">TIN {s.tin}</div>}
@@ -100,7 +100,7 @@ const LEAF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C4 10 10
 /** Cup labels: on the receipt printer when set up, otherwise through the print window (58 × 40 mm stickers). */
 export async function printCupLabels(sale, settings) {
   if (await printLabels(sale, settings)) return 'Labels sent to the printer.';
-  const shop = esc(settings?.name || 'AL Matcha Co');
+  const shop = esc(settings?.name || 'Matchéa');
   const html = cupLabels(sale).map((c) => {
     const name = c.name || '—';
     const size = name.length > 20 ? ' s' : name.length > 13 ? ' m' : '';

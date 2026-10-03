@@ -86,7 +86,7 @@ export function QrSettingsModal({ settings, onClose, done, toast }) {
               <label className="btn sm">{preview(k) ? 'Change picture' : 'Upload QR picture'}<input type="file" accept="image/*" hidden onChange={(e) => { pick(k, e.target.files?.[0]); e.target.value = ''; }} /></label>
               {preview(k) && <button className="btn sm ghost" onClick={() => set(k, { image: '' })}>Remove</button>}
             </div>
-            <label className="field"><span>Account name shown to customers</span><input maxLength={60} value={f[k].name} onChange={(e) => set(k, { name: e.target.value })} placeholder="AL MATCHA CO / J. DELA CRUZ" /></label>
+            <label className="field"><span>Account name shown to customers</span><input maxLength={60} value={f[k].name} onChange={(e) => set(k, { name: e.target.value })} placeholder="MATCHEA / J. DELA CRUZ" /></label>
             <label className="field"><span>{QR_LABEL[k]} number <small className="muted">(optional)</small></span><input inputMode="tel" maxLength={20} value={f[k].number} onChange={(e) => set(k, { number: e.target.value })} placeholder="0917 123 4567" /></label>
             {status(k)}
             {errs[k] && <div className="ferr" role="alert">{errs[k]}</div>}

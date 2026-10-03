@@ -30,10 +30,10 @@ function dayChart(month, byDay) {
   const bw = (W - P.l - P.r) / days.length; const y = (v) => P.t + (H - P.t - P.b) * (1 - v / top);
   const fmt = (t) => (t >= 1000 ? `${(t / 1000).toLocaleString('en-PH', { maximumFractionDigits: 1 })}k` : Math.round(t));
   let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Sales by day">`;
-  [0, 0.5, 1].forEach((f) => { s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(top * f)}" y2="${y(top * f)}" stroke="#E6D3D6" ${f ? 'stroke-dasharray="3 3"' : ''}/><text x="${P.l - 6}" y="${y(top * f) + 3}" text-anchor="end">₱${fmt(top * f)}</text>`; });
+  [0, 0.5, 1].forEach((f) => { s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(top * f)}" y2="${y(top * f)}" stroke="#EBE0C9" ${f ? 'stroke-dasharray="3 3"' : ''}/><text x="${P.l - 6}" y="${y(top * f) + 3}" text-anchor="end">₱${fmt(top * f)}</text>`; });
   vals.forEach((v, i) => {
     const x = P.l + i * bw + bw * 0.18, w = bw * 0.64, h = Math.max(0, H - P.b - y(v));
-    if (h > 0) s += `<rect x="${x}" y="${y(v)}" width="${w}" height="${h}" rx="2" fill="#2B5A20"/>`;
+    if (h > 0) s += `<rect x="${x}" y="${y(v)}" width="${w}" height="${h}" rx="2" fill="#324623"/>`;
     const dd = +days[i].slice(8);
     if (dd === 1 || dd % 5 === 0) s += `<text x="${x + w / 2}" y="${H - 7}" text-anchor="middle">${dd}</text>`;
   });
@@ -49,33 +49,33 @@ function buildHtml({ month, shop, s, prev, p, b, ex }) {
 <style>
 @page{size:A4;margin:14mm 13mm}
 *{box-sizing:border-box}
-body{margin:0;font:11px/1.45 "Zen Kaku Gothic New",-apple-system,"Segoe UI",Arial,sans-serif;color:#1D2E18;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-h1,h2{font-family:"Shippori Mincho B1",Georgia,serif;margin:0;color:#2B5A20}
-h1{font-size:24px} h2{font-size:14px;margin:18px 0 8px;padding-bottom:4px;border-bottom:1.5px solid #2B5A20}
-.head{display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:3px solid #2B5A20}
-.head img{width:58px;height:58px}
-.head .sub{color:#5A6852;font-size:12px}
-.head .gen{margin-left:auto;text-align:right;color:#5A6852;font-size:10px}
+body{margin:0;font:11px/1.45 "Figtree",-apple-system,"Segoe UI",Arial,sans-serif;color:#1E2418;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1,h2{font-family:"Fraunces",Georgia,serif;margin:0;color:#324623}
+h1{font-size:24px} h2{font-size:14px;margin:18px 0 8px;padding-bottom:4px;border-bottom:1.5px solid #324623}
+.head{display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:3px solid #324623}
+.head img{width:110px;height:auto}
+.head .sub{color:#505749;font-size:12px}
+.head .gen{margin-left:auto;text-align:right;color:#505749;font-size:10px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
-.kpi{border:1px solid #EBCBD1;border-radius:10px;padding:9px 11px;background:#FFFBF7}
-.kpi span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:#5A6852;font-weight:700}
-.kpi b{display:block;font-family:"Shippori Mincho B1",Georgia,serif;font-size:19px;margin-top:2px}
-.kpi.hi{background:#2B5A20;border-color:#2B5A20;color:#fff}.kpi.hi span{color:#DCE9C4}
-.chg{font-size:9.5px;font-weight:700}.chg.up{color:#2F6B2A}.chg.down{color:#A8322A}
-.kpi.hi .chg.up,.kpi.hi .chg.down{color:#DCE9C4}
-svg text{font-size:9px;fill:#5A6852}
+.kpi{border:1px solid #E8DFCE;border-radius:10px;padding:9px 11px;background:#FFFBF7}
+.kpi span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:#505749;font-weight:700}
+.kpi b{display:block;font-family:"Fraunces",Georgia,serif;font-size:19px;margin-top:2px}
+.kpi.hi{background:#324623;border-color:#324623;color:#fff}.kpi.hi span{color:#DAE4C9}
+.chg{font-size:9.5px;font-weight:700}.chg.up{color:#3C542C}.chg.down{color:#A8322A}
+.kpi.hi .chg.up,.kpi.hi .chg.down{color:#DAE4C9}
+svg text{font-size:9px;fill:#505749}
 table{width:100%;border-collapse:collapse}
-th{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:#5A6852;text-align:left;padding:5px 6px;border-bottom:1px solid #EBCBD1}
-td{padding:5px 6px;border-bottom:1px solid #F4E1E5}
+th{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:#505749;text-align:left;padding:5px 6px;border-bottom:1px solid #E8DFCE}
+td{padding:5px 6px;border-bottom:1px solid #F2EBDE}
 .r{text-align:right}.num{font-variant-numeric:tabular-nums}
-tr.tot td{font-weight:700;border-top:1.5px solid #2B5A20;border-bottom:0}
-tr.sub td{color:#5A6852}
+tr.tot td{font-weight:700;border-top:1.5px solid #324623;border-bottom:0}
+tr.sub td{color:#505749}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.note{color:#5A6852;font-size:9.5px;margin-top:6px}
+.note{color:#505749;font-size:9.5px;margin-top:6px}
 .keep{break-inside:avoid}
-.foot{margin-top:18px;padding-top:8px;border-top:1px solid #EBCBD1;color:#5A6852;font-size:9px;display:flex;justify-content:space-between}
+.foot{margin-top:18px;padding-top:8px;border-top:1px solid #E8DFCE;color:#505749;font-size:9px;display:flex;justify-content:space-between}
 </style></head><body>
-<div class="head"><img src="/brand/logo.svg" alt=""><div><h1>${esc(shop)}</h1><div class="sub">Monthly report · <b>${esc(monthLabel(month))}</b></div></div>
+<div class="head"><img src="/brand/matchea-print.png" alt=""><div><h1>${esc(shop)}</h1><div class="sub">Monthly report · <b>${esc(monthLabel(month))}</b></div></div>
 <div class="gen">Made ${esc(new Date().toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }))}</div></div>
 
 <div class="kpis">
@@ -143,7 +143,7 @@ export default function MonthlyReport({ settings, toast, onClose }) {
         api.get(`/reports/busy?from=${from}&to=${to}`),
         api.get(`/expenses?from=${from}&to=${to}`).catch(() => ({ byCat: [], total: 0 })),
       ]);
-      printHtml(buildHtml({ month, shop: settings?.name || 'AL Matcha Co', s, prev, p, b, ex }));
+      printHtml(buildHtml({ month, shop: settings?.name || 'Matchéa', s, prev, p, b, ex }));
       toast('In the print window, choose “Save as PDF” to keep a copy.');
     } catch (e) { toast(e.message); }
     finally { setBusy(false); }

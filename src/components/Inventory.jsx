@@ -259,7 +259,7 @@ function RestockModal({ list, shop, toast, onClose }) {
   const rows = items.map((i) => ({ i, q: Math.max(0, +qty[i._id] || 0) })).filter((r) => r.q > 0);
   const cost = rows.reduce((a, r) => a + r.q * (+r.i.cost || 0), 0);
   const today = new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-  const text = [`${shop || 'AL Matcha Co'} restock list · ${today}`, ...rows.map((r) => `• ${r.i.name}: ${qfmt(r.q)} ${r.i.unit}`)].join('\n');
+  const text = [`${shop || 'Matchéa'} restock list · ${today}`, ...rows.map((r) => `• ${r.i.name}: ${qfmt(r.q)} ${r.i.unit}`)].join('\n');
   const copy = async () => { try { await navigator.clipboard.writeText(text); toast('List copied. Paste it in a message to your supplier.'); } catch { toast('Could not copy. Select the list and copy it by hand.'); } };
   const csv = () => download(`restock-${new Date().toISOString().slice(0, 10)}.csv`,
     [['ingredient', 'unit', 'on_hand', 'reorder_at', 'per_day', 'order_qty', 'est_cost'], ...rows.map((r) => [r.i.name, r.i.unit, r.i.stock, r.i.reorder, r.i.perDay, r.q, (r.q * (+r.i.cost || 0)).toFixed(2)])]

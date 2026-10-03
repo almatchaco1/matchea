@@ -1,4 +1,4 @@
-// Photos and allowed add-ons for the AL Matcha Co menu (shared by the server and the React app).
+// Photos and allowed add-ons for the Matchéa menu (shared by the server and the React app).
 // Used by seed.js (new databases) and update-menu.js (existing databases).
 
 export const slug = (name) => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/'/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -10,7 +10,7 @@ export const photoUrl = (src) => {
   const m = /^\/drinks\/([\w-]+)\.(jpe?g|webp|png)$/.exec(src || '');
   return m && BUNDLED.includes(m[1]) ? `/drinks/${m[1]}.webp?v=${PHOTO_V}` : src;
 };
-// Photos that ship in public/drinks (cropped from the AL Matcha Co menu)
+// Photos that ship in public/drinks (cropped from the Matchéa menu)
 export const BUNDLED = ['matcha-latte', 'strawberry-matcha-latte', 'mango-matcha-latte', 'creme-brulee-matcha-latte', 'kinako-dango-matcha-latte',
   'banana-pudding-matcha-latte', 'putobumbong-matcha-latte', 'smores-matcha-latte', 'caramel-matcha-latte', 'salted-caramel-matcha-latte', 'cinnamon-bun-matcha-latte'];
 export const hasBundledImage = (name) => BUNDLED.includes(slug(name));

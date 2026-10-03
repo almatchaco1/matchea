@@ -29,7 +29,7 @@ export async function notifyReady(sale) {
     if (c && c.smsReady === false) return; // customer turned texts off
   }
   const s = await Settings.get();
-  const shop = s.name || 'AL Matcha Co';
+  const shop = s.name || 'Matchéa';
   const first = String(sale.customer || '').split(' ')[0];
   const site = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
   const msg = [

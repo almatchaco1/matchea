@@ -58,7 +58,7 @@ export default function Backups({ toast }) {
         ) : (
           <div className="bk-dir">
             <label className="field"><span>Folder on the computer running the server</span>
-              <input value={dir} onChange={(e) => { setDir(e.target.value); setDirErr(''); }} placeholder="/Users/you/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/AL Matcha backups" autoFocus /></label>
+              <input value={dir} onChange={(e) => { setDir(e.target.value); setDirErr(''); }} placeholder="/Users/you/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/Matchéa backups" autoFocus /></label>
             <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>On a Mac: create the folder in Finder, then hold Option, right-click it and choose “Copy … as Pathname”, and paste it here. Leave it empty to turn this off.</p>
             {dirErr && <div className="ferr" role="alert">{dirErr}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><button className="btn sm ghost" onClick={() => setDir(null)}>Cancel</button><button className="btn sm primary" onClick={saveDir} disabled={busy === 'dir'}>{busy === 'dir' ? 'Checking…' : 'Save'}</button></div>

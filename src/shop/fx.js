@@ -88,7 +88,7 @@ export function confetti(from, n = 36) {
   if (calm() || typeof document === 'undefined') return;
   const r = (from?.getBoundingClientRect?.() || { left: window.innerWidth / 2, top: window.innerHeight / 3, width: 0, height: 0 });
   const x = r.left + r.width / 2, y = r.top + r.height / 2;
-  const colors = ['#2B5A20', '#8DB255', '#DCE9C4', '#F7E1E4', '#EFC9CF', '#F3C94A'];
+  const colors = ['#324623', '#8BA562', '#DAE4C9', '#F3EDE0', '#EADFC9', '#F3C94A'];
   for (let i = 0; i < n; i++) {
     const p = document.createElement('i');
     const size = 6 + Math.random() * 6;
@@ -154,7 +154,7 @@ function fly(src, getTo, hide, duration, done) {
   const a = inner(src);
   const g = new Image();
   g.src = src.currentSrc || src.src; g.alt = '';
-  Object.assign(g.style, { position: 'fixed', left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, height: `${a.height}px`, objectFit: 'contain', zIndex: 2000, pointerEvents: 'none', margin: 0, filter: 'drop-shadow(0 16px 18px rgba(29,46,24,.25))' });
+  Object.assign(g.style, { position: 'fixed', left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px`, height: `${a.height}px`, objectFit: 'contain', zIndex: 2000, pointerEvents: 'none', margin: 0, filter: 'drop-shadow(0 16px 18px rgba(30,36,24,.25))' });
   document.body.appendChild(g);
   hide.forEach((h) => { h.style.visibility = 'hidden'; });
   const t0 = performance.now();

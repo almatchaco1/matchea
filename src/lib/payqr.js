@@ -16,7 +16,7 @@ export function qrPng(text, { caption = '', sub = '' } = {}) {
   g.fillStyle = '#000';
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) g.fillRect(pad + x * cell, pad + y * cell, cell, cell);
   if (caption) {
-    g.textAlign = 'center'; g.fillStyle = '#1D2E18';
+    g.textAlign = 'center'; g.fillStyle = '#1E2418';
     g.font = 'bold 40px system-ui, -apple-system, sans-serif'; g.fillText(caption, w / 2, w + 30);
     if (sub) { g.font = '26px system-ui, -apple-system, sans-serif'; g.fillStyle = '#555'; g.fillText(sub, w / 2, w + 72); }
   }
@@ -35,7 +35,7 @@ export function useAmountQr(q, amount, label) {
 }
 
 /** <img> of the QR with the amount built in, or the uploaded picture when the code couldn't be read. */
-export function AmountQr({ kind, q, amount, label = 'AL Matcha Co', alt, className }) {
+export function AmountQr({ kind, q, amount, label = 'Matchéa', alt, className }) {
   const src = useAmountQr(q, amount, label);
   return <img className={className} src={src || `/api/public/qr/${kind}?v=${q.v}`} alt={alt || 'Payment QR code'} />;
 }

@@ -62,12 +62,12 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
   return (
     <div className="au">
       <div className="au-card">
-        <img className="au-logo" src="/brand/logo.svg" alt="AL Matcha Co" width="72" height="72" />
+        <img className="au-logo" src="/brand/matchea-word.webp" alt="Matchéa" width="200" height="113" />
         <div className="au-tabs" role="tablist">
           <a role="tab" aria-selected={!signup} href={'/signin' + next} onClick={(e) => { e.preventDefault(); go('/signin' + next, { replace: true }); }}>Sign in</a>
           <a role="tab" aria-selected={signup} href={'/signup' + next} onClick={(e) => { e.preventDefault(); go('/signup' + next, { replace: true }); }}>Create account</a>
         </div>
-        <h1>{signup ? 'Join AL Matcha Co' : 'Welcome back'}</h1>
+        <h1>{signup ? `Join ${shop?.name || 'Matchéa'}` : 'Welcome back'}</h1>
         <p className="au-sub">{signup ? 'Order ahead, track your drinks, and pay your way.' : 'Sign in to order ahead and see your orders.'}</p>
 
         {cfg && (cfg.googleClientId || cfg.facebookAppId) && (
@@ -323,7 +323,7 @@ export function ForgotPage({ go, onSignedIn }) {
   return (
     <div className="au">
       <div className="au-card">
-        <img className="au-logo" src="/brand/logo.svg" alt="AL Matcha Co" width="72" height="72" />
+        <img className="au-logo" src="/brand/matchea-word.webp" alt="Matchéa" width="200" height="113" />
         <h1>{setting ? 'Set a password' : 'Reset your password'}</h1>
         {!verify ? (<>
           <p className="au-sub">Enter the email or mobile number of your account. We’ll email you a 6-digit code.</p>

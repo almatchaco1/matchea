@@ -368,7 +368,7 @@ export function socialUrl(kind, v) {
 export function checkStoreInfo(b = {}) {
   const e = {};
   text(e, 'contactPhone', b.contactPhone, { label: 'the phone number', max: 20, pattern: /^\+?[\d\s()-]{7,20}$/, patternMsg: 'Use numbers only, like 0917 123 4567 or (02) 8123 4567.' });
-  text(e, 'contactEmail', b.contactEmail, { label: 'the email', max: 80, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, patternMsg: 'Enter an email like hello@almatcha.com.' });
+  text(e, 'contactEmail', b.contactEmail, { label: 'the email', max: 80, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, patternMsg: 'Enter an email like hello@matchea.com.' });
   const hours = str(b.hours);
   if (hours.length > 160) e.hours = 'Keep the hours under 160 characters.';
   else if (hours.split('\n').length > 4) e.hours = 'Use at most 4 lines.';

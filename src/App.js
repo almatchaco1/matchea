@@ -15,6 +15,7 @@ import { usePosRipples, TabInk, useHeaderFit } from './lib/motion';
 import { DecorString } from './lib/decor';
 import { LockIcon } from './components/Locked';
 import './styles.css';
+import './matchea-pos.css';
 
 const TABS = [['register', 'Register'], ['online', 'Online'], ['barista', 'Barista'], ['inventory', 'Inventory'], ['menu', 'Menu'], ['reports', 'Reports'], ['staff', 'Staff', 'admin']];
 // Short two-note chime for new online orders (browsers may block sound until the page was clicked once)
@@ -165,8 +166,8 @@ export default function App() {
         <header className="top" ref={topRef} data-fit="0">
           {data.settings?.decorPos !== false && <DecorString decor={data.settings?.decor} wide />}
           <div className="brand">
-            <picture className="seal-logo"><source srcSet="/brand/logo-small-light.svg" media="(prefers-color-scheme: dark)" /><img src="/brand/logo-small.svg" alt="" width="46" height="46" /></picture>
-            <div><h1>{data.settings?.name || 'AL Matcha Co'}</h1><small>Point of sale · Inventory</small></div>
+            <span className="seal-logo"><img src="/brand/matchea-seal.webp" alt="" width="46" height="46" /></span>
+            <div><h1>{data.settings?.name || 'Matchéa'}</h1><small>Point of sale · Inventory</small></div>
           </div>
           <nav className="tabs" role="tablist" ref={navRef}>
             <TabInk nav={navRef} dep={`${shownTab}|${training}|${isAdmin}|${lowCount}|${newCount}`} />

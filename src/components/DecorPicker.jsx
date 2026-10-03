@@ -57,7 +57,7 @@ export default function DecorPicker({ f, set }) {
         <input type="checkbox" checked={f.decorPos !== false} onChange={(e) => set('decorPos', e.target.checked)} /> <span>Show the top string on the POS too</span>
       </label>
       <Field id="sGreet" label="Greeting on the website home page (optional)" hint="Pick one below or type your own. Leave blank for none.">
-        <input id="sGreet" value={f.decorGreeting || ''} maxLength={GREETING_MAX} placeholder="e.g. Maligayang Pasko! Merry Christmas from AL Matcha" onChange={(e) => set('decorGreeting', e.target.value)} />
+        <input id="sGreet" value={f.decorGreeting || ''} maxLength={GREETING_MAX} placeholder="e.g. Maligayang Pasko! Merry Christmas from Matchéa" onChange={(e) => set('decorGreeting', e.target.value)} />
       </Field>
       <div className="dp-greets">
         {GREETINGS.map((g) => <button type="button" key={g} className="chip" aria-pressed={f.decorGreeting === g} onClick={() => set('decorGreeting', f.decorGreeting === g ? '' : g)}>{g}</button>)}

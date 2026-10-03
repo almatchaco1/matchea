@@ -19,7 +19,7 @@ export default function Landing({ menu, err, go, me }) {
       <section className="ld-hero">
         <div className="ld-copy">
           {menu?.shop?.greeting && <p className={`ld-season s-${greetIcon(menu.shop.decor)}`}><i aria-hidden="true" />{menu.shop.greeting}</p>}
-          <p className="ld-eyebrow"><span className="ld-leaf" aria-hidden="true" />AL Matcha Co · Order ahead</p>
+          <p className="ld-eyebrow"><span className="ld-leaf" aria-hidden="true" />{menu?.shop?.name || 'Matchéa'} · Order ahead</p>
           <h1><span className="ld-line"><span>Good matcha,</span></span><br /><span className="ld-line"><em>good mood.</em></span></h1>
           <p className="ld-lede">Whisked-to-order matcha lattes, from classic to Putobumbong. Order on your phone, pay online or at the counter, and skip the line at pickup.</p>
           <div className="ld-ctas">

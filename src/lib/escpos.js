@@ -57,7 +57,7 @@ export function receiptBytes(sale, s = {}, { width = 32, drawer = false, copy = 
   if (drawer) cmd(CMD.drawer);
   cmd(CMD.center);
   if (logo) { bytes.push(...logo); cmd(CMD.feed(1)); }
-  cmd(CMD.boldOn); cmd(CMD.tall); text(s.name || 'AL Matcha Co'); cmd(CMD.normal); cmd(CMD.boldOff);
+  cmd(CMD.boldOn); cmd(CMD.tall); text(s.name || 'Matchéa'); cmd(CMD.normal); cmd(CMD.boldOff);
   if (s.address) wrap(s.address, w).forEach(text);
   if (s.tin) text(`TIN ${s.tin}`);
   if (copy) text(copy);
@@ -117,7 +117,7 @@ export function labelBytes(sale, s = {}, { width = 32 } = {}) {
   const rule = () => text('-'.repeat(w));
   for (const c of cupLabels(sale)) {
     cmd(CMD.left);
-    lr(plain(s.name || 'AL Matcha Co').toUpperCase(), `#${String(c.no).padStart(3, '0')}${c.online ? ' ONLINE' : ''}`, w).forEach(text);
+    lr(plain(s.name || 'Matchéa').toUpperCase(), `#${String(c.no).padStart(3, '0')}${c.online ? ' ONLINE' : ''}`, w).forEach(text);
     rule();
     cmd(CMD.center);
     const name = (c.name || '-').replace(/\b\w/g, (x) => x.toUpperCase());
@@ -140,7 +140,7 @@ export function closingBytes(c, s = {}, { width = 32, cash = '', note = '' } = {
   const row = (l, r) => lr(l, String(r), w).forEach(text);
   const DISC = { pct: 'Discounts', scpwd: 'Senior/PWD', reward: 'Free drinks' };
   cmd(CMD.init); cmd(CMD.center);
-  cmd(CMD.boldOn); cmd(CMD.tall); text(s.name || 'AL Matcha Co'); cmd(CMD.normal); cmd(CMD.boldOff);
+  cmd(CMD.boldOn); cmd(CMD.tall); text(s.name || 'Matchéa'); cmd(CMD.normal); cmd(CMD.boldOff);
   text('END OF DAY'); text(c.date);
   if (c.closed) text(`Closed by ${c.closed.by}`);
   cmd(CMD.left); rule();
@@ -168,7 +168,7 @@ export function closingBytes(c, s = {}, { width = 32, cash = '', note = '' } = {
 export function testBytes({ width = 32 } = {}) {
   const bytes = [...CMD.init, ...CMD.center, ...CMD.boldOn];
   const text = (t) => { for (const ch of plain(t)) bytes.push(ch.charCodeAt(0)); bytes.push(0x0a); };
-  text('AL Matcha Co'); bytes.push(...CMD.boldOff);
+  text('Matchéa'); bytes.push(...CMD.boldOff);
   text('Printer test'); text('-'.repeat(width)); text(`${width} characters per line`); text('1234567890'.repeat(5).slice(0, width));
   text('If this looks right, you are set!');
   bytes.push(...CMD.feed(3), ...CMD.cut);
@@ -179,11 +179,11 @@ export function testBytes({ width = 32 } = {}) {
  * The shop logo as printer dots (GS v 0 raster image). dots: width in printer dots
  * (58 mm paper = 384 dots wide, 80 mm = 576), we use about half of that.
  */
-export async function logoRaster(dots = 192, src = '/brand/logo.svg') {
+export async function logoRaster(dots = 288, src = '/brand/matchea-print.png') {
   const img = new Image();
   img.src = src;
   await img.decode();
-  const w = Math.ceil(dots / 8) * 8, h = w;
+  const w = Math.ceil(dots / 8) * 8, h = Math.round((w * (img.naturalHeight || 1)) / (img.naturalWidth || 1));
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const g = c.getContext('2d');
   g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
