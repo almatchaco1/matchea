@@ -32,6 +32,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
   const [receipt, setReceipt] = useState(null);
   const [booking, setBooking] = useState(null); // delivery: booking Lalamove
   const [rider, setRider] = useState(null);     // delivery: the rider picked up the drinks
+  const [linking, setLinking] = useState(null); // delivery: add / change the Lalamove tracking link
   const s = data.settings;
 
   const act = async (o, step, body, msg) => {
@@ -117,6 +118,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                       {(o.delivery?.state || 'waiting') === 'waiting' && <button className="btn primary" disabled={!!busy} onClick={() => setBooking(o)}>Book Lalamove</button>}
                       {o.delivery?.state === 'booked' && <button className="btn primary" disabled={!!busy} onClick={() => setRider(o)}>Rider picked up</button>}
                       {o.delivery?.state === 'picked' && <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'delivery/delivered', {}, `Order #${pad(o.no)} delivered`)}>Delivered</button>}
+                      {['booked', 'picked'].includes(o.delivery?.state) && <button className={`btn sm ${o.delivery.trackUrl ? 'ghost' : 'track-add'}`} disabled={!!busy} onClick={() => setLinking(o)}>{o.delivery.trackUrl ? 'Tracking link ✓' : 'Add tracking link'}</button>}
                       {['booked', 'picked'].includes(o.delivery?.state) && <button className="btn ghost sm" disabled={!!busy} onClick={() => act(o, 'delivery/rebook', {}, `Order #${pad(o.no)}: book a new rider`)}>Rider cancelled</button>}
                       <button className="btn ghost sm" onClick={() => printSlip(o, s)}>Delivery slip</button>
                     </>}
@@ -165,7 +167,8 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
       {shot && <ShotModal order={shot} onClose={() => setShot(null)} />}
       {receipt && <ReceiptModal sale={receipt} settings={s} onClose={() => setReceipt(null)} />}
       {booking && <BookModal order={booking} settings={s} onClose={() => setBooking(null)}
-        onDone={async (cost) => { await act(booking, 'delivery/booked', { cost }, `Order #${pad(booking.no)}: waiting for the rider`); setBooking(null); }} />}
+        onDone={async (cost, trackUrl) => { await act(booking, 'delivery/booked', { cost, trackUrl }, `Order #${pad(booking.no)}: waiting for the rider`); setBooking(null); }} />}
+      {linking && <TrackLinkModal order={linking} onClose={() => setLinking(null)} toast={toast} onDone={() => { setLinking(null); toast(`Tracking link saved for order #${pad(linking.no)}`); reload(); }} />}
       {rider && <RiderModal order={rider} onClose={() => setRider(null)} toast={toast} onDone={() => { setRider(null); toast(`Order #${pad(rider.no)} is on the way`); reload(); }} />}
     </>
   );
@@ -323,23 +326,30 @@ function DeliveryInfo({ o }) {
   );
 }
 
+const TRACK_RE = /^https:\/\/[\w-]+(\.[\w-]+)+([/?#]\S*)?$/i;
+const trackErr = (u) => (u && !TRACK_RE.test(u) ? 'Paste the share link from the Lalamove app (it starts with https://), or leave it empty.' : '');
+const TRACK_HINT = 'In the Lalamove app: open the booking → Share → Copy link. The customer can then watch the rider move live.';
+
 const copy = async (text, setMsg) => { try { await navigator.clipboard.writeText(text); setMsg('Copied'); } catch { setMsg('Select and copy it by hand'); } setTimeout(() => setMsg(''), 1600); };
 
 /** Booking Lalamove: everything to type into the Lalamove app, then "I booked it". */
 function BookModal({ order, settings, onClose, onDone }) {
   const d = order.delivery;
   const [cost, setCost] = useState('');
+  const [link, setLink] = useState('');
+  const [linkErr, setLinkErr] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const drop = `${order.customer} · ${order.phone}\n${addrText(d)}`;
   return (
     <Modal title={`Book Lalamove · #${pad(order.no)}`} aside={<span className="pill">{d.km} km</span>} onClose={onClose}
-      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={async () => { setBusy(true); await onDone(cost); setBusy(false); }}>{busy ? 'Saving…' : 'I booked it · Waiting for rider'}</button></>}>
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={async () => { const le = trackErr(link); setLinkErr(le); if (le) return; setBusy(true); await onDone(cost, link); setBusy(false); }}>{busy ? 'Saving…' : 'I booked it · Waiting for rider'}</button></>}>
       <ol className="book-steps">
         <li>Open the <b>Lalamove</b> app and choose <b>Motorcycle</b>.</li>
         <li><b>Pick-up:</b> {settings?.name || 'your shop'}{settings?.delivery?.label ? ` (${settings.delivery.label})` : ''}.</li>
         <li><b>Drop-off:</b> paste the pin link, then add the details below for the rider.</li>
-        <li>Book it, then tap <b>I booked it</b>. The customer sees “Waiting for a rider”.</li>
+        <li>Book it, then tap <b>Share</b> on the booking and paste the link below, so the customer can watch the rider live.</li>
+        <li>Tap <b>I booked it</b>. The customer sees “Waiting for a rider”.</li>
       </ol>
       <div className="book-box">
         <div><small>Drop-off pin</small><span className="num">{(+d.lat).toFixed(6)}, {(+d.lng).toFixed(6)}</span></div>
@@ -354,18 +364,44 @@ function BookModal({ order, settings, onClose, onDone }) {
       <Field id="bkCost" label="Lalamove fee you were charged (optional)" hint="For your reports. Leave empty if you don’t know yet.">
         <input id="bkCost" type="number" inputMode="decimal" min="0" step="any" value={cost} onChange={(e) => setCost(e.target.value)} placeholder={String(d.fee || '')} />
       </Field>
+      <Field id="bkLink" label="Lalamove tracking link (recommended)" error={linkErr} hint={TRACK_HINT}>
+        <input id="bkLink" maxLength={300} value={link} onChange={(e) => { setLink(e.target.value.trim()); setLinkErr(''); }} placeholder="https://…" />
+      </Field>
+    </Modal>
+  );
+}
+
+/** Add or change the Lalamove share link after booking. */
+function TrackLinkModal({ order, onClose, onDone, toast }) {
+  const [link, setLink] = useState(order.delivery?.trackUrl || '');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    const e = trackErr(link); setErr(e); if (e) return;
+    setBusy(true);
+    try { await api.post(`/online/${order._id}/delivery/track`, { trackUrl: link }); onDone(); }
+    catch (x) { setErr(x.fields?.trackUrl || ''); toast(x.message); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Modal title={`Tracking link · #${pad(order.no)}`} onClose={onClose}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button></>}>
+      <Field id="tkLink" label="Lalamove tracking link" error={err} hint={TRACK_HINT}>
+        <input id="tkLink" autoFocus maxLength={300} value={link} onChange={(e) => { setLink(e.target.value.trim()); setErr(''); }} placeholder="https://…" />
+      </Field>
+      {order.delivery?.trackUrl && <a className="linkbtn" href={order.delivery.trackUrl} target="_blank" rel="noopener noreferrer">Open the current link ↗</a>}
     </Modal>
   );
 }
 
 /** The rider came: their details from the Lalamove app, so the customer can see who is coming. */
 function RiderModal({ order, onClose, onDone, toast }) {
-  const [f, setF] = useState({ name: '', phone: '', plate: '', trackUrl: '' });
+  const [f, setF] = useState({ name: '', phone: '', plate: '', trackUrl: order.delivery?.trackUrl || '' });
   const { errs, check, clear, fromServer } = useErrors();
   const [busy, setBusy] = useState(false);
   const set = (k, v) => { setF({ ...f, [k]: v }); clear(k); };
   const save = async () => {
-    if (!check(f.name.trim().length < 2 ? { name: 'Enter the rider’s name (from the Lalamove app).' } : {})) return;
+    if (!check({ ...(f.name.trim().length < 2 ? { name: 'Enter the rider’s name (from the Lalamove app).' } : {}), ...(trackErr(f.trackUrl) ? { trackUrl: trackErr(f.trackUrl) } : {}) })) return;
     setBusy(true);
     try { await api.post(`/online/${order._id}/delivery/picked`, f); onDone(); }
     catch (e) { fromServer(e, toast); }
@@ -380,7 +416,7 @@ function RiderModal({ order, onClose, onDone, toast }) {
         <Field id="rdPlate" label="Plate no. (optional)" error={errs.plate}><input id="rdPlate" maxLength={12} value={f.plate} onChange={(e) => set('plate', e.target.value.toUpperCase())} placeholder="ABC 1234" /></Field>
       </div>
       <Field id="rdPhone" label="Rider’s mobile (optional)" error={errs.phone}><input id="rdPhone" inputMode="tel" maxLength={20} value={f.phone} onChange={(e) => set('phone', e.target.value)} placeholder="0917 123 4567" /></Field>
-      <Field id="rdLink" label="Lalamove tracking link (optional)" error={errs.trackUrl} hint="In the Lalamove app: your order → Share. The customer can watch the rider live."><input id="rdLink" maxLength={300} value={f.trackUrl} onChange={(e) => set('trackUrl', e.target.value.trim())} placeholder="https://…lalamove…" /></Field>
+      <Field id="rdLink" label="Lalamove tracking link (optional)" error={errs.trackUrl} hint={TRACK_HINT}><input id="rdLink" maxLength={300} value={f.trackUrl} onChange={(e) => set('trackUrl', e.target.value.trim())} placeholder="https://…lalamove…" /></Field>
     </Modal>
   );
 }

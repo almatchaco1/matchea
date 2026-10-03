@@ -362,7 +362,7 @@ const publicView = (s) => ({
     from: s.delivery.from?.lat != null ? { lat: s.delivery.from.lat, lng: s.delivery.from.lng } : null, route: String(s.delivery.route || '').split(';').filter(Boolean).map((p) => p.split(',').map(Number)),
     km: s.delivery.km, free: !!s.delivery.free, state: s.delivery.state || 'waiting', bookedAt: s.delivery.bookedAt || null, pickedAt: s.delivery.pickedAt || null, deliveredAt: s.delivery.deliveredAt || null,
     rider: s.delivery.state === 'picked' || s.delivery.state === 'delivered' ? { name: s.delivery.rider?.name || '', phone: s.delivery.rider?.phone || '', plate: s.delivery.rider?.plate || '' } : null,
-    trackUrl: s.delivery.state === 'picked' ? s.delivery.trackUrl || '' : '',
+    trackUrl: ['booked', 'picked'].includes(s.delivery.state) ? s.delivery.trackUrl || '' : '',
   } : null,
 });
 

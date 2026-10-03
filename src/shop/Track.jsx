@@ -216,6 +216,13 @@ function DeliveryBox({ o }) {
   const dest = { lat: d.lat, lng: d.lng };
   return (
     <div className="dl-box">
+      {d.trackUrl && ['booked', 'picked'].includes(d.state) && (
+        <a className="dl-live" href={d.trackUrl} target="_blank" rel="noopener noreferrer">
+          <span className="dl-live-dot" aria-hidden="true"><i /></span>
+          <span className="dl-live-t"><small>Live</small><b>Track your rider</b><em>{d.state === 'picked' ? 'See where your drinks are right now' : 'See your rider coming to pick up your drinks'}</em></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+        </a>
+      )}
       <MapView mode="view" shop={d.from} dest={dest} route={d.route?.length > 1 ? d.route : null} />
       {d.state === 'picked' && d.rider && (
         <div className="dl-rider">
@@ -224,7 +231,6 @@ function DeliveryBox({ o }) {
           {d.rider.phone && <a className="sh-btn sm ghost" href={`tel:${d.rider.phone.replace(/[^\d+]/g, '')}`}>Call</a>}
         </div>
       )}
-      {d.state === 'picked' && d.trackUrl && <a className="sh-btn" href={d.trackUrl} target="_blank" rel="noopener noreferrer">Follow the rider on Lalamove</a>}
       <div className="dl-addr">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="10" r="2.6" /></svg>
         <div><b>{d.detail}</b><small>{[d.landmark && `Landmark: ${d.landmark}`, d.label].filter(Boolean).join(' · ')}</small>{d.note && <small>Note: {d.note}</small>}</div>

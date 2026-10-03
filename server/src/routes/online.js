@@ -113,12 +113,18 @@ async function step(id, from, update, statuses = ['preparing', 'ready']) {
   throw new HttpError(409, `The delivery is ${STATE_LABEL[cur.delivery?.state] || cur.delivery?.state}, so that step isn't available. The list will refresh.`);
 }
 
+// The Lalamove share link ("Share" on the booking in the Lalamove app): the customer follows the rider live on it.
+// Any https link is accepted, because Lalamove's share links differ by app version and country.
+const trackError = (u) => (u && !/^https:\/\/[\w-]+(\.[\w-]+)+([/?#]\S*)?$/i.test(u) ? 'Paste the share link from the Lalamove app (it starts with https://), or leave it empty.' : '');
+
 // Booked Lalamove: the customer sees "Waiting for a rider". cost (optional) = what Lalamove charged.
 r.post('/:id/delivery/booked', ah(async (req, res) => {
   const b = req.body || {};
   const cost = b.cost === '' || b.cost == null ? undefined : +b.cost;
   if (cost != null && (!Number.isFinite(cost) || cost < 0 || cost > 5000)) throw new HttpError(400, 'Enter the Lalamove fee in pesos, or leave it empty.', { cost: 'Enter the fee in pesos.' });
-  const sale = await step(req.params.id, ['waiting', 'booked'], { 'delivery.state': 'booked', 'delivery.bookedAt': new Date(), 'delivery.bookedBy': req.user.name, ...(cost != null ? { 'delivery.cost': r2(cost) } : {}) });
+  const trackUrl = clean(b.trackUrl, 300);
+  const te = trackError(trackUrl); if (te) throw new HttpError(400, te, { trackUrl: te });
+  const sale = await step(req.params.id, ['waiting', 'booked'], { 'delivery.state': 'booked', 'delivery.bookedAt': new Date(), 'delivery.bookedBy': req.user.name, ...(cost != null ? { 'delivery.cost': r2(cost) } : {}), ...(trackUrl ? { 'delivery.trackUrl': trackUrl } : {}) });
   res.json(forStaff(sale));
 }));
 
@@ -130,9 +136,17 @@ r.post('/:id/delivery/picked', ah(async (req, res) => {
   const e = {};
   if (rider.name.length < 2) e.name = 'Enter the rider’s name (from the Lalamove app).';
   if (rider.phone && !/^(\+?63|0)9\d{9}$/.test(rider.phone.replace(/[\s-]/g, ''))) e.phone = 'Enter a mobile number like 0917 123 4567, or leave it empty.';
-  if (trackUrl && !/^https:\/\/([\w-]+\.)*(lalamove\.com|llm\.ph|lalamove\.ph)(\/|$)/i.test(trackUrl)) e.trackUrl = 'Paste the share link from the Lalamove app (https://…lalamove…), or leave it empty.';
+  if (trackError(trackUrl)) e.trackUrl = trackError(trackUrl);
   assertValid(e);
-  const sale = await step(req.params.id, ['booked'], { status: 'ready', readyAt: new Date(), 'delivery.state': 'picked', 'delivery.pickedAt': new Date(), 'delivery.rider': rider, 'delivery.trackUrl': trackUrl });
+  const sale = await step(req.params.id, ['booked'], { status: 'ready', readyAt: new Date(), 'delivery.state': 'picked', 'delivery.pickedAt': new Date(), 'delivery.rider': rider, ...(trackUrl ? { 'delivery.trackUrl': trackUrl } : {}) });
+  res.json(forStaff(sale));
+}));
+
+// Add or change the tracking link any time after booking (empty = remove it)
+r.post('/:id/delivery/track', ah(async (req, res) => {
+  const trackUrl = clean(req.body?.trackUrl, 300);
+  const te = trackError(trackUrl); if (te) throw new HttpError(400, te, { trackUrl: te });
+  const sale = await step(req.params.id, ['booked', 'picked'], { 'delivery.trackUrl': trackUrl });
   res.json(forStaff(sale));
 }));
 

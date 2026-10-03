@@ -149,3 +149,5 @@ h2.sec{color:#25331B}
 .ps .ps-box input,.ps .ps-box input:focus{border:0;background:transparent;box-shadow:none;outline:0;border-radius:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ps-loc{background:#C29B54}:root:not([data-theme="light"]) .ps-loc svg{stroke:#1A2013}}
 :root[data-theme="dark"] .ps-loc{background:#C29B54}:root[data-theme="dark"] .ps-loc svg{stroke:#1A2013}
+/* Delivery card: tracking link still missing */
+.btn.track-add{border-color:var(--gold,#C29B54);color:var(--ink);background:color-mix(in srgb,var(--gold,#C29B54) 14%,var(--surface))}
