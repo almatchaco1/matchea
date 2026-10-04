@@ -13,6 +13,8 @@ export default function Landing({ menu, err, go, me }) {
   const items = menu?.items || [];
   const strip = [...items].sort((a, b) => (b.bestSeller ? 1 : 0) - (a.bestSeller ? 1 : 0));
   const start = me ? '/menu' : '/signup';
+  const dlv = menu?.shop?.delivery; // set only when the shop has delivery turned on
+  const freeFrom = +dlv?.freeDrinks || 0;
   const priceOf = (it) => it.price + (it.hasSizes ? +menu.sizes[0]?.price || 0 : 0);
 
   return (
@@ -22,13 +24,15 @@ export default function Landing({ menu, err, go, me }) {
           {menu?.shop?.greeting && <p className={`ld-season s-${greetIcon(menu.shop.decor)}`}><i aria-hidden="true" />{menu.shop.greeting}</p>}
           <p className="ld-eyebrow"><span className="ld-leaf" aria-hidden="true" />{menu?.shop?.name || 'Matchéa'} · Order ahead</p>
           <h1><span className="ld-line"><span>Good matcha,</span></span><br /><span className="ld-line"><em>good mood.</em></span></h1>
-          <p className="ld-lede">Whisked-to-order matcha lattes, from classic to Putobumbong. Order on your phone, pay online or at the counter, and skip the line at pickup.</p>
+          <p className="ld-lede">Whisked-to-order matcha lattes, from classic to Putobumbong. {dlv ? 'Order on your phone, then pick it up at the counter or have it delivered to your door by Lalamove.' : 'Order on your phone, pay online or at the counter, and skip the line at pickup.'}</p>
           <div className="ld-ctas">
             <a href={start} className="sh-btn" onClick={nav(go, start)}>{me ? 'Start your order' : 'Create an account'}</a>
             {!me && <a href="/signin" className="sh-btn ghost" onClick={nav(go, '/signin')}>I already have one</a>}
           </div>
           <ul className="ld-perks">
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8Z M9 8a3 3 0 0 1 6 0" /></svg><span><b>Pickup only</b>Skip the line</span></li>
+            {dlv
+              ? <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg><span><b>Pickup or delivery</b>{freeFrom ? `Free delivery from ${freeFrom} drinks` : 'Delivered by Lalamove'}</span></li>
+              : <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8Z M9 8a3 3 0 0 1 6 0" /></svg><span><b>Pickup only</b>Skip the line</span></li>}
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 5 6.5 5 10a5 5 0 0 1-10 0c0-3.5 2-6 5-10Z" /></svg><span><b>Oatside milk</b>In every latte</span></li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.3 6L12 16.4 6.6 19.4l1.3-6L3.4 9.3l6-.7Z" /></svg><span><b>10th drink free</b>With your stamp card</span></li>
           </ul>
@@ -89,7 +93,9 @@ export default function Landing({ menu, err, go, me }) {
       </section>
 
       <section className="ld-info">
-        {[['Pickup only', 'Order ahead and collect at the counter.', 'M4 9h16l-1 11H5L4 9Zm4 0V7a4 4 0 0 1 8 0v2'],
+        {[dlv
+          ? ['Pickup or delivery', `Collect at the counter, or get it delivered by Lalamove${freeFrom ? `. Free delivery from ${freeFrom} drinks` : ''}.`, 'M6 20a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM9 17h6l-2-7H9m4 0h4l2 4M15 6h3']
+          : ['Pickup only', 'Order ahead and collect at the counter.', 'M4 9h16l-1 11H5L4 9Zm4 0V7a4 4 0 0 1 8 0v2'],
           ['Oatside oat milk', 'Every latte is made with Oatside.', 'M12 21c-4 0-7-3-7-7 0-5 7-11 7-11s7 6 7 11c0 4-3 7-7 7Z'],
           ['Upsize anytime', `+${peso(menu?.sizes?.[1]?.price || 40).replace('.00', '')} for a bigger cup.`, 'M8 3h8l-1 18H9L8 3Zm-1 4h10'],
           ['Stamp card', 'Buy 9 drinks, get the 10th free.', 'M12 3l2.6 5.4 5.9.9-4.3 4.1 1 5.9L12 16.5 6.8 19.3l1-5.9L3.5 9.3l5.9-.9L12 3Z']].map(([t, d, icon], i) => (

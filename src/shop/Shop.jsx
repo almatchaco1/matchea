@@ -277,7 +277,7 @@ function Footer({ shop }) {
       <div className="sf-col">
         <h4>Visit</h4>
         {s.address ? <p>{s.address}</p> : <p>Location coming soon</p>}
-        <p className="sf-dim">Pickup only · Order ahead online</p>
+        <p className="sf-dim">{s.delivery ? 'Pickup & delivery' : 'Pickup only'} · Order ahead online</p>
       </div>
       {hours.length > 0 && (
         <div className="sf-col">
