@@ -183,19 +183,30 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
   let qrPay = null;
   if (b.qrPay) {
     const method = String(b.qrPay.method || '');
-    const ref = cleanQrRef(b.qrPay.ref);
     if (!qrInfo(settings)[method]) throw new HttpError(409, 'That QR payment isn’t available right now. Choose another way to pay.');
-    const refErr = checkQrRef(method, ref);
-    if (refErr) throw new HttpError(400, refErr, { qrRef: refErr });
-    if (await Sale.exists({ 'qrPay.ref': ref, status: { $ne: 'cancelled' } })) throw new HttpError(409, 'That reference number was already used for another order. Check your receipt.', { qrRef: 'Already used for another order.' });
+    const shotIn = typeof b.qrPay.shot === 'string' ? b.qrPay.shot : '';
+    // The receipt screenshot is the proof. The browser reads the reference number and time from it; if it couldn't, the shop checks the picture.
+    let ref = cleanQrRef(b.qrPay.ref);
+    const refErr = ref ? checkQrRef(method, ref) : 'none';
+    if (refErr && !shotIn) throw new HttpError(400, ref ? refErr : 'Upload a screenshot of your payment receipt so the shop can check it.', ref ? { qrRef: refErr } : { qrShot: 'Upload your receipt screenshot.' });
+    if (refErr) ref = ''; // misread: the shop will check the screenshot
+    if (ref && await Sale.exists({ 'qrPay.ref': ref, status: { $ne: 'cancelled' } })) throw new HttpError(409, 'This receipt was already used for another order. Upload the receipt for this payment.', { qrShot: 'This receipt was already used.' });
     // Time on the receipt: a payment made long before this order may be an old receipt
-    const time = checkPaidTime(b.qrPay.paidTime);
-    if (time.err) throw new HttpError(400, time.err, { qrTime: time.err });
+    let time = b.qrPay.paidTime ? checkPaidTime(b.qrPay.paidTime) : { err: 'none' };
+    // the receipt's date, read from the screenshot: makes the age exact (an old receipt from another day is caught too)
+    const pd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(b.qrPay.paidDate || ''));
+    if (pd && !time.err) {
+      const [hh, mm] = String(b.qrPay.paidTime).split(':').map(Number);
+      const at = Date.UTC(+pd[1], +pd[2] - 1, +pd[3], hh, mm) - 8 * 3600e3;
+      if (Number.isFinite(at) && at <= Date.now() + ONLINE.payTimeAhead * 60e3) time = { paidAt: new Date(at), mins: Math.max(0, Math.floor((Date.now() - at) / 60e3)) };
+    }
+    if (time.err && !shotIn) { const msg = time.err === 'none' ? 'Enter the time shown on your receipt.' : time.err; throw new HttpError(400, msg, { qrTime: msg }); }
+    const readAmount = Number.isFinite(+b.qrPay.readAmount) && +b.qrPay.readAmount > 0 ? Math.round(+b.qrPay.readAmount * 100) / 100 : null;
     // Optional screenshot of the payment receipt (made small in the browser first)
-    const shot = typeof b.qrPay.shot === 'string' ? b.qrPay.shot : '';
+    const shot = shotIn;
     if (shot && (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(shot) || shot.length > 700000))
-      throw new HttpError(400, 'That picture couldn’t be used. Try a smaller screenshot, or leave it out.', { qrShot: 'Try a smaller screenshot, or leave it out.' });
-    qrPay = { method, ref, at: new Date(), verified: false, shot: !!shot, shotData: shot, paidAt: time.paidAt };
+      throw new HttpError(400, 'That picture couldn’t be used. Try another screenshot of your receipt.', { qrShot: 'Try another screenshot.' });
+    qrPay = { method, ref, at: new Date(), verified: false, shot: !!shot, shotData: shot, ...(time.paidAt ? { paidAt: time.paidAt } : {}), ...(readAmount ? { readAmount } : {}), ...(ref ? {} : { unread: true }) };
     if (time.mins > ONLINE.payTimeOld) qrPay.timeOld = time.mins;
     if (shot) {
       // Same screenshot used before? (same original file, or the same picture data)
@@ -258,6 +269,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
     pay: { method: 'unpaid', tendered: 0, change: 0, ref: '' },
     usage: usageList(usage), cost, stampsUsed: useReward ? 9 : 0,
     ...(qrPay ? { qrPay: { method: qrPay.method, ref: qrPay.ref, at: qrPay.at, verified: false, shot: qrPay.shot, paidAt: qrPay.paidAt, ...(qrPay.timeOld ? { timeOld: qrPay.timeOld } : {}),
+      ...(qrPay.readAmount ? { readAmount: qrPay.readAmount, amountOff: Math.abs(qrPay.readAmount - t.total) > 0.009 } : {}), ...(qrPay.unread ? { unread: true } : {}),
       ...(qrPay.shot ? { shotHash: qrPay.shotHash, shotPrint: qrPay.shotPrint, ...(qrPay.shotReused ? { shotReused: qrPay.shotReused } : {}) } : {}) } } : {}),
   }); } catch (e) {
     if (useReward) await Customer.updateOne({ _id: cust._id }, { $inc: { stamps: 9, rewardsUsed: -1 } });

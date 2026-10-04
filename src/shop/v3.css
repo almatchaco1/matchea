@@ -113,3 +113,45 @@
   .shop .sh-btn,.shop .mn-card,.shop .mn-photo img{transition:none}
 }
 @media (prefers-color-scheme:dark){.shop .ld-hero h1{color:#F6F1E1}.shop .mn-top h1,.shop .mn-top h2{color:#FFF6E2}}
+
+/* ---------- Checkout: upload the receipt, we read it ---------- */
+.qr-up{position:relative;display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;border:1.5px dashed color-mix(in srgb,var(--green) 45%,transparent);background:color-mix(in srgb,var(--matcha-2) 70%,var(--card));cursor:pointer;transition:border-color .2s,background .2s,transform .25s var(--spring)}
+.qr-up:hover{border-color:var(--green);transform:translateY(-1px)}
+.qr-up:focus-within{outline:2.5px solid var(--rose);outline-offset:2px}
+.qr-up input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.qr-up svg{width:42px;height:42px;flex:none;padding:9px;border-radius:12px;background:var(--green);fill:none;stroke:#FFF8E8;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.qr-up span{display:flex;flex-direction:column;gap:2px}
+.qr-up b{font-size:15px;color:var(--ink)}
+.qr-up small{font-size:12.5px;color:var(--ink-2)}
+.qr-read{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);animation:rise .35s var(--ease-out)}
+.qr-read img,.qr-read-ph{width:46px;height:64px;flex:none;object-fit:cover;border-radius:8px;background:var(--matcha-2)}
+.qr-read-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.qr-read-b b{font-size:14.5px;display:flex;align-items:center;gap:8px}
+.qr-read-b small{font-size:12.5px;color:var(--ink-2)}
+.qr-read.ok{box-shadow:inset 0 0 0 1.5px #5E9A45;background:color-mix(in srgb,#E6F0DA 60%,var(--card))}
+.qr-read.ok .qr-read-b>b{color:#2F6A22}
+.qr-read.bad{box-shadow:inset 0 0 0 1.5px var(--rose);background:var(--rose-bg)}
+.qr-read.bad .qr-read-b>b{color:var(--rose-ink)}
+.qr-read.warn{box-shadow:inset 0 0 0 1.5px #D79A2B}
+.qr-facts{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 6px}
+.qr-facts li{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;font-variant-numeric:tabular-nums}
+.qr-facts li.yes{background:#DDEBD0;color:#2F6A22}
+.qr-facts li.yes::before{content:"✓ "}
+.qr-facts li.no{background:#FBD9E2;color:#B02A55}
+.qr-facts li.no::before{content:"✗ "}
+.qr-dots{display:inline-flex;gap:3px}
+.qr-dots i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:qrDot 1s ease-in-out infinite}
+.qr-dots i:nth-child(2){animation-delay:.15s}.qr-dots i:nth-child(3){animation-delay:.3s}
+@keyframes qrDot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+.qr-read.busy{box-shadow:inset 0 0 0 1.5px var(--line)}
+.qr-problem{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px 12px;border-radius:12px;background:var(--rose-bg);color:var(--rose-ink);font-size:13.5px;line-height:1.4}
+.qr-problem.ok{background:#FFF4DE;color:#7A5410}
+.qr-problem .shop-link{font-size:13px}
+@media (prefers-color-scheme:dark){
+  .qr-up svg{background:#9BCB78;stroke:#10200B}
+  .qr-read.ok{background:rgba(155,203,120,.1)}
+  .qr-read.ok .qr-read-b>b{color:#B4DA97}
+  .qr-facts li.yes{background:rgba(155,203,120,.18);color:#B4DA97}
+  .qr-facts li.no{background:rgba(255,124,156,.16);color:#FF97B0}
+  .qr-problem.ok{background:rgba(215,154,43,.14);color:#F2C46B}
+}

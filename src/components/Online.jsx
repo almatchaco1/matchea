@@ -111,8 +111,10 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                     return (<>
                       <div className={`kqr ${mins >= 15 ? 'late' : ''}`}>
                         {mins >= 15 && <b className="kqr-late">Waiting {mins} min for a payment check</b>}
-                        Open your <b>{QR_LABEL[o.qrPay.method]}</b> app and look for <b className="num">{peso(o.total)}</b> with reference <b className="num">{o.qrPay.ref}</b>{o.qrPay.paidAt && <>, paid at <b className="num">{phTime(o.qrPay.paidAt)}</b></>}.
+                        Open your <b>{QR_LABEL[o.qrPay.method]}</b> app and look for <b className="num">{peso(o.total)}</b>{o.qrPay.ref ? <> with reference <b className="num">{o.qrPay.ref}</b></> : ''}{o.qrPay.paidAt && <>, paid at <b className="num">{phTime(o.qrPay.paidAt)}</b></>}.
                       </div>
+                      {o.qrPay.unread && <div className="kqr-dup" role="alert"><b>👀 Receipt not read</b> The customer’s screenshot couldn’t be read by the site. Open the screenshot and check it against your {QR_LABEL[o.qrPay.method]} app.</div>}
+                      {o.qrPay.amountOff && <div className="kqr-dup" role="alert"><b>⚠ Amount doesn’t match</b> The receipt was read as {peso(o.qrPay.readAmount)}, but the order is {peso(o.total)}. The customer said it’s correct: check your {QR_LABEL[o.qrPay.method]} app.</div>}
                       {o.qrPay.timeOld && <div className="kqr-dup" role="alert"><b>⏱ Old payment time</b> The receipt says {phTime(o.qrPay.paidAt)}, {minsText(o.qrPay.timeOld)} before this order was placed. It may be an old receipt: check the date and time of this payment in your {QR_LABEL[o.qrPay.method]} app.</div>}
                       {o.qrPay.shotReused && <div className="kqr-dup" role="alert"><b>⚠ Screenshot used before</b> This exact picture was already sent with order #{pad(o.qrPay.shotReused.no)} ({o.qrPay.shotReused.date}). Check your {QR_LABEL[o.qrPay.method]} app carefully before accepting.</div>}
                       {o.qrPay.shot && <button className="btn sm" onClick={() => setShot(o)}>View payment screenshot</button>}
@@ -161,7 +163,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                     : o.status === 'paid'
                     ? <span className="pill ok">Paid · {PAY_LABELS[o.pay.method] || o.pay.method}{o.paidOnline ? ' (online)' : o.qrPay?.verified ? ' (QR)' : ''}</span>
                     : o.refundDue
-                      ? <span className="pill bad" title={o.qrPay?.verified ? `Send ${peso(o.total)} back to the customer by ${QR_LABEL[o.qrPay.method]} (ref ${o.qrPay.ref})` : `Refund ${peso(o.total)} in the PayMongo dashboard (ref ${o.pay.ref})`}>Cancelled · refund due</span>
+                      ? <span className="pill bad" title={o.qrPay?.verified ? `Send ${peso(o.total)} back to the customer by ${QR_LABEL[o.qrPay.method]} ${o.qrPay.ref ? ` (ref ${o.qrPay.ref})` : ''}` : `Refund ${peso(o.total)} in the PayMongo dashboard (ref ${o.pay.ref})`}>Cancelled · refund due</span>
                       : <span className="pill mute" title={o.cancelReason}>Cancelled</span>}</td>
                   <td className="r num">{peso(o.total)}</td>
                 </tr>))}
@@ -267,7 +269,7 @@ function PayModal({ order, settings, onClose, onDone, toast }) {
 
 function CancelModal({ order, onClose, onDone }) {
   const qr = order.qrPay?.method ? QR_LABEL[order.qrPay.method] : '';
-  const notFound = qr ? `We couldn't find your ${qr} payment (ref ${order.qrPay.ref}). Please message us.` : '';
+  const notFound = qr ? `We couldn't find your ${qr} payment${order.qrPay.ref ? ` (ref ${order.qrPay.ref})` : ''}. Please message us.` : '';
   const presets = order.notFound ? [notFound] : ['Sold out of an ingredient', 'Shop is closing', 'Customer asked to cancel', 'Did not pick up'];
   const [reason, setReason] = useState(order.notFound ? notFound : '');
   const [err, setErr] = useState('');
@@ -280,8 +282,8 @@ function CancelModal({ order, onClose, onDone }) {
     <Modal title={`Cancel order #${pad(order.no)}?`} onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Keep order</button><button className="btn danger" onClick={submit}>{order.notFound ? 'Cancel · payment not found' : 'Cancel order'}</button></>}>
       <p className="muted" style={{ margin: 0 }}>{order.customer} will see the reason on their order page.{order.stockDeducted ? ' Ingredients go back into stock.' : ''}</p>
-      {order.qrPay?.verified && <div className="warnbox">This order was paid by {qr} QR ({peso(order.total)}, ref <b>{order.qrPay.ref}</b>). After cancelling, send the money back to the customer by {qr}.</div>}
-      {order.notFound && <div className="warnbox">Only do this after checking your {qr} app for {peso(order.total)} with reference <b>{order.qrPay.ref}</b>. The customer will see the reason below.</div>}
+      {order.qrPay?.verified && <div className="warnbox">This order was paid by {qr} QR ({peso(order.total)}{order.qrPay.ref && <>, ref <b>{order.qrPay.ref}</b></>}). After cancelling, send the money back to the customer by {qr}.</div>}
+      {order.notFound && <div className="warnbox">Only do this after checking your {qr} app for {peso(order.total)}{order.qrPay.ref && <> with reference <b>{order.qrPay.ref}</b></>}. The customer will see the reason below.</div>}
       {order.paidOnline && <div className="warnbox">This order was paid online ({PAY_LABELS[order.pay.method] || 'Online'}, {peso(order.total)}). After cancelling, refund it in your PayMongo dashboard using reference <b>{order.pay.ref}</b>.</div>}
       <div className="opts">{presets.map((p) => <button key={p} className="opt" aria-pressed={reason === p} onClick={() => { setReason(p); setErr(''); }}>{p}</button>)}</div>
       {reason === 'Did not pick up' && !order.paidOnline && !order.qrPay?.method && <p className="fhint" style={{ margin: 0 }}>This counts as a no-show. After 2 no-shows in 60 days, this customer has to pay first (GCash, Maya or online) for new orders.</p>}
@@ -311,7 +313,7 @@ function ShotModal({ order, onClose }) {
   }, [order._id]);
   return (
     <Modal title={`Payment screenshot · #${pad(order.no)}`} onClose={onClose} footer={<button className="btn" onClick={onClose}>Close</button>}>
-      <p className="muted" style={{ margin: 0 }}>Check it matches <b className="num">{peso(order.total)}</b> and reference <b className="num">{order.qrPay.ref}</b>, then confirm in your {QR_LABEL[order.qrPay.method]} app too.</p>
+      <p className="muted" style={{ margin: 0 }}>Check it matches <b className="num">{peso(order.total)}</b>{order.qrPay.ref && <> and reference <b className="num">{order.qrPay.ref}</b></>}, then confirm in your {QR_LABEL[order.qrPay.method]} app too.</p>
       {order.qrPay.timeOld && <div className="warnbox">The receipt time ({phTime(order.qrPay.paidAt)}) is {minsText(order.qrPay.timeOld)} before this order was placed. It may be an old receipt.</div>}
       {order.qrPay.shotReused && <div className="warnbox">This screenshot was already used with order #{pad(order.qrPay.shotReused.no)} on {order.qrPay.shotReused.date}. It may be an old receipt.</div>}
       {err ? <div className="banner">{err}</div> : url ? <img className="shot-img" src={url} alt="Customer's payment screenshot" /> : <p className="muted">Loading…</p>}

@@ -146,7 +146,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
               return (
                 <li key={k} className={i < at ? 'done' : i === at ? 'now' : ''}>
                   <span className="dot" aria-hidden="true" />
-                  <div><b>{title}</b>{i === at && <small>{k === 'new' && o.qrPay && !o.qrPay.verified ? `The shop is checking your ${qr} payment (ref ${o.qrPay.ref}).` : k === 'preparing' && o.status === 'ready' ? 'Your drinks are ready. We’re booking a rider.' : text}</small>}</div>
+                  <div><b>{title}</b>{i === at && <small>{k === 'new' && o.qrPay && !o.qrPay.verified ? `The shop is checking your ${qr} payment${o.qrPay.ref ? ` (ref ${o.qrPay.ref})` : ''}.` : k === 'preparing' && o.status === 'ready' ? 'Your drinks are ready. We’re booking a rider.' : text}</small>}</div>
                 </li>
               );
             })}

@@ -50,7 +50,8 @@ const saleSchema = new mongoose.Schema(
     // Paid by scanning the shop's QR when ordering online; staff checks their GCash / Maya, then accepts
     qrPay: { method: String, ref: String, at: Date, verified: Boolean, verifiedBy: String, shot: Boolean, shotHash: String, shotPrint: String, // shot: customer attached a receipt screenshot (hash of the picture + of the original file)
       shotReused: { no: Number, date: String, code: String, same: Boolean }, // set when this screenshot was already used for another order
-      paidAt: Date, timeOld: Number }, // paidAt: time on the customer's receipt; timeOld: minutes it was before the order (set when that's suspiciously long)
+      paidAt: Date, timeOld: Number,
+      readAmount: Number, amountOff: Boolean, unread: Boolean }, // read from the screenshot in the customer's browser: amount on the receipt, differs from the order, ref couldn't be read // paidAt: time on the customer's receipt; timeOld: minutes it was before the order (set when that's suspiciously long)
     noShow: { type: Boolean, default: false }, // cancelled because the customer never picked it up
     onlineFee: { type: Number, default: 0 }, // PayMongo fee the customer paid on top of the total (the shop still receives the total)
     refundDue: { type: Boolean, default: false }, // paid online, then cancelled: refund in the PayMongo dashboard
