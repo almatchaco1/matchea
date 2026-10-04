@@ -2,7 +2,7 @@
 :root{
   --bg:#F4EDDF; --surface:#FFFCF5; --surface2:#EFE6D2; --ink:#1F2416; --muted:#5E604C; --line:#E3D7BE;
   --matcha:#1F4A17; --matcha-deep:#16330F; --on-matcha:#FFF8E8; --tan:#C9A46A; --pink:#FFF1D6;
-  --gold:#F0648A; --gold-2:#F9A9BD; --gold-ink:#C2365F; --forest:#16330F; --on-forest:#FFF6E2;
+  --gold:#5E9A3A; --gold-2:#B9D49A; --gold-ink:#3F7A2A; --forest:#16330F; --on-forest:#FFF6E2;
   --ok:#3E6A2E; --ok-bg:#E3EBD3;
   --shadow:0 10px 30px rgba(22,51,15,.14);
   --display:"Fraunces","Iowan Old Style",Georgia,serif;
@@ -10,15 +10,15 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#10140B; --surface:#1A2013; --surface2:#232A1A; --ink:#F0E8D5; --muted:#B4AD97; --line:#30382A;
-  --matcha:#FF7C9C; --matcha-deep:#FFB3C5; --on-matcha:#17190D; --tan:#EDD9B6; --pink:#FFF1D6;
-  --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#F9A9BD; --forest:#0C0F07; --on-forest:#EFE4C9;
+  --matcha:#A6D488; --matcha-deep:#C9E3B0; --on-matcha:#17190D; --tan:#EDD9B6; --pink:#FFF1D6;
+  --gold:#A6D488; --gold-2:#C9E3B0; --gold-ink:#B9D49A; --forest:#0C0F07; --on-forest:#EFE4C9;
   --ok:#A9C17E; --ok-bg:#232B18;
   --shadow:0 10px 30px rgba(0,0,0,.5);
 }}
 :root[data-theme="dark"]{
   --bg:#10140B; --surface:#1A2013; --surface2:#232A1A; --ink:#F0E8D5; --muted:#B4AD97; --line:#30382A;
-  --matcha:#FF7C9C; --matcha-deep:#FFB3C5; --on-matcha:#17190D; --tan:#EDD9B6; --pink:#FFF1D6;
-  --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#F9A9BD; --forest:#0C0F07; --on-forest:#EFE4C9;
+  --matcha:#A6D488; --matcha-deep:#C9E3B0; --on-matcha:#17190D; --tan:#EDD9B6; --pink:#FFF1D6;
+  --gold:#A6D488; --gold-2:#C9E3B0; --gold-ink:#B9D49A; --forest:#0C0F07; --on-forest:#EFE4C9;
   --ok:#A9C17E; --ok-bg:#232B18;
 }
 body{background:radial-gradient(120% 70% at 100% 0,rgba(237,217,182,.28),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(186,198,140,.22),transparent 60%),var(--bg);background-attachment:fixed}
@@ -59,7 +59,7 @@ h1,h2,h3,.sec{font-family:var(--display);letter-spacing:-.01em}
 .login-card .seal-logo{width:64px;height:64px}
 .t-no i{color:var(--gold-ink)}
 
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background:radial-gradient(120% 70% at 100% 0,rgba(255,124,156,.1),transparent 60%),var(--bg)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background:radial-gradient(120% 70% at 100% 0,rgba(155,203,120,.1),transparent 60%),var(--bg)}
   :root:not([data-theme="light"]) .top{background:linear-gradient(180deg,#151A0E,var(--forest))}
   :root:not([data-theme="light"]) .top .tab-ink{background:linear-gradient(180deg,var(--gold-2),var(--gold))}
   :root:not([data-theme="light"]) .top .tabs button[aria-selected="true"]{color:#17190D}
@@ -97,7 +97,7 @@ h2.sec{color:#25331B}
 .ticket{background:linear-gradient(180deg,#FFFDF8,#FBF5E8)}
 
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) body{background:radial-gradient(120% 70% at 100% 0,rgba(255,124,156,.1),transparent 60%),var(--bg)}
+  :root:not([data-theme="light"]) body{background:radial-gradient(120% 70% at 100% 0,rgba(155,203,120,.1),transparent 60%),var(--bg)}
   :root:not([data-theme="light"]) .prod,:root:not([data-theme="light"]) .panel,:root:not([data-theme="light"]) .chip{background:var(--surface);border-color:var(--line)}
   :root:not([data-theme="light"]) .prod .nm,:root:not([data-theme="light"]) h2.sec{color:var(--ink)}
   :root:not([data-theme="light"]) .ticket{background:linear-gradient(180deg,#18251D,#15211A)}
@@ -134,7 +134,7 @@ h2.sec{color:#25331B}
 /* Shop pin search (Menu → Shop & options → Delivery) */
 .ps{display:flex;flex-direction:column;gap:6px}
 .ps-box{position:relative;display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line)}
-.ps-box:focus-within{box-shadow:inset 0 0 0 1.5px var(--gold,#F0648A),0 0 0 3px rgba(214,180,128,.2)}
+.ps-box:focus-within{box-shadow:inset 0 0 0 1.5px var(--gold,#5E9A3A),0 0 0 3px rgba(214,180,128,.2)}
 .ps-box>svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round}
 .ps-box input{flex:1;min-width:0;border:0;background:transparent;padding:9px 2px;outline:0;font-size:15px;color:var(--ink)}
 .ps-loc{width:38px;height:38px;flex:none;border-radius:50%;border:0;background:#16330F;display:grid;place-items:center;cursor:pointer}
@@ -147,10 +147,10 @@ h2.sec{color:#25331B}
 .ps-hits button:hover,.ps-hits button:focus-visible{background:var(--surface2)}
 .ps-msg{font-size:12.5px;color:#B4472E}
 .ps .ps-box input,.ps .ps-box input:focus{border:0;background:transparent;box-shadow:none;outline:0;border-radius:0}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ps-loc{background:#F0648A}:root:not([data-theme="light"]) .ps-loc svg{stroke:#1A2013}}
-:root[data-theme="dark"] .ps-loc{background:#F0648A}:root[data-theme="dark"] .ps-loc svg{stroke:#1A2013}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ps-loc{background:#5E9A3A}:root:not([data-theme="light"]) .ps-loc svg{stroke:#1A2013}}
+:root[data-theme="dark"] .ps-loc{background:#5E9A3A}:root[data-theme="dark"] .ps-loc svg{stroke:#1A2013}
 /* Delivery card: tracking link still missing */
-.btn.track-add{border-color:var(--gold,#F0648A);color:var(--ink);background:color-mix(in srgb,var(--gold,#F0648A) 14%,var(--surface))}
+.btn.track-add{border-color:var(--gold,#5E9A3A);color:var(--ink);background:color-mix(in srgb,var(--gold,#5E9A3A) 14%,var(--surface))}
 /* Online board: 4th column for deliveries on the way */
 @media (min-width:1201px){.kanban.has-onway{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (min-width:901px) and (max-width:1200px){.kanban.has-onway{grid-template-columns:repeat(2,minmax(0,1fr))}}

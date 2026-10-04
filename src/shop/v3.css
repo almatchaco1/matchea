@@ -3,8 +3,8 @@
 .shop{
   --pink:#FBF6E8; --pink-2:#FFFBF1; --pink-3:#EDD9B6; --cream:#FFFDF6; --card:#FFFEF9;
   --ink:#1B2614; --ink-2:#596050; --green:#1F4A17; --green-2:#2E6424; --matcha:#7FAF5A; --matcha-2:#EEF2E2;
-  --forest:#163310; --forest-2:#1E4116; --gold:#F0648A; --gold-2:#F9A9BD; --gold-ink:#C2365F; --on-forest:#FFF6E2;
-  --rose:#F0648A; --rose-2:#F9A9BD; --rose-ink:#C2365F; --rose-bg:#FDEAF0;
+  --forest:#163310; --forest-2:#1E4116; --gold:#5E9A3A; --gold-2:#B9D49A; --gold-ink:#3F7A2A; --on-forest:#FFF6E2;
+  --rose:#5E9A3A; --rose-2:#B9D49A; --rose-ink:#3F7A2A; --rose-bg:#E8F1DC;
   --tan:#EDD9B6; --line:#EADBBE; --blush:#F9C5D2; --leaf:#C7DBAE;
   --shadow:0 0 0 1.5px var(--line),0 2px 0 rgba(22,51,15,.03),0 18px 34px -24px rgba(22,51,15,.42);
   --lift:0 0 0 1.5px var(--tan),0 26px 40px -24px rgba(22,51,15,.5);
@@ -15,9 +15,9 @@
   .shop{
     --pink:#0E170B; --pink-2:#121D0F; --pink-3:#3B3A27; --cream:#111B0E; --card:#152112;
     --ink:#F3EFDF; --ink-2:#B5B9A2; --green:#9BCB78; --green-2:#B4DA97; --matcha:#9BCB78; --matcha-2:#1B2A16;
-    --forest:#0A1208; --forest-2:#132310; --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#FF97B0; --on-forest:#F6EED8;
-    --rose:#FF7C9C; --rose-2:#FFB3C5; --rose-ink:#FF97B0; --rose-bg:rgba(255,124,156,.12);
-    --tan:#4A4530; --line:#26361F; --blush:#FFB3C5; --leaf:#5E7A4A;
+    --forest:#0A1208; --forest-2:#132310; --gold:#A6D488; --gold-2:#C9E3B0; --gold-ink:#B4DA97; --on-forest:#F6EED8;
+    --rose:#A6D488; --rose-2:#C9E3B0; --rose-ink:#B4DA97; --rose-bg:rgba(155,203,120,.12);
+    --tan:#4A4530; --line:#26361F; --blush:#C9E3B0; --leaf:#5E7A4A;
     --shadow:0 0 0 1px var(--line),0 18px 40px -24px rgba(0,0,0,.95);
     --lift:0 0 0 1px #3A5230,0 26px 44px -24px rgba(0,0,0,.95);
   }
@@ -27,11 +27,11 @@
 .shop h1,.shop h2,.shop h3,.shop .sec,.shop .sh-name{font-family:var(--serif);font-variation-settings:"SOFT" 100,"WONK" 0;font-weight:700;letter-spacing:-.018em}
 .ld-hero h1{font-weight:800;letter-spacing:-.03em}
 .ld-hero h1 em{color:var(--rose);font-variation-settings:"SOFT" 100,"WONK" 1}
-.shop ::selection{background:rgba(240,100,138,.25)}
+.shop ::selection{background:rgba(94,154,58,.25)}
 .shop :focus-visible{outline:2.5px solid var(--rose);outline-offset:2px}
 
 /* soft background glows: pink whisk + matcha */
-.shop-bg i:nth-child(1){background:radial-gradient(circle,rgba(249,169,189,.42),transparent 70%)}
+.shop-bg i:nth-child(1){background:radial-gradient(circle,rgba(185,212,154,.42),transparent 70%)}
 .shop-bg i:nth-child(2){background:radial-gradient(circle,rgba(199,219,174,.5),transparent 70%)}
 .shop-bg i:nth-child(3){background:radial-gradient(circle,rgba(237,217,182,.55),transparent 70%)}
 
@@ -45,7 +45,7 @@
 @keyframes stickerIn{0%{opacity:0;transform:scale(.55) rotate(-10deg)}60%{opacity:1;transform:scale(1.07) rotate(2deg)}100%{transform:none}}
 @keyframes stickerWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-4deg) scale(1.03)}45%{transform:rotate(3deg) scale(1.03)}70%{transform:rotate(-1.5deg)}}
 .shop .sh-head .sh-nav>a.on{background:rgba(255,246,226,.1) !important;color:#FFF6E2 !important;box-shadow:inset 0 0 0 1px rgba(255,246,226,.28)}
-.shop .sh-head .sh-nav>a.on::after{content:"";position:absolute;left:50%;bottom:3px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--rose);box-shadow:0 0 10px rgba(240,100,138,.8)}
+.shop .sh-head .sh-nav>a.on::after{content:"";position:absolute;left:50%;bottom:3px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--rose);box-shadow:0 0 10px rgba(94,154,58,.8)}
 .shop .sh-head .sh-nav>a{position:relative}
 .shop .sh-head .sh-cart span,.shop .sh-head .sh-dot,.shop-bar .shop-count{background:var(--rose);color:#fff;box-shadow:0 0 0 2px var(--forest)}
 .shop .sh-head .sh-avatar{background:#FFF6E2;color:var(--forest);border-color:rgba(255,246,226,.6)}
@@ -105,7 +105,7 @@
 
 /* ---------- Order number + live states get the pink accent ---------- */
 .track-no.is-ready{background-image:linear-gradient(180deg,var(--rose),var(--rose-ink))}
-.steps li.now .dot{background:var(--rose);box-shadow:0 0 0 5px rgba(240,100,138,.18)}
+.steps li.now .dot{background:var(--rose);box-shadow:0 0 0 5px rgba(94,154,58,.18)}
 .steps li.done .dot{background:var(--green)}
 
 @media (prefers-reduced-motion:reduce){
@@ -137,7 +137,7 @@
 .qr-facts li{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;font-variant-numeric:tabular-nums}
 .qr-facts li.yes{background:#DDEBD0;color:#2F6A22}
 .qr-facts li.yes::before{content:"✓ "}
-.qr-facts li.no{background:#FBD9E2;color:#B02A55}
+.qr-facts li.no{background:#F6DAD6;color:#AE3229}
 .qr-facts li.no::before{content:"✗ "}
 .qr-dots{display:inline-flex;gap:3px}
 .qr-dots i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:qrDot 1s ease-in-out infinite}
@@ -152,6 +152,14 @@
   .qr-read.ok{background:rgba(155,203,120,.1)}
   .qr-read.ok .qr-read-b>b{color:#B4DA97}
   .qr-facts li.yes{background:rgba(155,203,120,.18);color:#B4DA97}
-  .qr-facts li.no{background:rgba(255,124,156,.16);color:#FF97B0}
+  .qr-facts li.no{background:rgba(155,203,120,.16);color:#B4DA97}
   .qr-problem.ok{background:rgba(215,154,43,.14);color:#F2C46B}
 }
+/* receipt problems are errors: red, not the green accent */
+.qr-read.bad{box-shadow:inset 0 0 0 1.5px #C0473B;background:#FBE9E6}
+.qr-read.bad .qr-read-b>b{color:#AE3229}
+.qr-problem{background:#FBE9E6;color:#9A2F24}
+@media (prefers-color-scheme:dark){.qr-read.bad{background:rgba(238,124,112,.12);box-shadow:inset 0 0 0 1.5px #EE7C70}.qr-read.bad .qr-read-b>b{color:#F2A097}.qr-problem{background:rgba(238,124,112,.12);color:#F2A097}}
+/* the only pink accent: the "good mood." title on the home page, like the whisk in the logo */
+.shop .ld-hero h1 em{color:transparent;background-image:linear-gradient(100deg,#C2365F 0%,#F0648A 40%,#FFB3C5 52%,#F0648A 64%,#C2365F 100%)}
+@media (prefers-color-scheme:dark){.shop .ld-hero h1 em{background-image:linear-gradient(100deg,#FF7C9C 0%,#FFB3C5 45%,#FFE3EA 52%,#FF7C9C 64%,#E85A80 100%)}}

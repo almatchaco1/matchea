@@ -3,8 +3,8 @@
 :root{
   --bg:#FBF6E8; --surface:#FFFEF9; --surface2:#F3EAD6; --ink:#1B2614; --muted:#596050; --line:#EADBBE;
   --matcha:#1F4A17; --matcha-deep:#163310; --on-matcha:#FFF8E8; --tan:#C9A46A;
-  --gold:#F0648A; --gold-2:#F9A9BD; --gold-ink:#C2365F; --forest:#163310; --on-forest:#FFF6E2;
-  --rose:#F0648A; --rose-2:#F9A9BD; --rose-ink:#C2365F; --rose-bg:#FDEAF0;
+  --gold:#5E9A3A; --gold-2:#B9D49A; --gold-ink:#3F7A2A; --forest:#163310; --on-forest:#FFF6E2;
+  --rose:#5E9A3A; --rose-2:#B9D49A; --rose-ink:#3F7A2A; --rose-bg:#E8F1DC;
   --ok:#2F6A22; --ok-bg:#E2EED6;
   --shadow:0 18px 34px -24px rgba(22,51,15,.42);
   --card-sh:0 0 0 1.5px var(--line),0 2px 0 rgba(22,51,15,.03),0 14px 26px -20px rgba(22,51,15,.42);
@@ -14,8 +14,8 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0E170B; --surface:#152112; --surface2:#1C2B17; --ink:#F3EFDF; --muted:#B5B9A2; --line:#26361F;
   --matcha:#9BCB78; --matcha-deep:#B4DA97; --on-matcha:#10200B; --tan:#EDD9B6;
-  --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#FF97B0; --forest:#0A1208; --on-forest:#F6EED8;
-  --rose:#FF7C9C; --rose-2:#FFB3C5; --rose-ink:#FF97B0; --rose-bg:rgba(255,124,156,.12);
+  --gold:#A6D488; --gold-2:#C9E3B0; --gold-ink:#B4DA97; --forest:#0A1208; --on-forest:#F6EED8;
+  --rose:#A6D488; --rose-2:#C9E3B0; --rose-ink:#B4DA97; --rose-bg:rgba(155,203,120,.12);
   --ok:#A6D488; --ok-bg:#1C2B17;
   --card-sh:0 0 0 1px var(--line),0 16px 30px -22px rgba(0,0,0,.95);
   --lift-sh:0 0 0 1px #3A5230,0 22px 36px -22px rgba(0,0,0,.95);
@@ -23,15 +23,15 @@
 :root[data-theme="dark"]{
   --bg:#0E170B; --surface:#152112; --surface2:#1C2B17; --ink:#F3EFDF; --muted:#B5B9A2; --line:#26361F;
   --matcha:#9BCB78; --matcha-deep:#B4DA97; --on-matcha:#10200B; --tan:#EDD9B6;
-  --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#FF97B0; --forest:#0A1208; --on-forest:#F6EED8;
-  --rose:#FF7C9C; --rose-2:#FFB3C5; --rose-ink:#FF97B0; --rose-bg:rgba(255,124,156,.12);
+  --gold:#A6D488; --gold-2:#C9E3B0; --gold-ink:#B4DA97; --forest:#0A1208; --on-forest:#F6EED8;
+  --rose:#A6D488; --rose-2:#C9E3B0; --rose-ink:#B4DA97; --rose-bg:rgba(155,203,120,.12);
   --ok:#A6D488; --ok-bg:#1C2B17;
   --card-sh:0 0 0 1px var(--line),0 16px 30px -22px rgba(0,0,0,.95);
   --lift-sh:0 0 0 1px #3A5230,0 22px 36px -22px rgba(0,0,0,.95);
 }
-body{background:radial-gradient(110% 70% at 100% 0,rgba(249,169,189,.22),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(199,219,174,.3),transparent 60%),var(--bg);background-attachment:fixed}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background:radial-gradient(110% 70% at 100% 0,rgba(255,124,156,.08),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(155,203,120,.07),transparent 60%),var(--bg)}}
-::selection{background:rgba(240,100,138,.25)}
+body{background:radial-gradient(110% 70% at 100% 0,rgba(185,212,154,.22),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(199,219,174,.3),transparent 60%),var(--bg);background-attachment:fixed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background:radial-gradient(110% 70% at 100% 0,rgba(155,203,120,.08),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(155,203,120,.07),transparent 60%),var(--bg)}}
+::selection{background:rgba(94,154,58,.25)}
 :focus-visible{outline:2.5px solid var(--rose);outline-offset:2px}
 
 /* ---------- Type: soft chunky serif, like the logo ---------- */
@@ -50,7 +50,7 @@ h1,h2,h3,.sec{font-variation-settings:"SOFT" 100,"WONK" 0;font-weight:700;letter
 .top .tabs button{color:rgba(255,246,226,.74)}
 .top .tabs button[aria-selected="true"]{color:#163310}
 .top .tab-ink{background:#FFF6E2 !important;box-shadow:0 6px 14px -8px rgba(0,0,0,.7)}
-.top .tab-ink::after{background:linear-gradient(90deg,transparent,var(--rose),transparent) !important;box-shadow:0 0 12px 1px rgba(240,100,138,.75) !important}
+.top .tab-ink::after{background:linear-gradient(90deg,transparent,var(--rose),transparent) !important;box-shadow:0 0 12px 1px rgba(94,154,58,.75) !important}
 .top .tabs .dot.new{background:var(--rose);color:#fff}
 .top .userchip .btn.train-on{background:var(--rose);color:#fff}
 .top>.userchip{box-shadow:inset 0 0 0 1px rgba(237,217,182,.22)}

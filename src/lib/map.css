@@ -13,16 +13,16 @@
 /* the fixed pin in the middle: lifts while the map moves, drops when it stops */
 .mp-pin{position:absolute;left:50%;top:50%;z-index:500;width:40px;height:52px;margin:-50px 0 0 -20px;pointer-events:none;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
 .mp-pin svg{width:100%;height:100%;filter:drop-shadow(0 6px 6px rgba(20,24,10,.35))}
-.mp-pin path{fill:#16330F;stroke:#F9A9BD;stroke-width:2.2}
-.mp-pin circle{fill:#F9A9BD}
+.mp-pin path{fill:#16330F;stroke:#B9D49A;stroke-width:2.2}
+.mp-pin circle{fill:#B9D49A}
 .mp-pin i{position:absolute;left:50%;bottom:-5px;width:14px;height:5px;margin-left:-7px;border-radius:50%;background:rgba(20,24,10,.35);transition:transform .25s,opacity .25s}
 .mp.moving .mp-pin{transform:translateY(-14px)}
 .mp.moving .mp-pin i{transform:translateY(14px) scale(1.6);opacity:.5}
-.mp-shop span{display:block;width:44px;height:44px;border-radius:50%;padding:2px;background:#F9A9BD;box-shadow:0 6px 14px -4px rgba(20,24,10,.55)}
+.mp-shop span{display:block;width:44px;height:44px;border-radius:50%;padding:2px;background:#B9D49A;box-shadow:0 6px 14px -4px rgba(20,24,10,.55)}
 .mp-shop img{width:100%;height:100%;border-radius:50%;display:block}
 .mp-home span{display:block;width:40px;height:48px;animation:mpDrop .6s cubic-bezier(.34,1.56,.64,1) backwards}
 .mp-home svg{width:100%;height:100%;filter:drop-shadow(0 6px 6px rgba(20,24,10,.35))}
-.mp-home path{fill:#F0648A;stroke:#fff;stroke-width:1.4}
+.mp-home path{fill:#5E9A3A;stroke:#fff;stroke-width:1.4}
 .mp-home circle{fill:#fff}
 @keyframes mpDrop{from{transform:translateY(-30px);opacity:0}}
 .mp-route{stroke-dashoffset:0}

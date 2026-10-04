@@ -202,7 +202,7 @@ export function useHeaderFit(ref, dep) {
 export function leafBurst(from, n = 34) {
   if (calm() || !from?.getBoundingClientRect) return;
   const r = from.getBoundingClientRect();
-  const colors = ['#F0648A', '#F9A9BD', '#1F4A17', '#8DA35C', '#FFF1D6'];
+  const colors = ['#5E9A3A', '#B9D49A', '#1F4A17', '#8DA35C', '#FFF1D6'];
   for (let i = 0; i < n; i++) {
     const p = document.createElement('i');
     const size = 9 + Math.random() * 9;

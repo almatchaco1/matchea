@@ -12,14 +12,14 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;
-  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#F0648A; --line:#2D3626;
+  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#5E9A3A; --line:#2D3626;
   --matcha:#9DB777; --matcha-deep:#C3D6A5; --on-matcha:#10130D; --tan:#EDD9B6; --pink:#F3EDE0;
   --ok:#9DBC86; --ok-bg:#20281A; --warn:#E6B056; --warn-bg:#3A2D12; --bad:#EE7C70; --bad-bg:#3D1C18;
   --shadow:0 10px 30px rgba(0,0,0,.5);
 }}
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#F0648A; --line:#2D3626;
+  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#5E9A3A; --line:#2D3626;
   --matcha:#9DB777; --matcha-deep:#C3D6A5; --on-matcha:#10130D; --tan:#EDD9B6; --pink:#F3EDE0;
   --ok:#9DBC86; --ok-bg:#20281A; --warn:#E6B056; --warn-bg:#3A2D12; --bad:#EE7C70; --bad-bg:#3D1C18;
   --shadow:0 10px 30px rgba(0,0,0,.5);
@@ -969,7 +969,7 @@ tbody tr:last-child td{border-bottom:0}
 /* =====================================================================
    Round 3: Japanese café look, bento Reports, "Kissaten Night" dark mode
    ===================================================================== */
-:root{--gold:#F0648A}
+:root{--gold:#5E9A3A}
 /* Washi paper fibers */
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .17 0 0 0 0 .35 0 0 0 0 .13 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -1364,8 +1364,8 @@ td>.btn.sm{margin-top:2px;margin-bottom:2px}
 /* Barista queue: tickets slowly warm from matcha green to pink the longer they wait (full pink at 12 min).
    The top band fills with pink like a timer, and the card takes on a soft pink tint. */
 @property --age{syntax:'<number>';inherits:true;initial-value:0}
-.ticket{isolation:isolate;transition:transform .25s var(--spring),box-shadow .25s,--age 2.5s ease;border-color:color-mix(in srgb,#F0648A calc(var(--age,0) * 60%),var(--line))}
-.ticket::before,.ticket.slow::before,.ticket.late::before{background:linear-gradient(90deg,#F0648A calc(var(--age,0) * 100%),var(--matcha) calc(var(--age,0) * 100%))}
+.ticket{isolation:isolate;transition:transform .25s var(--spring),box-shadow .25s,--age 2.5s ease;border-color:color-mix(in srgb,#5E9A3A calc(var(--age,0) * 60%),var(--line))}
+.ticket::before,.ticket.slow::before,.ticket.late::before{background:linear-gradient(90deg,#5E9A3A calc(var(--age,0) * 100%),var(--matcha) calc(var(--age,0) * 100%))}
 .t-warm{position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(220,207,181,.32),rgba(220,207,181,.08) 60%);opacity:calc(var(--age,0) * .9)}
 .ticket.late{animation:tin .3s ease-out,warmPulse 3.2s ease-in-out 1s infinite}
 @keyframes warmPulse{0%,100%{box-shadow:0 1px 2px rgba(27,31,20,.05),0 4px 14px rgba(27,31,20,.05)}50%{box-shadow:0 0 0 3px rgba(220,207,181,.35),0 8px 22px -6px rgba(200,166,98,.45)}}
