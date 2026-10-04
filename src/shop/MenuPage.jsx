@@ -42,7 +42,7 @@ export default function MenuPage({ menu, err, reload, me, active, go, onPick, on
         {active[0] && (
           <button className="mn-active" onClick={() => go('/order/' + active[0].code)}>
             <span className="pulse" aria-hidden="true" />
-            <span><b>Order #{pad(active[0].no)}</b> · {active[0].fulfil === 'delivery' && active[0].status !== 'new' ? { booked: 'Waiting for a rider', picked: 'On the way' }[active[0].riderState] || 'Preparing' : STATUS[active[0].status]}</span>
+            <span><b>Order #{pad(active[0].no)}</b> · {active[0].fulfil === 'delivery' && active[0].status !== 'new' ? ({ booked: 'Waiting for a rider', picked: 'On the way' }[active[0].riderState] || (active[0].status === 'ready' ? 'Ready · booking a rider' : 'Preparing')) : STATUS[active[0].status]}</span>
             <span aria-hidden="true">›</span>
           </button>
         )}

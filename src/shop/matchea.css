@@ -455,3 +455,99 @@
 .dl-live-t em{font-style:normal;font-size:13px;opacity:.82}
 .dl-live>svg{width:22px;height:22px;flex:none;fill:none;stroke:#E2C88E;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media (prefers-reduced-motion:reduce){.dl-live-dot i{animation:none}}
+/* Customer confirms the delivery arrived */
+.dl-got{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line)}
+.dl-got>span{font-size:14.5px;flex:1 1 200px}
+.dl-got.sure{box-shadow:inset 0 0 0 1.5px var(--forest)}
+.dl-got-b{display:flex;gap:8px;flex-wrap:wrap}
+.dl-done{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#E6EEDA;color:#24321A}
+.dl-done svg{width:28px;height:28px;flex:none;padding:4px;border-radius:50%;background:#2D4320;fill:none;stroke:#F5EBD3;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.dl-done span{display:flex;flex-direction:column;font-size:13.5px}
+.dl-done b{font-size:15px}
+@media (prefers-color-scheme:dark){.dl-done{background:#24301A;color:#E9E2CC}.dl-done svg{background:#8FB36A;stroke:#151A0F}}
+
+/* ===== Checkout: QR payment panel (compact, professional) ===== */
+.shop .qrpay{container-type:inline-size;display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:0 12px 28px -22px rgba(34,42,20,.55);animation:rise .4s var(--ease-out) both}
+.qp-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;background:#F6F1E4;border-bottom:1px solid var(--line)}
+.qp-app{flex:none;font-weight:800;font-size:12.5px;letter-spacing:.02em;padding:6px 10px;border-radius:8px;color:#fff;background:#0B5CD5}
+.qp-app.maya{background:#0F9D58}
+.qp-amt,.qp-to{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.qp-amt small,.qp-to small{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.qp-amt b{font-size:22px;color:var(--ink);font-weight:800}
+.qp-to{margin-left:auto;text-align:right}
+.qp-to b{font-size:14px;color:var(--ink)}
+.qp-to span{font-size:13px;color:var(--ink-2)}
+.qp-body{display:grid;grid-template-columns:1fr;gap:14px;padding:16px}
+@container (min-width:440px){.qp-body{grid-template-columns:172px 1fr;align-items:start}}
+.qp-code{display:flex;flex-direction:column;align-items:center;gap:8px}
+.shop .qrpay .qrpay-img{width:172px;max-width:100%;border-radius:12px;background:#fff;box-shadow:0 0 0 1px var(--line);animation:none}
+.qp-code .qrpay-btns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.qp-how{display:flex;flex-direction:column;gap:8px;min-width:0}
+.qp-step{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--ink)}
+.qp-step i{font-style:normal;width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--green);color:#fff}
+.shop .qrpay .qrpay-steps{margin:0;padding-left:18px;font-size:13.5px;line-height:1.45;gap:3px}
+.shop .qrpay .qrpay-auto{align-self:flex-start;font-size:12px;padding:3px 9px;animation:none}
+.qp-form{display:flex;flex-direction:column;gap:10px;padding:14px 16px 4px;border-top:1px dashed var(--line)}
+.qp-fields{display:grid;grid-template-columns:1fr;gap:10px}
+@container (min-width:440px){.qp-fields{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start}}
+.shop .qrpay .au-field{margin:0}
+.shop .qrpay .qr-shot-add{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:8px;padding:10px 12px;border-radius:12px}
+.qp-note{margin:0;padding:10px 16px 14px;font-size:12.5px;color:var(--ink-2)}
+@media (prefers-color-scheme:dark){
+  .shop .qrpay{background:#151A0F;border-color:#2A3120}
+  .qp-head{background:#1B2113;border-color:#2A3120}
+  .qp-step i{background:#A7BB78;color:#151A0F}
+}
+
+/* Payment choice cards: selected = green, not gold */
+.shop .pay label.on{background:#F2F5EA;border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green),0 8px 18px -14px rgba(34,42,20,.5)}
+.shop .ck-fulfil button.on{background:#F2F5EA;border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+@media (prefers-color-scheme:dark){
+  .shop .pay label.on{background:rgba(167,187,120,.12);border-color:#A7BB78;box-shadow:inset 0 0 0 1px #A7BB78}
+  .shop .ck-fulfil button.on{background:rgba(167,187,120,.12);border-color:#A7BB78}
+  .shop .ck-fulfil button.on svg{background:#A7BB78;stroke:#151A0F}
+}
+
+/* ===== No gold buttons: green in light mode, soft matcha green in dark mode ===== */
+.shop .sh-head .sh-btn,.shop .sh-head a.sh-btn:not(.ghost){background:#F5F1E6;border-color:#F5F1E6;color:var(--forest)}
+.shop .sh-head .sh-btn:hover:not(:disabled),.shop .sh-head a.sh-btn:not(.ghost):hover{background:#fff;border-color:#fff;color:var(--forest)}
+.shop .sh-head .sh-btn.ghost:hover:not(:disabled){border-color:rgba(245,241,230,.7)}
+.shop .sh-btn.ghost:hover:not(:disabled){background:rgba(45,67,32,.08);border-color:var(--green)}
+.shop .sh-btn.gold,.ld-cta .sh-btn{background:var(--green);border-color:var(--green);color:#fff}
+.shop .mn-add:hover:not(:disabled){background:var(--green);color:#fff}
+.mn-top .mn-active{background:#F5F1E6 !important;color:var(--forest) !important}
+.shop .sh-head .sh-avatar{background:#F5F1E6;color:var(--forest);border-color:rgba(245,241,230,.6)}
+@media (max-width:640px){
+  .tb-ink{background:#F5F1E6;box-shadow:0 8px 16px -8px rgba(0,0,0,.6)}
+}
+.shop .dl-live-dot i{background:#B9D49A;animation-name:livePingG}
+@keyframes livePingG{0%{box-shadow:0 0 0 0 rgba(185,212,154,.7)}80%,100%{box-shadow:0 0 0 16px rgba(185,212,154,0)}}
+.shop .dl-live-t small{color:#B9D49A}
+.shop .dl-live>svg{stroke:#B9D49A}
+@media (prefers-color-scheme:dark){
+  .shop .sh-btn{background:#A7BB78;border-color:#A7BB78;color:#141A0C}
+  .shop .sh-btn:hover:not(:disabled){background:#B9CB8E;border-color:#B9CB8E}
+  .shop .sh-btn.ghost{background:transparent;color:#C2D195;border-color:rgba(167,187,120,.55)}
+  .shop .sh-btn.ghost:hover:not(:disabled){background:rgba(167,187,120,.1);border-color:#A7BB78}
+  .shop .mn-add{background:#A7BB78;color:#141A0C}
+  .mn-cats .cat-ink{background:#A7BB78}
+  .shop .sh-head .sh-btn,.shop .sh-head a.sh-btn:not(.ghost){background:#A7BB78;border-color:#A7BB78;color:#141A0C}
+}
+/* tighter payment panel */
+.qp-head{padding:12px 14px;gap:12px}
+.qp-amt b{font-size:20px}
+.qp-body{grid-template-columns:132px 1fr;gap:12px;padding:14px;align-items:start}
+@container (min-width:440px){.qp-body{grid-template-columns:160px 1fr}}
+@container (max-width:280px){.qp-body{grid-template-columns:1fr}}
+.shop .qrpay .qrpay-img{width:100%}
+.qp-code .qrpay-btns .sh-btn{padding:6px 12px;font-size:13px;min-height:0}
+.shop .qrpay .qrpay-steps{font-size:13px;padding-left:16px}
+.qp-step{font-size:13.5px}
+.qp-form{padding:12px 14px 2px;gap:8px}
+.qp-fields{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:8px}
+@container (max-width:280px){.qp-fields{grid-template-columns:1fr}}
+.shop .qrpay .au-field>span{font-size:12.5px}
+.shop .qrpay .au-field input{padding:10px 11px;font-size:14.5px;letter-spacing:.03em}
+.shop .qrpay .qr-shot-add{border-style:dashed;padding:9px 12px}
+.shop .qrpay .qr-shot-add span{font-size:13.5px}
+.qp-note{padding:8px 14px 12px}

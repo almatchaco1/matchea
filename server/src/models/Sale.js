@@ -36,7 +36,7 @@ const saleSchema = new mongoose.Schema(
       state: { type: String, enum: ['waiting', 'booked', 'picked', 'delivered'] },
       bookedAt: Date, bookedBy: String, cost: Number, // cost: what Lalamove actually charged the shop
       rider: { name: String, phone: String, plate: String }, trackUrl: String,
-      pickedAt: Date, deliveredAt: Date,
+      pickedAt: Date, deliveredAt: Date, receivedBy: { type: String, enum: ['staff', 'customer'] }, // who confirmed it arrived
     },
     trackCode: { type: String, index: true, sparse: true }, // secret code in the customer's tracking link
     acceptedAt: Date, readyAt: Date, completedAt: Date, cancelledAt: Date,

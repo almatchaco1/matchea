@@ -12,6 +12,7 @@ import { paymongoMode } from '../lib/paymongo.js';
 import { awardStamps, returnReward } from '../lib/loyalty.js';
 import { notifyReady } from '../lib/notify.js';
 import { checkOverride } from '../middleware/auth.js';
+import { finishDelivery } from '../lib/delivery.js';
 
 const r = Router();
 r.param('id', checkId);
@@ -104,7 +105,7 @@ async function deliveryOrder(id) {
   if (cur.fulfil !== 'delivery') throw new HttpError(400, 'This is a pickup order.');
   return cur;
 }
-const STATE_LABEL = { waiting: 'waiting to be booked', booked: 'waiting for the rider', picked: 'on the way', delivered: 'delivered' };
+const STATE_LABEL = { waiting: 'not booked yet', booked: 'waiting for the rider', picked: 'on the way', delivered: 'already delivered' };
 async function step(id, from, update, statuses = ['preparing', 'ready']) {
   const sale = await Sale.findOneAndUpdate({ _id: id, source: 'online', fulfil: 'delivery', status: { $in: statuses }, 'delivery.state': { $in: from } }, update, { new: true });
   if (sale) return sale;
@@ -138,7 +139,9 @@ r.post('/:id/delivery/picked', ah(async (req, res) => {
   if (rider.phone && !/^(\+?63|0)9\d{9}$/.test(rider.phone.replace(/[\s-]/g, ''))) e.phone = 'Enter a mobile number like 0917 123 4567, or leave it empty.';
   if (trackError(trackUrl)) e.trackUrl = trackError(trackUrl);
   assertValid(e);
-  const sale = await step(req.params.id, ['booked'], { status: 'ready', readyAt: new Date(), 'delivery.state': 'picked', 'delivery.pickedAt': new Date(), 'delivery.rider': rider, ...(trackUrl ? { 'delivery.trackUrl': trackUrl } : {}) });
+  const cur = await deliveryOrder(req.params.id);
+  if (cur.status === 'preparing') throw new HttpError(409, 'The drinks aren’t marked ready yet. Tap Done on the Barista screen (or Mark ready here) before the rider takes them.');
+  const sale = await step(req.params.id, ['booked'], { status: 'ready', readyAt: new Date(), 'delivery.state': 'picked', 'delivery.pickedAt': new Date(), 'delivery.rider': rider, ...(trackUrl ? { 'delivery.trackUrl': trackUrl } : {}) }, ['ready']);
   res.json(forStaff(sale));
 }));
 
@@ -156,16 +159,11 @@ r.post('/:id/delivery/rebook', ah(async (req, res) => {
   res.json(forStaff(sale));
 }));
 
-// Delivered: the order is completed (it was paid before it was sent)
+// Delivered: the order is completed (it was paid before it was sent). The customer can also confirm it on their order page.
 r.post('/:id/delivery/delivered', ah(async (req, res) => {
   const cur = await deliveryOrder(req.params.id);
-  if (!(cur.paidOnline || cur.qrPay?.verified || cur.total <= 0)) throw new HttpError(400, 'This delivery isn’t marked paid yet. Check the payment first.');
-  const sale = await step(req.params.id, ['picked'], { status: 'paid', completedAt: new Date(), cashier: req.user._id, cashierName: req.user.name, 'delivery.state': 'delivered', 'delivery.deliveredAt': new Date() }, ['ready']);
-  if (!cur.stockDeducted) {
-    await applyUsage(usageMap(sale.usage), -1, { reason: 'sale', by: req.user.name, sale: sale._id, note: 'Online order' });
-    await Sale.updateOne({ _id: sale._id }, { stockDeducted: true });
-  }
-  res.json(await awardStamps(sale));
+  if (cur.delivery?.state === 'delivered') return res.json(forStaff(cur));
+  res.json(forStaff(await finishDelivery(cur, req.user)));
 }));
 
 // The payment screenshot a customer attached (staff only)
@@ -180,7 +178,8 @@ r.post('/:id/cancel', ah(async (req, res) => {
   const reason = String(req.body?.reason || '').trim();
   if (reason.length < 3) throw new HttpError(400, 'Tell the customer why (at least 3 characters).', { reason: 'Tell the customer why.' });
   if (reason.length > 120) throw new HttpError(400, 'The reason can be at most 120 characters.', { reason: 'At most 120 characters.' });
-  const prev = await Sale.findOne({ _id: req.params.id, source: 'online' }, 'paidOnline qrPay');
+  const prev = await Sale.findOne({ _id: req.params.id, source: 'online' }, 'paidOnline qrPay fulfil delivery');
+  if (prev?.fulfil === 'delivery' && prev.delivery?.state === 'picked') throw new HttpError(409, 'The rider already has this order, so it can’t be cancelled here. Call the rider and the customer first; if Lalamove cancels, tap Rider cancelled.');
   const paid = !!prev?.paidOnline || !!prev?.qrPay?.verified || !!prev?.qrPay?.method;
   // "Did not pick up" on an unpaid order counts as a no-show (2 in 60 days → that customer pays first next time)
   const noShow = !paid && (req.body?.noShow === true || /did not pick up|didn.t pick up|no.?show/i.test(reason));

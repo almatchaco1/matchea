@@ -20,6 +20,7 @@ import { paymongoEnabled, methodTypes, createCheckout, getCheckout, expireChecko
 import { cleanDecor } from '../../../src/shared/decor.mjs';
 import { quoteFor, checkAddress, inPH } from '../../../src/shared/delivery.mjs';
 import { roadKm, searchPlaces, placeName } from '../lib/geo.js';
+import { finishDelivery } from '../lib/delivery.js';
 
 const PAY_WINDOW_MIN = 45; // unpaid "pay now" orders are cancelled after this many minutes
 
@@ -315,6 +316,18 @@ r.post('/orders/:code/cancel', ah(async (req, res) => {
   res.json(publicView(upd || (await Sale.findById(cur._id))));
 }));
 
+// Customer confirms the rider handed over the drinks (the shop sees it as delivered)
+r.post('/orders/:code/received', rateLimit(10, 10 * 60 * 1000), ah(async (req, res) => {
+  const code = String(req.params.code || '');
+  if (!/^[A-Za-z0-9_-]{8,20}$/.test(code)) throw new HttpError(404, 'Order not found.');
+  const cur = await Sale.findOne({ trackCode: code, source: 'online' });
+  if (!cur) throw new HttpError(404, 'Order not found.');
+  if (cur.fulfil !== 'delivery') throw new HttpError(400, 'This is a pickup order.');
+  if (cur.delivery?.state === 'delivered') return res.json(publicView(cur));
+  if (cur.delivery?.state !== 'picked') throw new HttpError(409, 'Your rider hasn’t picked up your order yet. You can confirm once it’s on the way.');
+  res.json(publicView(await finishDelivery(cur, 'customer')));
+}));
+
 // PayMongo webhook: register https://YOUR-SITE/api/public/paymongo/webhook for "checkout_session.payment.paid"
 r.post('/paymongo/webhook', ah(async (req, res) => {
   const evt = req.body?.data?.attributes || {};
@@ -360,7 +373,7 @@ const publicView = (s) => ({
   delivery: s.fulfil === 'delivery' && s.delivery ? {
     lat: s.delivery.lat, lng: s.delivery.lng, label: s.delivery.label || '', detail: s.delivery.detail || '', landmark: s.delivery.landmark || '', note: s.delivery.note || '',
     from: s.delivery.from?.lat != null ? { lat: s.delivery.from.lat, lng: s.delivery.from.lng } : null, route: String(s.delivery.route || '').split(';').filter(Boolean).map((p) => p.split(',').map(Number)),
-    km: s.delivery.km, free: !!s.delivery.free, state: s.delivery.state || 'waiting', bookedAt: s.delivery.bookedAt || null, pickedAt: s.delivery.pickedAt || null, deliveredAt: s.delivery.deliveredAt || null,
+    km: s.delivery.km, free: !!s.delivery.free, state: s.delivery.state || 'waiting', bookedAt: s.delivery.bookedAt || null, pickedAt: s.delivery.pickedAt || null, deliveredAt: s.delivery.deliveredAt || null, receivedBy: s.delivery.receivedBy || '',
     rider: s.delivery.state === 'picked' || s.delivery.state === 'delivered' ? { name: s.delivery.rider?.name || '', phone: s.delivery.rider?.phone || '', plate: s.delivery.rider?.plate || '' } : null,
     trackUrl: ['booked', 'picked'].includes(s.delivery.state) ? s.delivery.trackUrl || '' : '',
   } : null,

@@ -1,5 +1,5 @@
 // Barista screen: every drink still to make, oldest first, big enough to read from across the counter.
-// Tap a drink to see its recipe, tap the circle to tick it off; tap Done when the order is complete (online orders become "Ready for pickup").
+// Tap a drink to see its recipe, tap the circle to tick it off; tap Done when the order is complete (online orders become "Ready for pickup", deliveries "Ready for the rider").
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { pad, qfmt } from '../lib/format';
@@ -77,7 +77,7 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
     try {
       const r = await api.post(`/barista/${t._id}/done`);
       leave(card, () => setData((d) => ({ ...d, tickets: d.tickets.filter((x) => x._id !== t._id) })));
-      if (r.ready) toast(`#${pad(t.no)} is ready. The customer has been told.`);
+      if (r.ready) toast(t.delivery ? `#${pad(t.no)} is ready for the Lalamove rider.` : `#${pad(t.no)} is ready. The customer has been told.`);
       else setUndo({ id: t._id, no: t.no });
     } catch (e) { toast(e.message); load(); }
     finally { setBusy(''); }
@@ -146,7 +146,7 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
                 })}
               </ul>
               <button className="btn primary t-done" disabled={busy === t._id} onClick={() => done(t)}>
-                {busy === t._id ? 'Saving…' : t.source === 'online' ? 'Done · ready for pickup' : 'Done'}
+                {busy === t._id ? 'Saving…' : t.delivery ? 'Done · ready for the rider' : t.source === 'online' ? 'Done · ready for pickup' : 'Done'}
               </button>
             </article>
           );

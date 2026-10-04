@@ -192,37 +192,50 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         )}
         {needQr && (
           <div className="qrpay">
-            <div className="qrpay-h"><b>Pay {peso(total)} with {appName}</b>{qrs[qrMethod].name && <small>to {qrs[qrMethod].name}{qrs[qrMethod].number ? ` · ${qrs[qrMethod].number.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}` : ''}</small>}</div>
-            <img className="qrpay-img" src={qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`} alt={`Our ${appName} QR code for ${peso(total)}`} />
-            {qrImg && <span className="qrpay-auto">✓ {peso(total)} is already in this QR</span>}
-            <div className="qrpay-btns">
-              <button type="button" className="sh-btn ghost sm" onClick={async () => { const r = await saveQr(qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`, `matchea-${qrMethod}-${Math.round(total)}.png`); if (r !== 'cancelled') setSaved(r); }}>{saved ? 'Saved ✓' : 'Save QR'}</button>
-              {phone && qrMethod === 'gcash' && <button type="button" className="sh-btn sm" onClick={openGcash}>Open GCash app</button>}
+            <div className="qp-head">
+              <span className={`qp-app ${qrMethod}`}>{appName}</span>
+              <div className="qp-amt"><small>Amount to pay</small><b className="num">{peso(total)}</b></div>
+              {qrs[qrMethod].name && <div className="qp-to"><small>Send to</small><b>{qrs[qrMethod].name}</b>{qrs[qrMethod].number && <span className="num">{qrs[qrMethod].number.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span>}</div>}
             </div>
-            <ol className="qrpay-steps">
-              {phone ? <>
-                <li>Tap <b>Save QR</b>{saved === 'shared' ? '' : ' (save the picture to your photos)'}.</li>
-                <li>{qrMethod === 'gcash' ? <>Tap <b>Open GCash app</b>, then <b>QR</b> → <b>Upload QR</b> and pick the picture.</> : <>Open the Maya app, tap <b>Scan</b> → <b>Upload QR</b> and pick the picture.</>}</li>
-                <li>{qrImg ? <>The amount <b>{peso(total)}</b> fills in by itself. Pay it.</> : <>Type exactly <b>{peso(total)}</b> and pay.</>}</li>
-                <li>Come back here and type the <b>reference number</b> and <b>time</b> from your receipt.</li>
-              </> : <>
-                <li>Open {appName} on your phone and scan this QR.</li>
-                <li>{qrImg ? <>The amount <b>{peso(total)}</b> fills in by itself. Pay it.</> : <>Type exactly <b>{peso(total)}</b> and pay.</>}</li>
-                <li>Type the <b>reference number</b> and <b>time</b> from your receipt below.</li>
-              </>}
-            </ol>
+            <div className="qp-body">
+              <div className="qp-code">
+                <img className="qrpay-img" src={qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`} alt={`Our ${appName} QR code for ${peso(total)}`} />
+                <div className="qrpay-btns">
+                  <button type="button" className="sh-btn ghost sm" onClick={async () => { const r = await saveQr(qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`, `matchea-${qrMethod}-${Math.round(total)}.png`); if (r !== 'cancelled') setSaved(r); }}>{saved ? 'Saved ✓' : 'Save QR'}</button>
+                  {phone && qrMethod === 'gcash' && <button type="button" className="sh-btn sm" onClick={openGcash}>Open GCash</button>}
+                </div>
+              </div>
+              <div className="qp-how">
+                <span className="qp-step"><i>1</i>Pay with {appName}</span>
+                <ol className="qrpay-steps">
+                  {phone ? <>
+                    <li>Tap <b>Save QR</b>{saved === 'shared' ? '' : ' to keep it in your photos'}.</li>
+                    <li>{qrMethod === 'gcash' ? <>In GCash: <b>QR</b> → <b>Upload QR</b>, pick the picture.</> : <>In Maya: <b>Scan</b> → <b>Upload QR</b>, pick the picture.</>}</li>
+                    <li>{qrImg ? <>Pay the <b>{peso(total)}</b> that fills in.</> : <>Type exactly <b>{peso(total)}</b> and pay.</>}</li>
+                  </> : <>
+                    <li>Scan this QR with {appName} on your phone.</li>
+                    <li>{qrImg ? <>Pay the <b>{peso(total)}</b> that fills in.</> : <>Type exactly <b>{peso(total)}</b> and pay.</>}</li>
+                  </>}
+                </ol>
+                {qrImg && <span className="qrpay-auto">✓ Amount is already in the QR</span>}
+              </div>
+            </div>
+            <div className="qp-form">
+              <span className="qp-step"><i>2</i>Enter your receipt details</span>
+              <div className="qp-fields">
             <label className="au-field">
-              <span>Reference number</span>
+              <span>Reference no.</span>
               <input value={ref} onChange={(e) => { setRef(fmtRef(qrMethod, e.target.value)); setRefErr(''); }} onBlur={() => { if (ref) setRefErr(checkQrRef(qrMethod, ref)); }}
-                inputMode={qrMethod === 'gcash' ? 'numeric' : 'text'} autoCapitalize="characters" maxLength={qrMethod === 'gcash' ? 15 : 24} placeholder={qrMethod === 'gcash' ? '13-digit Ref No. e.g. 1011 234 567890' : 'Reference ID from your Maya receipt'} aria-invalid={!!refErr} />
+                inputMode={qrMethod === 'gcash' ? 'numeric' : 'text'} autoCapitalize="characters" maxLength={qrMethod === 'gcash' ? 15 : 24} placeholder={qrMethod === 'gcash' ? '1011 234 567890' : 'Maya reference ID'} aria-invalid={!!refErr} />
               {refErr ? <small className="au-err" role="alert">{refErr}</small>
                 : qrMethod === 'gcash' && cleanQrRef(ref).length > 0 && <small className="muted">{cleanQrRef(ref).length} of 13 digits</small>}
             </label>
             <label className="au-field">
-              <span>Time on your receipt</span>
+              <span>Time paid</span>
               <input type="time" value={paidTime} onChange={(e) => { setPaidTime(e.target.value); setTimeErr(''); }} onBlur={() => { if (paidTime) setTimeErr(checkPaidTime(paidTime).err || ''); }} aria-invalid={!!timeErr} />
-              {timeErr ? <small className="au-err" role="alert">{timeErr}</small> : <small className="muted">The time shown on your {appName} receipt, e.g. 2:14 PM.</small>}
+              {timeErr && <small className="au-err" role="alert">{timeErr}</small>}
             </label>
+              </div>
             <div className="qr-shot">
               {shot ? (
                 <div className="qr-shot-have">
@@ -233,13 +246,13 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
               ) : (
                 <label className="qr-shot-add">
                   <input type="file" accept="image/*" onChange={async (e) => { const file = e.target.files?.[0]; e.target.value = ''; if (!file) return; setShotMsg(''); try { const [data, print] = await Promise.all([shrinkImage(file), fileFingerprint(file)]); setShot(data); setShotPrint(print); } catch { setShotMsg('That picture couldn’t be used. Try another screenshot.'); } }} />
-                  <span>📎 Add a screenshot of your receipt <i className="opt">optional</i></span>
-                  <small>Helps the shop confirm your payment faster.</small>
+                  <span>＋ Add receipt screenshot <i className="opt">optional · faster check</i></span>
                 </label>
               )}
               {shotMsg && <small className="au-err" role="alert">{shotMsg}</small>}
             </div>
-            <p className="muted small" style={{ margin: 0 }}>The shop checks your payment, then starts your drinks.</p>
+            </div>
+            <p className="qp-note">The shop checks your payment, then starts your drinks.</p>
           </div>
         )}
         {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - itemsTotal)}</b></div>}

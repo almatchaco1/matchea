@@ -12,7 +12,7 @@ import { Field, CodeStep, PasswordBox } from './Auth';
 const LABEL = { awaiting_payment: 'Waiting for payment', new: 'Order received', preparing: 'Preparing', ready: 'Ready for pickup', paid: 'Picked up', cancelled: 'Cancelled' };
 // Delivery orders: the rider's step instead
 const DLABEL = { waiting: 'Preparing', booked: 'Waiting for a rider', picked: 'On the way', delivered: 'Delivered' };
-const labelOf = (o) => (o.fulfil === 'delivery' && ['preparing', 'ready', 'paid'].includes(o.status) ? DLABEL[o.status === 'paid' ? 'delivered' : o.riderState] : LABEL[o.status]) || o.status;
+const labelOf = (o) => (o.fulfil === 'delivery' && ['preparing', 'ready', 'paid'].includes(o.status) ? (o.status === 'ready' && (o.riderState || 'waiting') === 'waiting' ? 'Ready · booking a rider' : DLABEL[o.status === 'paid' ? 'delivered' : o.riderState]) : LABEL[o.status]) || o.status;
 
 export function OrdersPage({ orders, go, reload }) {
   const { pull, busy } = usePullRefresh(reload);

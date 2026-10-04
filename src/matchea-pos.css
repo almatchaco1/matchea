@@ -151,3 +151,32 @@ h2.sec{color:#25331B}
 :root[data-theme="dark"] .ps-loc{background:#C29B54}:root[data-theme="dark"] .ps-loc svg{stroke:#1A2013}
 /* Delivery card: tracking link still missing */
 .btn.track-add{border-color:var(--gold,#C29B54);color:var(--ink);background:color-mix(in srgb,var(--gold,#C29B54) 14%,var(--surface))}
+/* Online board: 4th column for deliveries on the way */
+@media (min-width:1201px){.kanban.has-onway{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:901px) and (max-width:1200px){.kanban.has-onway{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.k-onway .kcol-h h3::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#5E8C3A;margin-right:7px;vertical-align:1px;animation:livePulse 1.6s ease-out infinite}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(94,140,58,.6)}80%,100%{box-shadow:0 0 0 8px rgba(94,140,58,0)}}
+.dtag.sm{font-size:10.5px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+
+/* ===== No gold buttons in the POS ===== */
+.btn:hover{border-color:#6E8F4E}
+.top .userchip .btn.train-on{background:#A7BB78;color:#141A0C}
+.btn.track-add{border-color:#5E8C3A;color:var(--ink);background:color-mix(in srgb,#5E8C3A 12%,var(--surface))}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .btn.primary{background:#A7BB78;border-color:#A7BB78;color:#141A0C;box-shadow:0 8px 18px -10px rgba(0,0,0,.8)}
+  :root:not([data-theme="light"]) .btn.primary:hover:not(:disabled){background:#B9CB8E;border-color:#B9CB8E}
+  :root:not([data-theme="light"]) .chip[aria-pressed="true"],:root:not([data-theme="light"]) .cats button[aria-pressed="true"]{background:#A7BB78;border-color:#A7BB78;color:#141A0C}
+  :root:not([data-theme="light"]) .ps-loc{background:#A7BB78}
+}
+:root[data-theme="dark"] .btn.primary{background:#A7BB78;border-color:#A7BB78;color:#141A0C}
+:root[data-theme="dark"] .chip[aria-pressed="true"],:root[data-theme="dark"] .cats button[aria-pressed="true"]{background:#A7BB78;border-color:#A7BB78;color:#141A0C}
+:root[data-theme="dark"] .ps-loc{background:#A7BB78}
+.top .tab-ink,.top .userchip ~ * .tab-ink{background:#F5F1E6;box-shadow:0 6px 14px -8px rgba(0,0,0,.7)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .top .tab-ink{background:#A7BB78}
+  :root:not([data-theme="light"]) .charge:not(:disabled){background:#A7BB78;color:#141A0C}
+}
+:root[data-theme="dark"] .top .tab-ink{background:#A7BB78}
+:root[data-theme="dark"] .charge:not(:disabled){background:#A7BB78;color:#141A0C}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prod:not(:disabled)::after{background:#A7BB78;color:#141A0C}}
+:root[data-theme="dark"] .prod:not(:disabled)::after{background:#A7BB78;color:#141A0C}

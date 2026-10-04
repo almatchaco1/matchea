@@ -138,7 +138,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
             <small>{o.status === 'ready' ? 'Tell this code at the counter to get your order.' : 'You’ll tell this code at the counter when you pick up. Keep it to yourself.'}</small>
           </div>
         )}
-        {o.fulfil === 'delivery' && o.delivery && <DeliveryBox o={o} />}
+        {o.fulfil === 'delivery' && o.delivery && <DeliveryBox o={o} busy={busy === 'received'} onReceived={() => post('received')} />}
         {o.fulfil === 'delivery' ? (
           <ol className="steps">
             {DSTEPS.map(([k, title, text], i) => {
@@ -211,8 +211,9 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
 }
 
 /** Delivery address, map with the rider's road, and the rider once they have the drinks. */
-function DeliveryBox({ o }) {
+function DeliveryBox({ o, busy, onReceived }) {
   const d = o.delivery;
+  const [sure, setSure] = useState(false);
   const dest = { lat: d.lat, lng: d.lng };
   return (
     <div className="dl-box">
@@ -229,6 +230,20 @@ function DeliveryBox({ o }) {
           <span className="dl-av" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg></span>
           <div><b>{d.rider.name || 'Your Lalamove rider'}</b><small>{[d.rider.plate && `Plate ${d.rider.plate}`, 'Lalamove'].filter(Boolean).join(' · ')}</small></div>
           {d.rider.phone && <a className="sh-btn sm ghost" href={`tel:${d.rider.phone.replace(/[^\d+]/g, '')}`}>Call</a>}
+        </div>
+      )}
+      {d.state === 'picked' && (
+        <div className={`dl-got ${sure ? 'sure' : ''}`}>
+          {!sure
+            ? <><span>Did the rider hand you your drinks?</span><button type="button" className="sh-btn" onClick={() => setSure(true)}>I received my order</button></>
+            : <><span>Confirm you have your drinks? This tells the shop the delivery is done.</span>
+              <div className="dl-got-b"><button type="button" className="sh-btn ghost" disabled={busy} onClick={() => setSure(false)}>Not yet</button><button type="button" className="sh-btn" disabled={busy} onClick={onReceived}>{busy ? 'Saving…' : 'Yes, I got it'}</button></div></>}
+        </div>
+      )}
+      {d.state === 'delivered' && (
+        <div className="dl-done" role="status">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+          <span><b>Delivered{d.deliveredAt ? ` at ${new Date(d.deliveredAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}` : ''}</b>{d.receivedBy === 'customer' ? 'You confirmed you received it. Thank you!' : 'The shop marked it as delivered. Something wrong? Call the shop.'}</span>
         </div>
       )}
       <div className="dl-addr">

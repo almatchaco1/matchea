@@ -17,8 +17,11 @@ import { useFlip, flyInto } from '../lib/motion';
 const COLS = [
   ['new', 'New', 'Accept to start making it. Stock is taken when you accept.'],
   ['preparing', 'Preparing', 'Mark ready when the drinks are done.'],
-  ['ready', 'Ready · pickup or on the way', 'Pickups: take payment when the customer arrives. Deliveries: tap Delivered when Lalamove drops it off.'],
+  ['ready', 'Ready', 'Pickups: hand over when the customer arrives. Deliveries: tap Rider picked up when Lalamove takes the drinks.'],
+  ['onway', 'On the way', 'Deliveries with the rider show here until you tap Delivered or the customer confirms it on their phone.'],
 ];
+// Which column an order is in: deliveries that left the shop get their own column
+const colOf = (o) => (o.status === 'ready' && o.fulfil === 'delivery' && o.delivery?.state === 'picked' ? 'onway' : o.status);
 const ago = (d) => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : timeOf(d); };
 
 export default function Online({ data, refresh, toast, orders, meta = {}, reload }) {
@@ -34,6 +37,13 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
   const [rider, setRider] = useState(null);     // delivery: the rider picked up the drinks
   const [linking, setLinking] = useState(null); // delivery: add / change the Lalamove tracking link
   const s = data.settings;
+  // Tell staff when a customer confirms their delivery arrived (the card then moves to Finished)
+  const onway = useRef(null);
+  useEffect(() => {
+    const now = new Set(orders.filter((o) => colOf(o) === 'onway').map((o) => o._id));
+    if (onway.current) for (const o of orders) if (onway.current.has(o._id) && o.delivery?.state === 'delivered' && o.delivery.receivedBy === 'customer') toast(`Order #${pad(o.no)}: the customer confirmed they received it`);
+    onway.current = now;
+  }, [orders]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const act = async (o, step, body, msg) => {
     setBusy(o._id + step);
@@ -47,6 +57,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
     catch (e) { toast(e.message); }
   };
 
+  const showOnway = !!s?.delivery?.enabled || orders.some((o) => o.fulfil === 'delivery');
   const done = orders.filter((o) => ['paid', 'cancelled', 'void'].includes(o.status)).reverse();
   const shopUrl = window.location.origin + '/';
 
@@ -67,9 +78,9 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
         {meta.awaitingPayment > 0 && <span className="muted"> · {meta.awaitingPayment} waiting for the customer to pay</span>}
       </p>
 
-      <div className="kanban" ref={board}>
-        {COLS.map(([st, title, hint]) => {
-          const list = orders.filter((o) => o.status === st);
+      <div className={`kanban ${showOnway ? 'has-onway' : ''}`} ref={board}>
+        {COLS.filter(([st]) => st !== 'onway' || showOnway).map(([st, title, hint]) => {
+          const list = orders.filter((o) => colOf(o) === st);
           return (
             <section key={st} className={`kcol k-${st}`}>
               <div className="kcol-h"><h3>{title}</h3><span className="pill mute">{list.length}</span></div>
@@ -116,7 +127,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                     {st === 'preparing' && <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'ready', {}, `Order #${pad(o.no)} is ready`)}>Mark ready</button>}
                     {o.fulfil === 'delivery' && st !== 'new' && <>
                       {(o.delivery?.state || 'waiting') === 'waiting' && <button className="btn primary" disabled={!!busy} onClick={() => setBooking(o)}>Book Lalamove</button>}
-                      {o.delivery?.state === 'booked' && <button className="btn primary" disabled={!!busy} onClick={() => setRider(o)}>Rider picked up</button>}
+                      {o.delivery?.state === 'booked' && st === 'ready' && <button className="btn primary" disabled={!!busy} onClick={() => setRider(o)}>Rider picked up</button>}
                       {o.delivery?.state === 'picked' && <button className="btn primary" disabled={!!busy} onClick={() => act(o, 'delivery/delivered', {}, `Order #${pad(o.no)} delivered`)}>Delivered</button>}
                       {['booked', 'picked'].includes(o.delivery?.state) && <button className={`btn sm ${o.delivery.trackUrl ? 'ghost' : 'track-add'}`} disabled={!!busy} onClick={() => setLinking(o)}>{o.delivery.trackUrl ? 'Tracking link ✓' : 'Add tracking link'}</button>}
                       {['booked', 'picked'].includes(o.delivery?.state) && <button className="btn ghost sm" disabled={!!busy} onClick={() => act(o, 'delivery/rebook', {}, `Order #${pad(o.no)}: book a new rider`)}>Rider cancelled</button>}
@@ -126,7 +137,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                       ? <button className="btn primary" disabled={!!busy} onClick={() => (o.hasCode ? setHanding(o) : act(o, 'complete', {}, `Order #${pad(o.no)} picked up`))}>Picked up</button>
                       : <button className="btn primary" onClick={() => setPaying(o)}>Picked up · Take payment</button>)}
                     {st === 'preparing' && <button className="btn ghost sm" onClick={async () => { try { const m = await printCupLabels(o, s); if (m) toast(m); } catch (e) { toast(e.message); } }}>Cup labels</button>}
-                    {!(st === 'new' && o.qrPay?.method && !o.qrPay.verified) && <button className="btn ghost sm" onClick={() => setCancelling(o)}>Cancel</button>}
+                    {!(st === 'new' && o.qrPay?.method && !o.qrPay.verified) && st !== 'onway' && <button className="btn ghost sm" onClick={() => setCancelling(o)}>Cancel</button>}
                   </div>
                 </article>
               ))}
@@ -143,9 +154,11 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
               <thead><tr><th>#</th><th>Customer</th><th>Items</th><th>Status</th><th className="r">Total</th></tr></thead>
               <tbody>{done.map((o) => (
                 <tr key={o._id} onClick={() => o.status === 'paid' && setReceipt(o)} style={{ cursor: o.status === 'paid' ? 'pointer' : 'default' }}>
-                  <td className="num">{pad(o.no)}</td><td>{o.customer}</td>
+                  <td className="num">{pad(o.no)}{o.fulfil === 'delivery' && <span className="dtag sm">Delivery</span>}</td><td>{o.customer}</td>
                   <td style={{ fontSize: 12 }}>{o.lines.map((l) => `${l.qty}× ${l.name}`).join(', ')}</td>
-                  <td>{o.status === 'paid'
+                  <td>{o.status === 'paid' && o.fulfil === 'delivery'
+                    ? <span className="pill ok" title={o.delivery?.rider?.name ? `Rider: ${o.delivery.rider.name}` : ''}>Delivered{o.delivery?.deliveredAt ? ` ${timeOf(o.delivery.deliveredAt)}` : ''} · {o.delivery?.receivedBy === 'customer' ? 'customer confirmed' : 'marked by staff'}</span>
+                    : o.status === 'paid'
                     ? <span className="pill ok">Paid · {PAY_LABELS[o.pay.method] || o.pay.method}{o.paidOnline ? ' (online)' : o.qrPay?.verified ? ' (QR)' : ''}</span>
                     : o.refundDue
                       ? <span className="pill bad" title={o.qrPay?.verified ? `Send ${peso(o.total)} back to the customer by ${QR_LABEL[o.qrPay.method]} (ref ${o.qrPay.ref})` : `Refund ${peso(o.total)} in the PayMongo dashboard (ref ${o.pay.ref})`}>Cancelled · refund due</span>
@@ -307,6 +320,7 @@ function ShotModal({ order, onClose }) {
 }
 
 const STATE_PILL = { waiting: ['warn', 'Book a rider'], booked: ['mute', 'Waiting for the rider'], picked: ['ok', 'On the way'], delivered: ['ok', 'Delivered'] };
+const since = (t) => { const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000)); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
 const addrText = (d) => [d.detail, d.landmark && `Landmark: ${d.landmark}`, d.label].filter(Boolean).join('\n');
 
 /** Delivery address and rider status on an order card. */
@@ -321,6 +335,8 @@ function DeliveryInfo({ o }) {
       <small>{d.landmark && <>Landmark: {d.landmark}<br /></>}{d.label}</small>
       {d.note && <small className="knote-r">Rider note: “{d.note}”</small>}
       {d.state === 'picked' && d.rider?.name && <small>Rider: <b>{d.rider.name}</b>{d.rider.plate ? ` · ${d.rider.plate}` : ''}{d.rider.phone ? ` · ${d.rider.phone}` : ''}</small>}
+      {d.state === 'picked' && d.pickedAt && <small>Left the shop {timeOf(d.pickedAt)} · {since(d.pickedAt)}</small>}
+      {d.state === 'booked' && o.status === 'preparing' && <small className="muted">Mark the drinks ready before the rider takes them.</small>}
       <a className="linkbtn" href={mapsLink(d.lat, d.lng)} target="_blank" rel="noopener noreferrer">Open pin in Google Maps ↗</a>
     </div>
   );
