@@ -39,7 +39,7 @@ export default function Login({ onLogin, notice }) {
     <div className="login">
       <form className="panel login-card" onSubmit={(e) => { e.preventDefault(); submit(); }}>
         {notice && <div className="banner" role="status" style={{ marginBottom: 14 }}>{notice}</div>}
-        <div className="brand"><span className="seal-logo"><img src="/brand/matchea-seal.webp" alt="" width="46" height="46" /></span><div><h1>Sign in</h1><small>Staff only</small></div></div>
+        <div className="brand"><span className="seal-logo"><img src="/brand/matchea-seal.webp" alt="" width="512" height="512" /></span><div><h1>Sign in</h1><small>Staff only</small></div></div>
         <p className="login-tag" aria-hidden="true">Good Matcha, Good Mood</p>
         {staff.length > 1 ? (
           <div className="field">

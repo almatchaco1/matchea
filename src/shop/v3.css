@@ -1,0 +1,115 @@
+/* ===== Matchéa v3: the sticker logo look. Deep matcha green, whisk pink, cream and tan. =====
+   Loaded after shop.css and matchea.css, so it only refines what's already there. */
+.shop{
+  --pink:#FBF6E8; --pink-2:#FFFBF1; --pink-3:#EDD9B6; --cream:#FFFDF6; --card:#FFFEF9;
+  --ink:#1B2614; --ink-2:#596050; --green:#1F4A17; --green-2:#2E6424; --matcha:#7FAF5A; --matcha-2:#EEF2E2;
+  --forest:#163310; --forest-2:#1E4116; --gold:#F0648A; --gold-2:#F9A9BD; --gold-ink:#C2365F; --on-forest:#FFF6E2;
+  --rose:#F0648A; --rose-2:#F9A9BD; --rose-ink:#C2365F; --rose-bg:#FDEAF0;
+  --tan:#EDD9B6; --line:#EADBBE; --blush:#F9C5D2; --leaf:#C7DBAE;
+  --shadow:0 0 0 1.5px var(--line),0 2px 0 rgba(22,51,15,.03),0 18px 34px -24px rgba(22,51,15,.42);
+  --lift:0 0 0 1.5px var(--tan),0 26px 40px -24px rgba(22,51,15,.5);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  background:var(--pink);
+}
+@media (prefers-color-scheme:dark){
+  .shop{
+    --pink:#0E170B; --pink-2:#121D0F; --pink-3:#3B3A27; --cream:#111B0E; --card:#152112;
+    --ink:#F3EFDF; --ink-2:#B5B9A2; --green:#9BCB78; --green-2:#B4DA97; --matcha:#9BCB78; --matcha-2:#1B2A16;
+    --forest:#0A1208; --forest-2:#132310; --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#FF97B0; --on-forest:#F6EED8;
+    --rose:#FF7C9C; --rose-2:#FFB3C5; --rose-ink:#FF97B0; --rose-bg:rgba(255,124,156,.12);
+    --tan:#4A4530; --line:#26361F; --blush:#FFB3C5; --leaf:#5E7A4A;
+    --shadow:0 0 0 1px var(--line),0 18px 40px -24px rgba(0,0,0,.95);
+    --lift:0 0 0 1px #3A5230,0 26px 44px -24px rgba(0,0,0,.95);
+  }
+}
+
+/* ---------- Type: soft, chunky serif like the logo letters ---------- */
+.shop h1,.shop h2,.shop h3,.shop .sec,.shop .sh-name{font-family:var(--serif);font-variation-settings:"SOFT" 100,"WONK" 0;font-weight:700;letter-spacing:-.018em}
+.ld-hero h1{font-weight:800;letter-spacing:-.03em}
+.ld-hero h1 em{color:var(--rose);font-variation-settings:"SOFT" 100,"WONK" 1}
+.shop ::selection{background:rgba(240,100,138,.25)}
+.shop :focus-visible{outline:2.5px solid var(--rose);outline-offset:2px}
+
+/* soft background glows: pink whisk + matcha */
+.shop-bg i:nth-child(1){background:radial-gradient(circle,rgba(249,169,189,.42),transparent 70%)}
+.shop-bg i:nth-child(2){background:radial-gradient(circle,rgba(199,219,174,.5),transparent 70%)}
+.shop-bg i:nth-child(3){background:radial-gradient(circle,rgba(237,217,182,.55),transparent 70%)}
+
+/* ---------- Header: logo green bar with the sticker wordmark ---------- */
+.sh-head,.sh-head.scrolled{background:linear-gradient(180deg,#1C3E14,var(--forest));border-bottom:0;box-shadow:0 1px 0 rgba(237,217,182,.35),0 12px 30px -18px rgba(10,20,6,.75)}
+.sh-head.scrolled{background:rgba(22,51,16,.94);-webkit-backdrop-filter:saturate(1.3) blur(10px);backdrop-filter:saturate(1.3) blur(10px)}
+.shop .sh-head .sh-logo.sh-word{width:auto;height:46px;border-radius:0;box-shadow:none;background:none;padding:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));animation:stickerIn .8s var(--spring) .05s backwards;transform-origin:20% 60%}
+.sh-head.scrolled .sh-logo.sh-word{scale:.86}
+.shop .sh-brand:hover .sh-logo.sh-word{transform:none;animation:stickerWiggle .7s ease-in-out}
+@media (max-width:480px){.shop .sh-head .sh-logo.sh-word{height:38px}}
+@keyframes stickerIn{0%{opacity:0;transform:scale(.55) rotate(-10deg)}60%{opacity:1;transform:scale(1.07) rotate(2deg)}100%{transform:none}}
+@keyframes stickerWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-4deg) scale(1.03)}45%{transform:rotate(3deg) scale(1.03)}70%{transform:rotate(-1.5deg)}}
+.shop .sh-head .sh-nav>a.on{background:rgba(255,246,226,.1) !important;color:#FFF6E2 !important;box-shadow:inset 0 0 0 1px rgba(255,246,226,.28)}
+.shop .sh-head .sh-nav>a.on::after{content:"";position:absolute;left:50%;bottom:3px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--rose);box-shadow:0 0 10px rgba(240,100,138,.8)}
+.shop .sh-head .sh-nav>a{position:relative}
+.shop .sh-head .sh-cart span,.shop .sh-head .sh-dot,.shop-bar .shop-count{background:var(--rose);color:#fff;box-shadow:0 0 0 2px var(--forest)}
+.shop .sh-head .sh-avatar{background:#FFF6E2;color:var(--forest);border-color:rgba(255,246,226,.6)}
+
+/* ---------- Buttons: glossy like the logo letters, with a shine that sweeps on hover ---------- */
+.shop .sh-btn:not(.ghost){
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.28) 50%,transparent 62%) -160% 0/250% 100% no-repeat,linear-gradient(180deg,#2B6020,#1A4413);
+  border-color:#163A10;color:#FFF8E8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.24),inset 0 -2px 0 rgba(0,0,0,.18),0 10px 18px -12px rgba(22,51,15,.75);
+  transition:background-position .7s ease,transform .25s var(--spring),box-shadow .25s;
+}
+.shop .sh-btn:not(.ghost):hover:not(:disabled){background-position:160% 0,0 0;transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.24),inset 0 -2px 0 rgba(0,0,0,.18),0 16px 24px -14px rgba(22,51,15,.8)}
+.shop .sh-btn:active:not(:disabled){transform:scale(.96)}
+.shop .sh-btn.ghost{background:transparent;color:var(--green);border:1.5px solid color-mix(in srgb,var(--green) 55%,transparent);box-shadow:none}
+.shop .sh-btn.ghost:hover:not(:disabled){background:rgba(31,74,23,.07);border-color:var(--green)}
+.shop .sh-head .sh-btn:not(.ghost),.shop .sh-head a.sh-btn:not(.ghost){background:#FFF6E2;border-color:#FFF6E2;color:var(--forest);box-shadow:0 8px 16px -10px rgba(0,0,0,.6)}
+.shop .sh-head .sh-btn.ghost{color:#FFF6E2;border-color:rgba(255,246,226,.5)}
+@media (prefers-color-scheme:dark){
+  .shop .sh-btn:not(.ghost){background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.35) 50%,transparent 62%) -160% 0/250% 100% no-repeat,linear-gradient(180deg,#AEDA8C,#8CBF68);border-color:#8CBF68;color:#10200B;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 0 rgba(0,0,0,.15),0 10px 22px -14px rgba(0,0,0,.9)}
+  .shop .sh-btn.ghost{color:#B4DA97;border-color:rgba(155,203,120,.5)}
+  .shop .sh-btn.ghost:hover:not(:disabled){background:rgba(155,203,120,.1);border-color:#9BCB78}
+  .shop .sh-head .sh-btn:not(.ghost),.shop .sh-head a.sh-btn:not(.ghost){background:#9BCB78;border-color:#9BCB78;color:#10200B}
+}
+
+/* ---------- Cards: cream stickers with a tan outline ---------- */
+.shop .panel,.shop .mn-card,.shop .olist-row,.shop .stamp-card,.shop .dl-got,.shop .ck-fulfil button,.shop .pay label{box-shadow:var(--shadow)}
+.shop .panel{border:0;border-radius:24px;background:var(--card)}
+.shop .mn-card{border:0;border-radius:24px;background:var(--card);transition:transform .35s var(--spring),box-shadow .3s}
+.shop .mn-card:hover{transform:translateY(-4px) rotate(-.4deg);box-shadow:var(--lift)}
+.shop .mn-card:hover .mn-photo img{transform:translateY(-4px) scale(1.04) rotate(-1.5deg)}
+.shop .mn-photo img{transition:transform .5s var(--spring)}
+.shop .mn-add{background:var(--green);color:#FFF8E8;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 14px -8px rgba(22,51,15,.7)}
+.shop .mn-add:hover:not(:disabled){background:var(--rose);color:#fff}
+@media (prefers-color-scheme:dark){.shop .mn-add{background:#9BCB78;color:#10200B}.shop .mn-add:hover:not(:disabled){background:var(--rose);color:#1A0A10}}
+
+/* category chips */
+.shop .mn-cats button{border-color:var(--line);background:var(--card)}
+.shop .mn-cats button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#FFF8E8}
+.shop .mn-cats .cat-ink{background:var(--green)}
+@media (prefers-color-scheme:dark){.shop .mn-cats button[aria-pressed="true"]{background:#9BCB78;border-color:#9BCB78;color:#10200B}.shop .mn-cats .cat-ink{background:#9BCB78}}
+
+/* badges */
+.ld-best.hanko b,.mn-best b{background:var(--rose) !important;color:#fff !important}
+
+/* ---------- Mobile tab bar ---------- */
+@media (max-width:640px){
+  .shop.has-tabbar .tabbar{background:rgba(22,51,16,.96);box-shadow:0 18px 40px -16px rgba(10,20,6,.8),0 0 0 1px rgba(237,217,182,.35)}
+  .tb-ink{background:#FFF6E2;box-shadow:inset 0 -3px 0 var(--rose),0 8px 16px -8px rgba(0,0,0,.6)}
+  .tb-ico em{background:var(--rose);color:#fff;border-color:var(--forest)}
+}
+
+/* ---------- Footer ---------- */
+.sh-foot-logo{width:auto !important;height:64px !important;border-radius:0 !important;background:none !important;padding:0 !important;filter:drop-shadow(0 6px 12px rgba(0,0,0,.3))}
+
+/* ---------- Sign-in / sign-up ---------- */
+.shop .au-logo{width:min(260px,70vw) !important;height:auto !important;border-radius:0 !important;background:none !important;padding:0 !important;box-shadow:none !important;filter:drop-shadow(0 12px 18px rgba(22,51,15,.22));animation:stickerIn .9s var(--spring) .1s backwards}
+
+/* ---------- Order number + live states get the pink accent ---------- */
+.track-no.is-ready{background-image:linear-gradient(180deg,var(--rose),var(--rose-ink))}
+.steps li.now .dot{background:var(--rose);box-shadow:0 0 0 5px rgba(240,100,138,.18)}
+.steps li.done .dot{background:var(--green)}
+
+@media (prefers-reduced-motion:reduce){
+  .shop .sh-head .sh-logo.sh-word,.shop .au-logo{animation:none}
+  .shop .sh-btn,.shop .mn-card,.shop .mn-photo img{transition:none}
+}
+@media (prefers-color-scheme:dark){.shop .ld-hero h1{color:#F6F1E1}.shop .mn-top h1,.shop .mn-top h2{color:#FFF6E2}}

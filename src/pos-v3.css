@@ -1,0 +1,106 @@
+/* ===== Matchéa POS v3: the sticker logo look. Logo green, whisk pink, cream and tan. =====
+   Loaded after styles.css and matchea-pos.css. */
+:root{
+  --bg:#FBF6E8; --surface:#FFFEF9; --surface2:#F3EAD6; --ink:#1B2614; --muted:#596050; --line:#EADBBE;
+  --matcha:#1F4A17; --matcha-deep:#163310; --on-matcha:#FFF8E8; --tan:#C9A46A;
+  --gold:#F0648A; --gold-2:#F9A9BD; --gold-ink:#C2365F; --forest:#163310; --on-forest:#FFF6E2;
+  --rose:#F0648A; --rose-2:#F9A9BD; --rose-ink:#C2365F; --rose-bg:#FDEAF0;
+  --ok:#2F6A22; --ok-bg:#E2EED6;
+  --shadow:0 18px 34px -24px rgba(22,51,15,.42);
+  --card-sh:0 0 0 1.5px var(--line),0 2px 0 rgba(22,51,15,.03),0 14px 26px -20px rgba(22,51,15,.42);
+  --lift-sh:0 0 0 1.5px #E2C9A0,0 22px 34px -22px rgba(22,51,15,.55);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E170B; --surface:#152112; --surface2:#1C2B17; --ink:#F3EFDF; --muted:#B5B9A2; --line:#26361F;
+  --matcha:#9BCB78; --matcha-deep:#B4DA97; --on-matcha:#10200B; --tan:#EDD9B6;
+  --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#FF97B0; --forest:#0A1208; --on-forest:#F6EED8;
+  --rose:#FF7C9C; --rose-2:#FFB3C5; --rose-ink:#FF97B0; --rose-bg:rgba(255,124,156,.12);
+  --ok:#A6D488; --ok-bg:#1C2B17;
+  --card-sh:0 0 0 1px var(--line),0 16px 30px -22px rgba(0,0,0,.95);
+  --lift-sh:0 0 0 1px #3A5230,0 22px 36px -22px rgba(0,0,0,.95);
+}}
+:root[data-theme="dark"]{
+  --bg:#0E170B; --surface:#152112; --surface2:#1C2B17; --ink:#F3EFDF; --muted:#B5B9A2; --line:#26361F;
+  --matcha:#9BCB78; --matcha-deep:#B4DA97; --on-matcha:#10200B; --tan:#EDD9B6;
+  --gold:#FF7C9C; --gold-2:#FFB3C5; --gold-ink:#FF97B0; --forest:#0A1208; --on-forest:#F6EED8;
+  --rose:#FF7C9C; --rose-2:#FFB3C5; --rose-ink:#FF97B0; --rose-bg:rgba(255,124,156,.12);
+  --ok:#A6D488; --ok-bg:#1C2B17;
+  --card-sh:0 0 0 1px var(--line),0 16px 30px -22px rgba(0,0,0,.95);
+  --lift-sh:0 0 0 1px #3A5230,0 22px 36px -22px rgba(0,0,0,.95);
+}
+body{background:radial-gradient(110% 70% at 100% 0,rgba(249,169,189,.22),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(199,219,174,.3),transparent 60%),var(--bg);background-attachment:fixed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background:radial-gradient(110% 70% at 100% 0,rgba(255,124,156,.08),transparent 60%),radial-gradient(90% 60% at 0 100%,rgba(155,203,120,.07),transparent 60%),var(--bg)}}
+::selection{background:rgba(240,100,138,.25)}
+:focus-visible{outline:2.5px solid var(--rose);outline-offset:2px}
+
+/* ---------- Type: soft chunky serif, like the logo ---------- */
+h1,h2,h3,.sec{font-variation-settings:"SOFT" 100,"WONK" 0;font-weight:700;letter-spacing:-.015em}
+
+/* ---------- Top bar: logo green with the sticker wordmark ---------- */
+.top{background:linear-gradient(180deg,#1C3E14,#163310);border:0;box-shadow:0 0 0 1px rgba(237,217,182,.28),0 18px 40px -26px rgba(10,20,6,.9),inset 0 1px 0 rgba(255,255,255,.06)}
+.top .seal-logo.top-word{width:auto;height:44px}
+.top .seal-logo.top-word img{width:auto;height:100%;border-radius:0;box-shadow:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));animation:posStickerIn .8s var(--spring) .05s backwards;transform-origin:20% 60%}
+.brand:hover .seal-logo.top-word img{transform:none;animation:posWiggle .7s ease-in-out}
+.top .brand small{color:rgba(255,246,226,.62);margin-top:2px}
+.top:is([data-fit="2"],[data-fit="3"],[data-fit="4"],[data-fit="5"]) .seal-logo.top-word{height:38px}
+@keyframes posStickerIn{0%{opacity:0;transform:scale(.55) rotate(-10deg)}60%{opacity:1;transform:scale(1.07) rotate(2deg)}100%{transform:none}}
+@keyframes posWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-4deg) scale(1.03)}45%{transform:rotate(3deg) scale(1.03)}70%{transform:rotate(-1.5deg)}}
+.top .tabs{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(237,217,182,.22)}
+.top .tabs button{color:rgba(255,246,226,.74)}
+.top .tabs button[aria-selected="true"]{color:#163310}
+.top .tab-ink{background:#FFF6E2 !important;box-shadow:0 6px 14px -8px rgba(0,0,0,.7)}
+.top .tab-ink::after{background:linear-gradient(90deg,transparent,var(--rose),transparent) !important;box-shadow:0 0 12px 1px rgba(240,100,138,.75) !important}
+.top .tabs .dot.new{background:var(--rose);color:#fff}
+.top .userchip .btn.train-on{background:var(--rose);color:#fff}
+.top>.userchip{box-shadow:inset 0 0 0 1px rgba(237,217,182,.22)}
+.top .userchip .btn,.top .userchip a.btn{color:#FFF6E2}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .top{background:linear-gradient(180deg,#132A0E,#0B1708)}
+  :root:not([data-theme="light"]) .top .tab-ink{background:#9BCB78 !important}
+  :root:not([data-theme="light"]) .top .tabs button[aria-selected="true"]{color:#10200B}
+}
+:root[data-theme="dark"] .top .tab-ink{background:#9BCB78 !important}
+:root[data-theme="dark"] .top .tabs button[aria-selected="true"]{color:#10200B}
+
+/* ---------- Buttons: glossy green with a sweeping shine ---------- */
+.btn{transition:transform .22s var(--spring),background-position .7s ease,box-shadow .2s,border-color .2s,background-color .2s}
+.btn:active:not(:disabled){transform:scale(.96)}
+.btn:hover{border-color:color-mix(in srgb,var(--matcha) 55%,transparent)}
+.btn.primary,.charge:not(:disabled){
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.28) 50%,transparent 62%) -160% 0/250% 100% no-repeat,linear-gradient(180deg,#2B6020,#1A4413);
+  border-color:#163A10;color:#FFF8E8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -2px 0 rgba(0,0,0,.18),0 10px 18px -12px rgba(22,51,15,.7);
+}
+.btn.primary:hover:not(:disabled),.charge:hover:not(:disabled){background-position:160% 0,0 0}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .btn.primary,:root:not([data-theme="light"]) .charge:not(:disabled){background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.35) 50%,transparent 62%) -160% 0/250% 100% no-repeat,linear-gradient(180deg,#AEDA8C,#8CBF68);border-color:#8CBF68;color:#10200B;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 0 rgba(0,0,0,.15),0 10px 22px -14px rgba(0,0,0,.9)}
+  :root:not([data-theme="light"]) .btn.primary:hover:not(:disabled),:root:not([data-theme="light"]) .charge:hover:not(:disabled){background-position:160% 0,0 0}
+}
+:root[data-theme="dark"] .btn.primary,:root[data-theme="dark"] .charge:not(:disabled){background:linear-gradient(180deg,#AEDA8C,#8CBF68);border-color:#8CBF68;color:#10200B}
+.btn.primary.charge.big-cash,.btn.primary.charge.big-cash:hover:not(:disabled){background:var(--warn);border-color:var(--warn);color:var(--surface)}
+.chip[aria-pressed="true"],.cats button[aria-pressed="true"]{background:var(--matcha);border-color:var(--matcha);color:var(--on-matcha)}
+
+/* ---------- Cards: cream stickers with a tan outline ---------- */
+.panel{border:0;box-shadow:var(--card-sh)}
+.prod{border:0;border-radius:20px;box-shadow:var(--card-sh);transition:transform .3s var(--spring),box-shadow .25s}
+.prod:hover:not(:disabled){transform:translateY(-3px);box-shadow:var(--lift-sh)}
+.prod:active:not(:disabled){transform:scale(.97)}
+.prod img{transition:transform .5s var(--spring)}
+.prod:hover:not(:disabled) img{transform:translateY(-3px) rotate(-1.5deg) scale(1.03)}
+.prod:not(:disabled)::after{transition:transform .3s var(--spring),background .2s}
+.prod:hover:not(:disabled)::after{background:var(--rose)}
+.kcard,.ticket{box-shadow:var(--card-sh)}
+.kcol{background:color-mix(in srgb,var(--surface2) 70%,transparent);border-radius:20px}
+.cart-h .ord{background:var(--rose);color:#fff}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+
+/* ---------- Sign-in card ---------- */
+.login-card .seal-logo{width:84px;height:84px}
+.login-card .seal-logo img{border-radius:50%;box-shadow:0 10px 24px -10px rgba(22,51,15,.55)}
+.login-card::before{background:linear-gradient(90deg,#1F4A17,var(--rose),#1F4A17) !important;background-size:200% 100% !important}
+
+@media (prefers-reduced-motion:reduce){
+  .top .seal-logo.top-word img{animation:none}
+  .btn,.prod,.prod img{transition:none}
+}

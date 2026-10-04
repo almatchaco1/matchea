@@ -1,5 +1,5 @@
 /* Delivery map (Matchéa green + gold) */
-.mp{position:relative;border-radius:20px;overflow:hidden;isolation:isolate;background:#EDE6D4;box-shadow:inset 0 0 0 1px rgba(194,155,84,.5),0 16px 34px -24px rgba(34,42,20,.6)}
+.mp{position:relative;border-radius:20px;overflow:hidden;isolation:isolate;background:#EDE6D4;box-shadow:inset 0 0 0 1px rgba(214,180,128,.5),0 16px 34px -24px rgba(22,51,15,.6)}
 .mp-map{position:absolute;inset:0;z-index:0;font:inherit}
 .mp-pick{height:300px}
 .mp-view{height:220px}
@@ -8,21 +8,21 @@
 /* soften OpenStreetMap colors to the cream + green look */
 .mp .mp-tiles{filter:sepia(.18) saturate(.82) brightness(1.02)}
 .mp .leaflet-control-attribution{font-size:9.5px;background:rgba(255,252,245,.82);border-radius:8px 0 0 0}
-.mp .leaflet-control-zoom a{color:#222A14;border-color:rgba(194,155,84,.45)}
+.mp .leaflet-control-zoom a{color:#16330F;border-color:rgba(214,180,128,.45)}
 .mp .leaflet-bar{border:0;box-shadow:0 6px 16px -8px rgba(20,24,10,.6);border-radius:12px;overflow:hidden}
 /* the fixed pin in the middle: lifts while the map moves, drops when it stops */
 .mp-pin{position:absolute;left:50%;top:50%;z-index:500;width:40px;height:52px;margin:-50px 0 0 -20px;pointer-events:none;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
 .mp-pin svg{width:100%;height:100%;filter:drop-shadow(0 6px 6px rgba(20,24,10,.35))}
-.mp-pin path{fill:#222A14;stroke:#E2C88E;stroke-width:2.2}
-.mp-pin circle{fill:#E2C88E}
+.mp-pin path{fill:#16330F;stroke:#F9A9BD;stroke-width:2.2}
+.mp-pin circle{fill:#F9A9BD}
 .mp-pin i{position:absolute;left:50%;bottom:-5px;width:14px;height:5px;margin-left:-7px;border-radius:50%;background:rgba(20,24,10,.35);transition:transform .25s,opacity .25s}
 .mp.moving .mp-pin{transform:translateY(-14px)}
 .mp.moving .mp-pin i{transform:translateY(14px) scale(1.6);opacity:.5}
-.mp-shop span{display:block;width:44px;height:44px;border-radius:50%;padding:2px;background:#E2C88E;box-shadow:0 6px 14px -4px rgba(20,24,10,.55)}
+.mp-shop span{display:block;width:44px;height:44px;border-radius:50%;padding:2px;background:#F9A9BD;box-shadow:0 6px 14px -4px rgba(20,24,10,.55)}
 .mp-shop img{width:100%;height:100%;border-radius:50%;display:block}
 .mp-home span{display:block;width:40px;height:48px;animation:mpDrop .6s cubic-bezier(.34,1.56,.64,1) backwards}
 .mp-home svg{width:100%;height:100%;filter:drop-shadow(0 6px 6px rgba(20,24,10,.35))}
-.mp-home path{fill:#C29B54;stroke:#fff;stroke-width:1.4}
+.mp-home path{fill:#F0648A;stroke:#fff;stroke-width:1.4}
 .mp-home circle{fill:#fff}
 @keyframes mpDrop{from{transform:translateY(-30px);opacity:0}}
 .mp-route{stroke-dashoffset:0}

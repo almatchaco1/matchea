@@ -11,7 +11,7 @@ export function Receipt({ sale, settings: s = {} }) {
   const R = ({ l, r, big }) => <div className={`r ${big ? 'big' : ''}`}><span>{l}</span><span>{r}</span></div>;
   return (
     <div className="receipt">
-      <img className="r-logo" src="/brand/matchea-print.png" alt="" width="120" height="62" />
+      <img className="r-logo" src="/brand/matchea-print.png" alt="" width="600" height="183" />
       <div className="c big">{s.name}</div>
       {s.address && <div className="c">{s.address}</div>}
       {s.tin && <div className="c">TIN {s.tin}</div>}
@@ -65,7 +65,7 @@ const PRINT_CSS = `
   .receipt .r span:last-child { white-space: nowrap; }
   .receipt hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
   .receipt .big { font-size: 14px; font-weight: 700; }
-  .receipt .r-logo { display: block; width: 22mm; height: 22mm; margin: 0 auto 2mm; }
+  .receipt .r-logo { display: block; width: 40mm; height: auto; margin: 0 auto 2mm; }
 `;
 
 /** Print only the receipt, in a hidden frame, so the rest of the POS never shows up on paper. */

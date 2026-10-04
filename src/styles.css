@@ -2,7 +2,7 @@
 :root{
   /* Base palette; the Matchéa brand colors and fonts are in matchea-pos.css */
   --bg:#F8F3EB; --surface:#FFFBF7; --surface2:#F2EBDE; --ink:#1E2418; --muted:#505749; --line:#E8DFCE;
-  --matcha:#324623; --matcha-deep:#232E1B; --on-matcha:#FFFFFF; --tan:#A9803F; --pink:#F3EDE0;
+  --matcha:#324623; --matcha-deep:#232E1B; --on-matcha:#FFFFFF; --tan:#C9A46A; --pink:#F3EDE0;
   --ok:#476137; --ok-bg:#E0E8D7; --warn:#9A6414; --warn-bg:#F5E6C8; --bad:#AE3229; --bad-bg:#F6DAD6;
   --shadow:0 10px 30px rgba(26,31,20,.14);
   --display:"Shippori Mincho B1","Hiragino Mincho ProN",Georgia,serif;
@@ -12,15 +12,15 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;
-  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#C8A662; --line:#2D3626;
-  --matcha:#9DB777; --matcha-deep:#C3D6A5; --on-matcha:#10130D; --tan:#D2AE6C; --pink:#F3EDE0;
+  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#F0648A; --line:#2D3626;
+  --matcha:#9DB777; --matcha-deep:#C3D6A5; --on-matcha:#10130D; --tan:#EDD9B6; --pink:#F3EDE0;
   --ok:#9DBC86; --ok-bg:#20281A; --warn:#E6B056; --warn-bg:#3A2D12; --bad:#EE7C70; --bad-bg:#3D1C18;
   --shadow:0 10px 30px rgba(0,0,0,.5);
 }}
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#C8A662; --line:#2D3626;
-  --matcha:#9DB777; --matcha-deep:#C3D6A5; --on-matcha:#10130D; --tan:#D2AE6C; --pink:#F3EDE0;
+  --bg:#11140E; --surface:#181C14; --surface2:#20261B; --ink:#F3EDE0; --muted:#F0648A; --line:#2D3626;
+  --matcha:#9DB777; --matcha-deep:#C3D6A5; --on-matcha:#10130D; --tan:#EDD9B6; --pink:#F3EDE0;
   --ok:#9DBC86; --ok-bg:#20281A; --warn:#E6B056; --warn-bg:#3A2D12; --bad:#EE7C70; --bad-bg:#3D1C18;
   --shadow:0 10px 30px rgba(0,0,0,.5);
 }
@@ -405,7 +405,7 @@ svg text{fill:var(--muted);font-family:var(--mono);font-size:10px}
 }
 @keyframes fadein{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.cart{transition:none}}
-.receipt .r-logo{display:block;width:72px;height:72px;margin:0 auto 6px}
+.receipt .r-logo{display:block;width:150px;height:auto;margin:0 auto 6px}
 
 /* ---------- Barista screen ---------- */
 .barista{display:flex;flex-direction:column;gap:14px}
@@ -969,7 +969,7 @@ tbody tr:last-child td{border-bottom:0}
 /* =====================================================================
    Round 3: Japanese café look, bento Reports, "Kissaten Night" dark mode
    ===================================================================== */
-:root{--gold:#B8913F}
+:root{--gold:#F0648A}
 /* Washi paper fibers */
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .17 0 0 0 0 .35 0 0 0 0 .13 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -1364,9 +1364,10 @@ td>.btn.sm{margin-top:2px;margin-bottom:2px}
 /* Barista queue: tickets slowly warm from matcha green to pink the longer they wait (full pink at 12 min).
    The top band fills with pink like a timer, and the card takes on a soft pink tint. */
 @property --age{syntax:'<number>';inherits:true;initial-value:0}
-.ticket{isolation:isolate;transition:transform .25s var(--spring),box-shadow .25s,--age 2.5s ease;border-color:color-mix(in srgb,#C8A662 calc(var(--age,0) * 60%),var(--line))}
-.ticket::before,.ticket.slow::before,.ticket.late::before{background:linear-gradient(90deg,#C8A662 calc(var(--age,0) * 100%),var(--matcha) calc(var(--age,0) * 100%))}
+.ticket{isolation:isolate;transition:transform .25s var(--spring),box-shadow .25s,--age 2.5s ease;border-color:color-mix(in srgb,#F0648A calc(var(--age,0) * 60%),var(--line))}
+.ticket::before,.ticket.slow::before,.ticket.late::before{background:linear-gradient(90deg,#F0648A calc(var(--age,0) * 100%),var(--matcha) calc(var(--age,0) * 100%))}
 .t-warm{position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(220,207,181,.32),rgba(220,207,181,.08) 60%);opacity:calc(var(--age,0) * .9)}
 .ticket.late{animation:tin .3s ease-out,warmPulse 3.2s ease-in-out 1s infinite}
 @keyframes warmPulse{0%,100%{box-shadow:0 1px 2px rgba(27,31,20,.05),0 4px 14px rgba(27,31,20,.05)}50%{box-shadow:0 0 0 3px rgba(220,207,181,.35),0 8px 22px -6px rgba(200,166,98,.45)}}
 @media (prefers-reduced-motion:reduce){.ticket.late{animation:none}}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

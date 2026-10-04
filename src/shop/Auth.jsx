@@ -62,7 +62,7 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
   return (
     <div className="au">
       <div className="au-card">
-        <img className="au-logo" src="/brand/matchea-word.webp" alt="Matchéa" width="200" height="113" />
+        <img className="au-logo" src="/brand/matchea-word.webp" alt="Matchéa" width="900" height="274" />
         <div className="au-tabs" role="tablist">
           <a role="tab" aria-selected={!signup} href={'/signin' + next} onClick={(e) => { e.preventDefault(); go('/signin' + next, { replace: true }); }}>Sign in</a>
           <a role="tab" aria-selected={signup} href={'/signup' + next} onClick={(e) => { e.preventDefault(); go('/signup' + next, { replace: true }); }}>Create account</a>
@@ -323,7 +323,7 @@ export function ForgotPage({ go, onSignedIn }) {
   return (
     <div className="au">
       <div className="au-card">
-        <img className="au-logo" src="/brand/matchea-word.webp" alt="Matchéa" width="200" height="113" />
+        <img className="au-logo" src="/brand/matchea-word.webp" alt="Matchéa" width="900" height="274" />
         <h1>{setting ? 'Set a password' : 'Reset your password'}</h1>
         {!verify ? (<>
           <p className="au-sub">Enter the email or mobile number of your account. We’ll email you a 6-digit code.</p>

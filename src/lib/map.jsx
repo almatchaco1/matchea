@@ -70,8 +70,8 @@ export default function MapView({ mode = 'view', center, shop, dest, route, onPi
     if (shop) lay.shop = Lf.marker([shop.lat, shop.lng], { icon: shopIcon(Lf), interactive: false, keyboard: false }).addTo(m);
     if (dest && mode === 'view') lay.dest = Lf.marker([dest.lat, dest.lng], { icon: homeIcon(Lf), interactive: false, keyboard: false }).addTo(m);
     if (route?.length > 1) {
-      lay.glow = Lf.polyline(route, { color: '#F1DFB0', weight: 9, opacity: 0.9, lineCap: 'round' }).addTo(m);
-      lay.route = Lf.polyline(route, { color: '#2D4320', weight: 4.5, opacity: 0.95, lineCap: 'round', dashArray: mode === 'pick' ? '1 9' : null, className: 'mp-route' }).addTo(m);
+      lay.glow = Lf.polyline(route, { color: '#FFF1D6', weight: 9, opacity: 0.9, lineCap: 'round' }).addTo(m);
+      lay.route = Lf.polyline(route, { color: '#1F4A17', weight: 4.5, opacity: 0.95, lineCap: 'round', dashArray: mode === 'pick' ? '1 9' : null, className: 'mp-route' }).addTo(m);
     }
     if (mode === 'view') {
       const pts = [shop, dest].filter(Boolean).map((p) => [p.lat, p.lng]).concat(route || []);
