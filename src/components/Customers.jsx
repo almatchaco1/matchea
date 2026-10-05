@@ -120,46 +120,94 @@ function Stamps({ n }) {
   );
 }
 
+const ICON = {
+  phone: <path d="M6.6 3.5h2.2l1.1 3-1.6 1.1a8.6 8.6 0 0 0 4.1 4.1l1.1-1.6 3 1.1v2.2a1.6 1.6 0 0 1-1.7 1.6A12.4 12.4 0 0 1 5 5.2 1.6 1.6 0 0 1 6.6 3.5Z" />,
+  mail: <><rect x="3" y="5" width="14" height="10" rx="2" /><path d="m3.5 6 6.5 5 6.5-5" /></>,
+  cup: <><path d="M5 7h10l-1.2 9.2a1.5 1.5 0 0 1-1.5 1.3H7.7a1.5 1.5 0 0 1-1.5-1.3L5 7Z" /><path d="M4 7h12M8 7l.6-3h2.8l.6 3" /></>,
+  pin: <><path d="M10 17s-5-4.6-5-8.5a5 5 0 0 1 10 0C15 12.4 10 17 10 17Z" /><circle cx="10" cy="8.5" r="1.8" /></>,
+  bag: <><path d="M5 7h10l-.8 9.5H5.8L5 7Z" /><path d="M7.5 7a2.5 2.5 0 0 1 5 0" /></>,
+  bike: <><circle cx="5.5" cy="13.5" r="2.5" /><circle cx="14.5" cy="13.5" r="2.5" /><path d="M5.5 13.5 8 8h4l2.5 5.5M9 8l-1-2H6" /></>,
+  clock: <><circle cx="10" cy="10" r="6.5" /><path d="M10 6.5V10l2.5 1.7" /></>,
+  store: <><path d="M3.5 8 5 4h10l1.5 4M4.5 8v8h11V8" /><path d="M3.5 8a2.2 2.2 0 0 0 4.3 0 2.2 2.2 0 0 0 4.4 0 2.2 2.2 0 0 0 4.3 0" /></>,
+};
+const Ico = ({ n }) => <svg viewBox="0 0 20 20" aria-hidden="true">{ICON[n]}</svg>;
+
 function CustomerModal({ c: row, onClose }) {
   const [c, setC] = useState(null);
   const [err, setErr] = useState('');
   useEffect(() => { api.get(`/customers/${row._id}`).then(setC).catch((e) => setErr(e.message)); }, [row._id]);
   const avg = c && c.orders ? c.spent / c.orders : 0;
+  const isNew = Date.now() - new Date(row.joined) < 30 * 864e5;
+  const prog = c ? c.stamps % STAMPS_PER_REWARD : 0;
+  const ready = c ? Math.floor(c.stamps / STAMPS_PER_REWARD) : 0;
   return (
-    <Modal wide title={row.name} aside={row.orders >= 2 ? <span className="pill ok">Regular</span> : null} onClose={onClose}
-      footer={<button className="btn primary" onClick={onClose}>Close</button>}>
-      {!c ? (err ? <div className="banner">{err}</div> : <p className="muted">Loading…</p>) : (
-        <div className="cu-detail">
-          <dl className="cu-facts">
-            <div><dt>Mobile no.</dt><dd className="num">{phoneFmt(c.phone) || '—'}</dd></div>
-            <div><dt>Email</dt><dd>{c.email || '—'}</dd></div>
-            <div><dt>Signed up</dt><dd>{day(c.joined)} · {c.via}</dd></div>
-            <div><dt>Last signed in</dt><dd>{c.lastLoginAt ? ago(c.lastLoginAt) : '—'}</dd></div>
-            <div><dt>Orders</dt><dd className="num">{c.orders}</dd></div>
-            <div><dt>Total spent</dt><dd className="num">{peso(c.spent)}</dd></div>
-            <div><dt>Average order</dt><dd className="num">{c.orders ? peso(avg) : '—'}</dd></div>
-            <div><dt>Stamp card</dt><dd><Stamps n={c.stamps} />{c.rewardsUsed > 0 && <small className="muted"> · {c.rewardsUsed} free {c.rewardsUsed === 1 ? 'drink' : 'drinks'} used</small>}</dd></div>
-            {c.address && <div className="wide"><dt>Delivery address</dt><dd>{[c.address.detail, c.address.area].filter(Boolean).join(', ')}{c.address.landmark && <small className="muted"> · {c.address.landmark}</small>}</dd></div>}
-          </dl>
-          <h4 className="cu-h">Recent orders</h4>
-          {!c.recent.length ? <p className="muted">No finished orders yet.</p> : (
-            <ul className="cu-orders">
-              {c.recent.map((o) => (
-                <li key={o._id}>
-                  <div className="cu-o-top">
-                    <b className="num">#{pad(o.no)}</b>
-                    <span className="muted">{new Date(o.at).toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
-                    <span className={`pill ${o.source === 'online' ? 'ok' : 'mute'}`}>{o.source === 'online' ? (o.area ? 'Delivery' : 'Online') : 'Counter'}</span>
-                    {o.freeDrink && <span className="pill best">Free drink</span>}
-                    <b className="num cu-o-amt">{peso(o.total)}</b>
-                  </div>
-                  <div className="cu-o-items">{o.items}</div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+    <Modal wide title="Customer" onClose={onClose} footer={<button className="btn primary" onClick={onClose}>Close</button>}>
+      <div className="cp">
+        <header className="cp-hero">
+          <span className="cp-av" aria-hidden="true">{initials(row.name)}</span>
+          <div className="cp-who">
+            <h3>{row.name}</h3>
+            <div className="cp-tags">
+              {row.orders >= 2 && <span className="cp-tag reg">Regular</span>}
+              {isNew && <span className="cp-tag new">New</span>}
+              {ready > 0 && <span className="cp-tag free">Free drink ready</span>}
+              <span className="cp-tag">Member since {new Date(row.joined).toLocaleDateString('en-PH', { month: 'short', year: 'numeric' })}</span>
+              {c && <span className="cp-tag">via {c.via}</span>}
+            </div>
+            <div className="cp-contact">
+              {row.phone && <a href={`tel:${row.phone}`}><Ico n="phone" /><span className="num">{phoneFmt(row.phone)}</span></a>}
+              {row.email && <a href={`mailto:${row.email}`}><Ico n="mail" /><span>{row.email}</span></a>}
+            </div>
+          </div>
+        </header>
+
+        {!c ? (err ? <div className="banner">{err}</div> : <p className="muted cp-load">Loading…</p>) : (<>
+          <div className="cp-stats">
+            <div><small>Orders</small><b className="num">{c.orders}</b></div>
+            <div><small>Total spent</small><b className="num">{peso(c.spent)}</b></div>
+            <div><small>Average order</small><b className="num">{c.orders ? peso(avg) : '—'}</b></div>
+            <div><small>Last order</small><b>{row.lastOrder ? ago(row.lastOrder) : '—'}</b></div>
+          </div>
+
+          <div className="cp-two">
+            <section className={`cp-card cp-stampcard ${ready ? 'ready' : ''}`}>
+              <div className="cp-card-h"><b>Stamp card</b><span>{c.lifetimeStamps} stamps all time</span></div>
+              <div className="cp-sbig"><b className="num">{prog}</b><span>of {STAMPS_PER_REWARD} stamps</span></div>
+              <div className="cp-stamps" aria-label={`${prog} of ${STAMPS_PER_REWARD} stamps`}>
+                {Array.from({ length: STAMPS_PER_REWARD }, (_, i) => <i key={i} className={i < prog ? 'on' : ''}>{i < prog && <Ico n="cup" />}</i>)}
+              </div>
+              <small className="cp-sub">{ready ? `${ready} free ${ready === 1 ? 'drink' : 'drinks'} ready to use` : `${STAMPS_PER_REWARD - prog} more for a free drink`}{c.rewardsUsed > 0 && ` · ${c.rewardsUsed} used`}</small>
+            </section>
+            <section className="cp-card cp-info">
+              <div className="cp-row"><span className="cp-ri"><Ico n="cup" /></span><div><small>Favorite drink</small><b>{row.favorite ? `${row.favorite.name}` : '—'}</b>{row.favorite?.qty > 0 && <em>{row.favorite.qty} {row.favorite.qty === 1 ? 'cup' : 'cups'} ordered</em>}</div></div>
+              <div className="cp-row"><span className="cp-ri"><Ico n="pin" /></span><div><small>Delivery address</small>{c.address ? <><b>{[c.address.detail, c.address.area].filter(Boolean).join(', ')}</b>{c.address.landmark && <em>{c.address.landmark}</em>}</> : <b className="muted">None saved</b>}</div></div>
+              <div className="cp-row"><span className="cp-ri"><Ico n="clock" /></span><div><small>Last signed in</small><b>{c.lastLoginAt ? ago(c.lastLoginAt) : '—'}</b></div></div>
+            </section>
+          </div>
+
+          <section className="cp-orders">
+            <div className="cp-card-h"><b>Recent orders</b>{c.recent.length > 0 && <span>Last {c.recent.length}</span>}</div>
+            {!c.recent.length ? <p className="cp-empty">No finished orders yet.</p> : (
+              <ul>
+                {c.recent.map((o) => {
+                  const kind = o.source === 'online' ? (o.area ? 'delivery' : 'online') : 'counter';
+                  return (
+                    <li key={o._id} className={kind}>
+                      <span className="cp-oi"><Ico n={kind === 'delivery' ? 'bike' : kind === 'online' ? 'bag' : 'store'} /></span>
+                      <div className="cp-om">
+                        <div className="cp-ot"><b className="num">#{pad(o.no)}</b><span className={`cp-kind ${kind}`}>{kind === 'delivery' ? 'Delivery' : kind === 'online' ? 'Online' : 'Counter'}</span>{o.freeDrink && <span className="cp-kind free">Free drink</span>}</div>
+                        <div className="cp-oit">{o.items}</div>
+                        <small>{new Date(o.at).toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}{o.stamps > 0 && ` · +${o.stamps} ${o.stamps === 1 ? 'stamp' : 'stamps'}`}</small>
+                      </div>
+                      <b className="num cp-oa">{peso(o.total)}</b>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </>)}
+      </div>
     </Modal>
   );
 }

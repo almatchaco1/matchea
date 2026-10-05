@@ -48,7 +48,7 @@ r.get('/', ah(async (_req, res) => {
       _id: c._id, name: c.name, phone: c.phone || '', email: c.email || '', via: how(c),
       joined: c.createdAt, lastLoginAt: c.lastLoginAt || null,
       orders: s.orders || 0, online: s.online || 0, spent: Math.round((s.spent || 0) * 100) / 100, lastOrder: s.last || null,
-      favorite: f ? { name: f.name, qty: f.q } : null,
+      favorite: f ? { name: f.name, qty: f.qty } : null,
       stamps: c.stamps || 0, rewardReady: Math.floor((c.stamps || 0) / STAMPS_PER_REWARD),
     };
   });

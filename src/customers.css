@@ -50,3 +50,79 @@
 .staff-rename{border:0;background:transparent;color:var(--muted);width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;cursor:pointer}
 .staff-rename:hover{background:var(--surface2);color:var(--matcha)}
 .staff-rename svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+
+/* ===== Customer profile (pop-up) ===== */
+.cp{display:flex;flex-direction:column;gap:14px}
+.cp-hero{display:flex;gap:16px;align-items:center;padding:18px;border-radius:20px;color:#FFF6E2;
+  background:radial-gradient(120% 120% at 100% 0%,rgba(255,255,255,.1),transparent 55%),linear-gradient(135deg,#2B6020,#163310)}
+.cp-av{flex:none;width:68px;height:68px;border-radius:22px;display:grid;place-items:center;font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:26px;font-weight:800;
+  background:#FFF6E2;color:#1F4A17;box-shadow:0 10px 20px -10px rgba(0,0,0,.5)}
+.cp-who{min-width:0;display:flex;flex-direction:column;gap:7px}
+.cp-who h3{margin:0;font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:26px;line-height:1.1;color:#FFF6E2;overflow-wrap:anywhere}
+.cp-tags{display:flex;gap:6px;flex-wrap:wrap}
+.cp-tag{padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px;font-weight:600;color:rgba(255,246,226,.9)}
+.cp-tag.reg{background:#FFF6E2;color:#1F4A17}
+.cp-tag.new{background:#C8E6A8;color:#163310}
+.cp-tag.free{background:#F6D77C;color:#4A3500}
+.cp-contact{display:flex;gap:8px;flex-wrap:wrap}
+.cp-contact a{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:12px;background:rgba(0,0,0,.18);color:#FFF6E2;text-decoration:none;font-size:13.5px;font-weight:600;min-width:0}
+.cp-contact a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp-contact a:hover{background:rgba(0,0,0,.28)}
+.cp svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.cp-load{margin:8px 2px}
+/* numbers */
+.cp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cp-stats div{padding:12px 14px;border-radius:16px;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.cp-stats small{display:block;font-size:12px;color:var(--muted)}
+.cp-stats b{display:block;margin-top:2px;font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:21px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* stamp card + info */
+.cp-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.cp-card{padding:14px;border-radius:18px;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.cp-card-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.cp-card-h b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:16px}
+.cp-card-h span{font-size:12.5px;color:var(--muted);font-weight:600}
+.cp-stampcard{background:radial-gradient(90% 90% at 100% 0%,color-mix(in srgb,var(--matcha) 10%,transparent),transparent 60%),var(--surface)}
+.cp-stampcard.ready{box-shadow:0 0 0 2px #E2B93B}
+.cp-stamps{display:flex;flex-wrap:wrap;gap:6px}
+.cp-stamps i{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--matcha) 35%,transparent);background:var(--bg)}
+.cp-stamps i.on{background:var(--matcha);color:var(--on-matcha);box-shadow:none;animation:cpStamp .35s var(--spring,ease) backwards}
+.cp-stamps i svg{width:17px;height:17px}
+@keyframes cpStamp{from{transform:scale(.5) rotate(-15deg);opacity:0}}
+.cp-sub{display:block;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.cp-info{display:flex;flex-direction:column;gap:12px}
+.cp-row{display:flex;gap:10px;align-items:flex-start}
+.cp-ri{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--matcha) 10%,var(--surface2));color:var(--matcha)}
+.cp-row>div{display:flex;flex-direction:column;min-width:0}
+.cp-row small{font-size:12px;color:var(--muted)}
+.cp-row b{font-size:14px;overflow-wrap:anywhere}
+.cp-row em{font-style:normal;font-size:12px;color:var(--muted)}
+/* orders */
+.cp-orders{padding:14px;border-radius:18px;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.cp-orders ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.cp-orders li{display:flex;gap:12px;align-items:flex-start;padding:10px 2px;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.cp-orders li:first-child{border-top:0;padding-top:2px}
+.cp-oi{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--surface2);color:var(--muted)}
+.cp-orders li.online .cp-oi{background:color-mix(in srgb,var(--matcha) 12%,var(--surface2));color:var(--matcha)}
+.cp-orders li.delivery .cp-oi{background:#F3E8CF;color:#7A5A12}
+.cp-om{flex:1;min-width:0}
+.cp-ot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px}
+.cp-kind{padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--muted)}
+.cp-kind.online{background:var(--ok-bg);color:var(--ok)}
+.cp-kind.delivery{background:#F3E8CF;color:#7A5A12}
+.cp-kind.free{background:#FCEBB0;color:#5A4200}
+.cp-oit{margin-top:2px;font-size:13.5px;color:var(--ink);overflow-wrap:anywhere}
+.cp-om small{font-size:12px;color:var(--muted)}
+.cp-oa{flex:none;font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:16px}
+.cp-empty{margin:0;color:var(--muted);font-size:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cp-orders li.delivery .cp-oi,:root:not([data-theme="light"]) .cp-kind.delivery{background:#3A2E12;color:#F2D58A}}
+@media (max-width:600px){
+  .cp-hero{flex-direction:column;align-items:flex-start;padding:16px}
+  .cp-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cp-two{grid-template-columns:1fr}
+}
+.cp-sbig{display:flex;align-items:baseline;gap:6px;margin:-2px 0 10px}
+.cp-sbig b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:34px;line-height:1;color:var(--matcha)}
+.cp-sbig span{font-size:13px;color:var(--muted);font-weight:600}
+.cp-stamps{flex-wrap:nowrap;gap:5px}
+.cp-stamps i{width:auto;height:auto;flex:1 1 0;max-width:32px;aspect-ratio:1}
+.cp-stamps i svg{width:60%;height:60%}
