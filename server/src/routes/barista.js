@@ -17,6 +17,16 @@ const ticket = (s) => ({
     product: l.product ? String(l.product) : null, sizeId: l.sizeId || null, milkId: l.milkId || null, addonIds: l.addonIds?.length ? l.addonIds : null })),
 });
 
+// How many orders the barista still has to make (for the number on the Barista tab)
+r.get('/count', ah(async (_req, res) => {
+  const since = new Date(Date.now() - WINDOW_H * 3600e3);
+  const [pos, online] = await Promise.all([
+    Sale.countDocuments({ source: 'pos', status: { $in: ['paid', 'staff'] }, baristaDone: { $ne: true }, createdAt: { $gte: since } }),
+    Sale.countDocuments({ source: 'online', status: 'preparing' }),
+  ]);
+  res.json({ orders: pos + online });
+}));
+
 r.get('/', ah(async (_req, res) => {
   const since = new Date(Date.now() - WINDOW_H * 3600e3);
   const [pos, online, waiting] = await Promise.all([

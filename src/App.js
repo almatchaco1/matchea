@@ -119,6 +119,17 @@ export default function App() {
     return () => clearInterval(t);
   }, [user, loadOnline]);
   const newCount = online.filter((o) => o.status === 'new').length;
+  // Orders still to make on the Barista screen (number on the Barista tab)
+  const [barCount, setBarCount] = useState(0);
+  const loadBar = useCallback(() => api.get('/barista/count').then((d) => setBarCount(d.orders || 0)).catch(() => {}), []);
+  useEffect(() => {
+    if (!user || user.needsNewPin) return undefined;
+    loadBar();
+    const t = setInterval(loadBar, 5000);
+    return () => clearInterval(t);
+  }, [user, loadBar, tab, online]);
+  const trainBar = trainTickets.filter((t) => t.lines.some((l) => !l.done)).length;
+  const barShown = training ? trainBar : barCount;
 
   useEffect(() => {
     if (data.settings?.name) document.title = `${newCount ? `(${newCount}) ` : ''}${data.settings.name} POS`;
@@ -155,7 +166,7 @@ export default function App() {
   }, [user, logout]); // eslint-disable-line react-hooks/exhaustive-deps
   const navRef = useRef(null);
   const topRef = useRef(null);
-  useHeaderFit(topRef, `${user?._id}|${training}|${newCount > 0}|${lowCount > 0}|${checking}`);
+  useHeaderFit(topRef, `${user?._id}|${training}|${newCount > 0}|${lowCount > 0}|${barShown > 0}|${checking}`);
 
   if (checking) return null;
   if (!user || user.needsNewPin) return <Login key={user?._id || 'in'} notice={signedOutMsg} pending={user?.needsNewPin ? user : null} onSignOut={logout}
@@ -174,12 +185,12 @@ export default function App() {
             <div><h1 className="sr-only">{data.settings?.name || 'Matchéa'}</h1><small>Point of sale · Inventory</small></div>
           </div>
           <nav className="tabs" role="tablist" ref={navRef}>
-            <TabInk nav={navRef} dep={`${shownTab}|${training}|${isAdmin}|${lowCount}|${newCount}`} />
+            <TabInk nav={navRef} dep={`${shownTab}|${training}|${isAdmin}|${lowCount}|${newCount}|${barShown > 0}`} />
             {TABS.map(([k, n, who]) => {
               const blocked = (who && !isAdmin) ? 'Admins only' : (training && !TRAIN_TABS.includes(k)) ? 'Not open during training' : '';
               return (
               <button key={k} data-tab={k} role="tab" aria-selected={shownTab === k} onClick={() => !blocked && go(k)} disabled={!!blocked} className={blocked ? 'locked' : undefined} title={blocked || undefined}>
-                {blocked && <LockIcon />}{n}{k === 'inventory' && lowCount > 0 && <span className="dot">{lowCount}</span>}{k === 'online' && newCount > 0 && <span className="dot new">{newCount}</span>}
+                {blocked && <LockIcon />}{n}{k === 'inventory' && lowCount > 0 && <span className="dot">{lowCount}</span>}{k === 'online' && newCount > 0 && <span className="dot new">{newCount}</span>}{k === 'barista' && barShown > 0 && <span className="dot new" aria-label={`${barShown} to make`}>{barShown}</span>}
               </button>
               );
             })}
