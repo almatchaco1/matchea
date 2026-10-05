@@ -8,6 +8,7 @@ import Menu from './components/Menu';
 import Reports from './components/Reports';
 import Online from './components/Online';
 import Staff from './components/Staff';
+import Customers from './components/Customers';
 import Barista from './components/Barista';
 import PrinterSettings from './components/PrinterSettings';
 import { loadPrinterSettings, reconnect } from './lib/printer';
@@ -19,7 +20,7 @@ import './matchea-pos.css';
 import './pos-v3.css';
 import './order-v4.css';
 
-const TABS = [['register', 'Register'], ['online', 'Online'], ['barista', 'Barista'], ['inventory', 'Inventory'], ['menu', 'Menu'], ['reports', 'Reports'], ['staff', 'Staff', 'admin']];
+const TABS = [['register', 'Register'], ['online', 'Online'], ['barista', 'Barista'], ['inventory', 'Inventory'], ['menu', 'Menu'], ['reports', 'Reports'], ['customers', 'Customers', 'admin'], ['staff', 'Staff', 'admin']];
 // Short two-note chime for new online orders (browsers may block sound until the page was clicked once)
 function chime() {
   try {
@@ -226,13 +227,14 @@ export default function App() {
           </div>
         )}
         <main key={shownTab} className="tabpane">
-          {(shownTab === 'register' || (shownTab === 'staff' && !isAdmin)) && <Register {...shared} {...trainProps} cart={cart} setCart={setCart} />}
+          {(shownTab === 'register' || ((shownTab === 'staff' || shownTab === 'customers') && !isAdmin)) && <Register {...shared} {...trainProps} cart={cart} setCart={setCart} />}
           {shownTab === 'barista' && <Barista {...shared} {...trainProps} key={training ? 'train' : 'real'} />}
           {!training && <>
           {tab === 'online' && <Online {...shared} orders={online} meta={onlineMeta} reload={loadOnline} />}
           {tab === 'inventory' && <Inventory {...shared} openRestock={openRestock} onRestockShown={() => setOpenRestock(false)} />}
           {tab === 'menu' && <Menu {...shared} goInventory={() => go('inventory')} />}
           {tab === 'reports' && <Reports {...shared} goInventory={() => go('inventory')} />}
+          {tab === 'customers' && isAdmin && <Customers {...shared} />}
           {tab === 'staff' && isAdmin && <Staff {...shared} />}
           </>}
         </main>

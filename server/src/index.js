@@ -19,6 +19,7 @@ import customerRoutes from './routes/customer.js';
 import backupRoutes from './routes/backups.js';
 import baristaRoutes from './routes/barista.js';
 import supplierRoutes from './routes/suppliers.js';
+import customerAdminRoutes from './routes/customers.js';
 import expenseRoutes from './routes/expenses.js';
 import trashRoutes from './routes/trash.js';
 import { scheduleDailyBackups } from './lib/backup.js';
@@ -52,6 +53,7 @@ app.use('/api/backups', requireAuth, backupRoutes);
 app.use('/api/barista', requireAuth, baristaRoutes);
 app.use('/api/suppliers', requireAuth, supplierRoutes);
 app.use('/api/expenses', requireAuth, expenseRoutes);
+app.use('/api/customers', requireAuth, customerAdminRoutes);
 app.use('/api/trash', requireAuth, trashRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 

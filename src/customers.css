@@ -1,0 +1,47 @@
+/* ===== Customers tab (owner / admin) ===== */
+.stat small{display:block;margin-top:2px;font-size:12.5px}
+.cu-panel{padding:14px}
+.cu-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cu-tools .search{flex:1 1 260px;min-width:0}
+.cu-sort{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.cu-sort select{min-height:40px;border-radius:12px}
+.cu-chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 6px}
+.cu-table{font-size:14px}
+.cu-table th{font-size:12px;font-weight:600;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.cu-table td{padding:11px 10px;border-bottom:1px solid color-mix(in srgb,var(--line) 65%,transparent);vertical-align:middle}
+.cu-table .r{text-align:right}
+.cu-table tbody tr{cursor:pointer;transition:background .15s}
+.cu-table tbody tr:hover,.cu-table tbody tr:focus-visible{background:color-mix(in srgb,var(--matcha) 6%,transparent);outline:0}
+.cu-who{display:flex;align-items:center;gap:10px;min-width:0}
+.cu-who>span:last-child{display:flex;flex-direction:column;min-width:0}
+.cu-who small{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.cu-av{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:color-mix(in srgb,var(--matcha) 14%,var(--surface2));color:var(--matcha)}
+.cu-reg,.cu-free{margin-left:6px;font-size:11px}
+.cu-stamps{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.cu-dots{display:inline-flex;gap:2px}
+.cu-dots i{width:7px;height:7px;border-radius:50%;box-shadow:inset 0 0 0 1.2px color-mix(in srgb,var(--matcha) 40%,transparent)}
+.cu-dots i.on{background:var(--matcha);box-shadow:none}
+.cu-count{margin:10px 2px 0;font-size:12.5px}
+/* detail */
+.cu-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 16px;margin:0 0 6px}
+.cu-facts div{min-width:0}
+.cu-facts .wide{grid-column:1/-1}
+.cu-facts dt{font-size:12px;color:var(--muted)}
+.cu-facts dd{margin:2px 0 0;font-weight:700;overflow-wrap:anywhere}
+.cu-h{margin:16px 0 8px;font-size:14px}
+.cu-orders{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.cu-orders li{padding:10px 12px;border-radius:12px;background:var(--surface2)}
+.cu-o-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.cu-o-amt{margin-left:auto}
+.cu-o-items{margin-top:3px;font-size:13px;color:var(--muted)}
+/* phones: each customer becomes a card */
+@media (max-width:760px){
+  .cu-table thead{display:none}
+  .cu-table,.cu-table tbody,.cu-table tr,.cu-table td{display:block;width:100%}
+  .cu-table tr{padding:10px 4px;border-bottom:1px solid var(--line)}
+  .cu-table td{display:flex;justify-content:space-between;gap:12px;padding:3px 6px;border:0;text-align:right}
+  .cu-table td::before{content:attr(data-l);color:var(--muted);font-size:12.5px;text-align:left;flex:none}
+  .cu-table td:first-child{padding-bottom:6px}
+  .cu-table td:first-child::before{display:none}
+  .cu-table .r{text-align:right}
+}
