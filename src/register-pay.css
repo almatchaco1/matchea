@@ -1,0 +1,112 @@
+/* ===== Register · payment card v5: method tiles, money display, bill chips, change ticket ===== */
+.op-h-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pay-due{display:inline-flex;align-items:baseline;gap:6px;padding:5px 12px;border-radius:999px;background:color-mix(in srgb,var(--matcha) 10%,var(--surface2));font-size:12.5px;font-weight:600;color:var(--muted)}
+.pay-due b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:16px;color:var(--matcha)}
+
+/* the payment card itself: soft green glow in the corner */
+.op-sec[aria-label="Payment"]{position:relative;overflow:hidden;isolation:isolate}
+.op-sec[aria-label="Payment"]::before{content:"";position:absolute;right:-70px;top:-90px;width:220px;height:220px;border-radius:50%;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--matcha) 14%,transparent),transparent 70%)}
+
+/* ---- method tiles ---- */
+.seg.pay-pick.pp-tiles{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px;padding:0;background:transparent;box-shadow:none;border-radius:0}
+.seg.pay-pick.pp-tiles button{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:10px;min-height:0;padding:12px 12px 11px;border:0;border-radius:18px;text-align:left;
+  background:var(--surface);color:var(--ink);box-shadow:0 0 0 1.5px var(--line),0 6px 14px -12px rgba(22,51,15,.4);cursor:pointer;
+  transition:transform .3s var(--spring),box-shadow .25s,background .3s,color .25s;animation:none}
+.seg.pay-pick.pp-tiles button:hover:not([aria-pressed="true"]){transform:translateY(-2px);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--matcha) 45%,var(--line)),0 10px 18px -12px rgba(22,51,15,.45)}
+.seg.pay-pick.pp-tiles button:active{transform:scale(.97)}
+.seg.pay-pick.pp-tiles .pp-ico{width:36px;height:36px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;transition:transform .35s var(--spring),background .3s}
+.seg.pay-pick.pp-tiles .pp-ico svg{width:22px;height:22px}
+.seg.pay-pick.pp-tiles .pp-cash .pp-ico{color:#2F6A22;background:#E5EFD9}
+.seg.pay-pick.pp-tiles .pp-gcash .pp-ico{background:#E3EEFF}
+.seg.pay-pick.pp-tiles .pp-maya .pp-ico{background:#DDF5EA}
+.pp-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.pp-txt b{font-size:14.5px;font-weight:800;letter-spacing:-.005em}
+.pp-txt small{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-tick{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;
+  box-shadow:inset 0 0 0 1.5px var(--line);transition:background .25s,box-shadow .25s,transform .35s var(--spring)}
+.pp-tick svg{width:12px;height:12px;fill:none;stroke:transparent;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+/* chosen */
+.seg.pay-pick.pp-tiles button[aria-pressed="true"]{color:#FFF8E8;background:radial-gradient(120% 120% at 100% 0%,rgba(255,255,255,.14),transparent 55%),linear-gradient(150deg,#2E6623,#173811);
+  box-shadow:0 0 0 1.5px #163A10,0 14px 24px -14px rgba(22,51,15,.85)}
+.seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-txt small{color:rgba(255,248,232,.72)}
+.seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-ico{background:rgba(255,255,255,.95);transform:rotate(-6deg) scale(1.05)}
+.seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-tick{background:#C8E6A8;box-shadow:none;transform:scale(1.05)}
+.seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-tick svg{stroke:#163310}
+.seg.pay-pick.pp-tiles button[aria-pressed="true"] .fill.g{fill:#0A6DFF}
+.seg.pay-pick.pp-tiles button[aria-pressed="true"] .fill.m{fill:#00A86B}
+.seg.pay-pick.pp-tiles button[aria-pressed="true"] .on{stroke:#fff}
+
+/* ---- cash: money display ---- */
+.op-sec .pay-box.is-cash .pb-cash>label{display:flex;justify-content:space-between}
+.op-sec .pb-in{position:relative;padding:4px 8px 4px 6px;border-radius:18px;background:var(--bg);box-shadow:inset 0 0 0 1.5px var(--line),inset 0 2px 6px rgba(0,0,0,.04)}
+.op-sec .pb-in i{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--surface);box-shadow:0 0 0 1px var(--line);color:var(--matcha);font-size:22px}
+.op-sec .pb-in input{font-size:30px;padding:8px 4px !important}
+.op-sec .pb-in:focus-within{box-shadow:inset 0 0 0 2px var(--matcha),0 0 0 4px color-mix(in srgb,var(--matcha) 16%,transparent)}
+.op-sec .pb-in.ok{box-shadow:inset 0 0 0 2px #5E9A3A}
+.op-sec .pb-in.short{box-shadow:inset 0 0 0 2px var(--bad)}
+
+/* bill chips */
+.op-sec .pb-quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:7px}
+.op-sec .pb-quick button{position:relative;overflow:hidden;min-width:0;padding:10px 6px;border-radius:12px;font-size:14px;font-weight:800;color:var(--ink);
+  background:repeating-linear-gradient(135deg,transparent 0 7px,color-mix(in srgb,var(--matcha) 5%,transparent) 7px 8px),var(--surface);
+  box-shadow:0 0 0 1.5px var(--line),0 3px 0 var(--line);transition:transform .15s,box-shadow .15s,background .2s,color .2s}
+.op-sec .pb-quick button::after{content:"";position:absolute;inset:4px;border-radius:8px;border:1px dashed color-mix(in srgb,var(--matcha) 22%,transparent);pointer-events:none}
+.op-sec .pb-quick button:active{transform:translateY(3px);box-shadow:0 0 0 1.5px var(--line),0 0 0 var(--line)}
+.op-sec .pb-quick button.on{color:#FFF8E8;background:linear-gradient(180deg,#2E6623,#1A4413);box-shadow:0 0 0 1.5px #163A10,0 3px 0 #0F2A0B}
+.op-sec .pb-quick button.on::after{border-color:rgba(255,248,232,.3)}
+
+/* change ticket */
+.op-sec .pb-change{position:relative;grid-template-columns:auto 1fr auto;gap:2px 12px;padding:14px 16px 14px 14px;border-radius:18px;overflow:hidden}
+.op-sec .pb-change::before{content:"";grid-row:1/3;align-self:center;width:38px;height:38px;border-radius:12px;background:var(--surface) center/20px no-repeat;box-shadow:0 0 0 1px var(--line);
+  -webkit-mask:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235E9A3A' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='9' cy='9' r='5.5'/%3E%3Cpath d='M14.5 9.6a5.5 5.5 0 1 1-4.9 4.9'/%3E%3C/svg%3E")}
+.op-sec .pb-change>span:first-of-type{grid-column:2}
+.op-sec .pb-change b{grid-column:3;grid-row:1/3;align-self:center}
+.op-sec .pb-change small{grid-column:2/4}
+.op-sec .pb-change .pb-hint{grid-column:3}
+.op-sec .pb-change.idle{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line)}
+.op-sec .pb-change.ok{background:radial-gradient(100% 140% at 100% 0%,rgba(255,255,255,.5),transparent 60%),linear-gradient(135deg,#E6F1DA,#D3E7C0);box-shadow:inset 0 0 0 1.5px #A9CC8A}
+.op-sec .pb-change.ok>span:first-of-type{color:#2F6A22}
+.op-sec .pb-change.ok b{color:#1F4A17;font-size:30px}
+/* torn ticket edge on the right */
+.op-sec .pb-change::after{content:"";position:absolute;right:-6px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line)}
+
+/* GCash / Maya: QR card + received */
+.op-sec .qr-hint-btn{padding:12px;border-radius:18px;gap:12px}
+.op-sec .qr-hint-btn img{width:52px;height:52px;border-radius:10px;background:#fff;padding:3px;box-shadow:0 0 0 1px var(--line)}
+.op-sec .pb-got{border-radius:18px}
+
+/* charge */
+.cart .charge:not(:disabled){position:relative;overflow:hidden;font-size:17.5px;letter-spacing:.01em}
+
+/* ---- dark ---- */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles button{background:rgba(255,255,255,.035);box-shadow:0 0 0 1.5px rgba(255,255,255,.08)}
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles .pp-cash .pp-ico{background:rgba(155,203,120,.14);color:#B4DA97}
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles .pp-gcash .pp-ico{background:rgba(10,109,255,.16)}
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles .pp-maya .pp-ico{background:rgba(0,168,107,.16)}
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles button[aria-pressed="true"]{color:#10200B;background:radial-gradient(120% 120% at 100% 0%,rgba(255,255,255,.35),transparent 55%),linear-gradient(150deg,#B4DA97,#86B862);box-shadow:0 0 0 1.5px #8CBF68,0 14px 26px -14px rgba(0,0,0,.9)}
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-txt small{color:rgba(16,32,11,.65)}
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-tick{background:#10200B}
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-tick svg{stroke:#B4DA97}
+  :root:not([data-theme="light"]) .op-sec .pb-quick button{background:rgba(255,255,255,.04);box-shadow:0 0 0 1.5px rgba(255,255,255,.08),0 3px 0 rgba(0,0,0,.4)}
+  :root:not([data-theme="light"]) .op-sec .pb-quick button.on{color:#10200B;background:linear-gradient(180deg,#B4DA97,#8CBF68);box-shadow:0 0 0 1.5px #8CBF68,0 3px 0 #4F7A36}
+  :root:not([data-theme="light"]) .op-sec .pb-in i{background:rgba(255,255,255,.05)}
+  :root:not([data-theme="light"]) .op-sec .pb-change.idle{background:rgba(255,255,255,.03)}
+  :root:not([data-theme="light"]) .op-sec .pb-change.ok{background:linear-gradient(135deg,rgba(155,203,120,.2),rgba(155,203,120,.1));box-shadow:inset 0 0 0 1.5px rgba(155,203,120,.4)}
+  :root:not([data-theme="light"]) .op-sec .pb-change.ok>span:first-of-type,:root:not([data-theme="light"]) .op-sec .pb-change.ok b{color:#C8E6A8}
+  :root:not([data-theme="light"]) .op-sec .pb-change::before{background-color:rgba(255,255,255,.05)}
+  :root:not([data-theme="light"]) .pay-due b{color:#B4DA97}
+}
+@media (max-width:400px){
+  .seg.pay-pick.pp-tiles button{padding:10px 9px}
+  .pp-txt small{display:none}
+  .seg.pay-pick.pp-tiles .pp-ico{width:32px;height:32px}
+}
+@media (prefers-reduced-motion:reduce){.seg.pay-pick.pp-tiles button,.seg.pay-pick.pp-tiles .pp-ico{transition:none}}
+.op-sec .pb-change>span:first-of-type{grid-row:1/3;align-self:center}
+.op-sec .pb-change .pb-hint{grid-row:1/3;align-self:center}
+.op-sec .pb-change small{grid-row:3}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-ico{background:#10200B;color:#B4DA97}
+}

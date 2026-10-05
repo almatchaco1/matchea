@@ -19,6 +19,7 @@ import './styles.css';
 import './matchea-pos.css';
 import './pos-v3.css';
 import './order-v4.css';
+import './register-pay.css';
 
 const TABS = [['register', 'Register'], ['online', 'Online'], ['barista', 'Barista'], ['inventory', 'Inventory'], ['menu', 'Menu'], ['reports', 'Reports'], ['customers', 'Customers', 'admin'], ['staff', 'Staff', 'admin']];
 // Short two-note chime for new online orders (browsers may block sound until the page was clicked once)

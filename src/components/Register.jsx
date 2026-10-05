@@ -324,8 +324,8 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
           </div>}
           </section>
           <section className="op-sec" aria-label="Payment">
-          <h3 className="op-h">Payment</h3>
-          <PayPicker value={pay.method} onChange={(k) => setPay({ ...pay, method: k, got: false })} />
+          <div className="op-h-row"><h3 className="op-h">Payment</h3>{!staffOn && <span className="pay-due">Due <b className="num">{peso(t.total)}</b></span>}</div>
+          <PayPicker tiles value={pay.method} onChange={(k) => setPay({ ...pay, method: k, got: false })} />
           <div className={`pay-box ${qrPay ? 'is-qr' : 'is-cash'}`}>
           {!qrPay ? <>
             <Field id="tendered" label="Cash received" className="pb-cash">

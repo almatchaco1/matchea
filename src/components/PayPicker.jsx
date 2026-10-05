@@ -7,14 +7,18 @@ const ICON = {
   maya: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" className="fill m" /><path d="M7.5 15.5v-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2" className="on" /></svg>,
 };
 
-export default function PayPicker({ value, onChange }) {
+const SUB = { cash: 'Bills & coins', gcash: 'Scan QR', maya: 'Scan QR' };
+
+export default function PayPicker({ value, onChange, tiles }) {
   const keys = Object.keys(PAY_METHODS);
   return (
-    <div className="seg pay-pick" role="group" aria-label="Payment method" style={{ '--n': keys.length, '--at': Math.max(0, keys.indexOf(value)) }}>
-      <span className="pay-ink" aria-hidden="true" />
+    <div className={`seg pay-pick ${tiles ? 'pp-tiles' : ''}`} role="group" aria-label="Payment method" style={{ '--n': keys.length, '--at': Math.max(0, keys.indexOf(value)) }}>
+      {!tiles && <span className="pay-ink" aria-hidden="true" />}
       {keys.map((k) => (
         <button key={k} type="button" aria-pressed={value === k} className={`pp-${k}`} onClick={() => onChange(k)}>
-          <span className="pp-ico">{ICON[k]}</span>{PAY_METHODS[k]}
+          <span className="pp-ico">{ICON[k]}</span>
+          {tiles ? <span className="pp-txt"><b>{PAY_METHODS[k]}</b><small>{SUB[k] || ''}</small></span> : PAY_METHODS[k]}
+          {tiles && <i className="pp-tick" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg></i>}
         </button>
       ))}
     </div>
