@@ -95,6 +95,7 @@ export default function Staff({ toast, user: me }) {
                   Locked {ago(u.lockedAt).toLowerCase()}{u.lockedBy ? ` by ${u.lockedBy}` : ''}.{u.lockReason ? <> Reason: <i>{u.lockReason}</i></> : ''}
                 </div>
               )}
+              {u.needsNewPin && u.status !== 'locked' && <div className="staff-note warn">Still has an old PIN. They’ll be asked to set a 6-digit PIN when they next sign in, or set one for them with Change PIN.</div>}
               {u.status === 'paused' && <div className="staff-note warn">Too many wrong PINs. Sign-in opens again {new Date(u.lockedUntil).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}.</div>}
 
               <dl className="staff-facts">
@@ -216,8 +217,8 @@ function PinModal({ u, me, toast, onClose, onDone }) {
     <Modal title={`New PIN for ${u.name}`} onClose={onClose}
       footer={<><button className="btn ghost" onClick={onClose}>Cancel</button><button className="btn primary" form="pinf" disabled={busy}>{busy ? 'Saving…' : 'Save PIN'}</button></>}>
       <form id="pinf" onSubmit={save} noValidate>
-        <Field id="newPin" label="PIN (4–8 digits)" error={e} hint={u._id === me._id ? 'Use this next time you sign in.' : `${u.name} will be signed out and must use the new PIN.`}>
-          <input id="newPin" inputMode="numeric" maxLength={8} value={pin} autoFocus onChange={(x) => { setPin(x.target.value.replace(/\D/g, '')); setE(''); }} />
+        <Field id="newPin" label="PIN (6 digits)" error={e} hint={u._id === me._id ? 'Use this next time you sign in.' : `${u.name} will be signed out and must use the new PIN.`}>
+          <input id="newPin" inputMode="numeric" maxLength={6} value={pin} autoFocus onChange={(x) => { setPin(x.target.value.replace(/\D/g, '')); setE(''); }} />
         </Field>
       </form>
     </Modal>
@@ -290,8 +291,8 @@ function AddStaff({ toast, onAdded }) {
         <Field id="nName" label="Name" error={errs.name} hint="Shown on the sign-in screen">
           <input id="nName" value={f.name} maxLength={LIMITS.staffName} onChange={(e) => { setF({ ...f, name: e.target.value }); clear('name'); }} />
         </Field>
-        <Field id="nPin" label="PIN (4–8 digits)" error={errs.pin} hint="No repeats like 1111 or runs like 1234">
-          <input id="nPin" inputMode="numeric" maxLength={8} value={f.pin} onChange={(e) => { setF({ ...f, pin: e.target.value.replace(/\D/g, '') }); clear('pin'); }} />
+        <Field id="nPin" label="PIN (6 digits)" error={errs.pin} hint="No repeats like 111111, runs like 123456 or patterns like 121212">
+          <input id="nPin" inputMode="numeric" maxLength={6} value={f.pin} onChange={(e) => { setF({ ...f, pin: e.target.value.replace(/\D/g, '') }); clear('pin'); }} />
         </Field>
         <Field id="nRole" label="Role" hint={f.role === 'admin' ? 'Can change menu, prices and staff' : 'Register and online orders only'}>
           <select id="nRole" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}><option value="cashier">Cashier</option><option value="admin">Admin</option></select>

@@ -196,13 +196,23 @@ export function checkSettings(b = {}) {
 }
 
 // ---------- staff ----------
-const WEAK_PINS = /^(\d)\1+$|^(0123|1234|2345|3456|4567|5678|6789|9876|8765|7654|6543|5432|4321|3210)/;
+/** Staff PINs are exactly 6 digits. (Older 4–8 digit PINs still sign in once, then must be changed.) */
+export const PIN_LEN = 6;
+/** Too easy to guess: one digit repeated (111111), a run (123456, 654321), or a short pattern repeated (121212, 123123). */
+export function weakPin(p) {
+  p = String(p || '');
+  if (/^(\d)\1+$/.test(p)) return true;
+  if ('01234567890'.includes(p) || '09876543210'.includes(p)) return true;
+  if (/^(\d{1,3})\1+$/.test(p)) return true;
+  return false;
+}
 export function checkPin(pin, key = 'pin') {
   const e = {};
   const p = str(pin);
   if (!p) e[key] = 'Enter a PIN.';
-  else if (!/^\d{4,8}$/.test(p)) e[key] = 'PIN must be 4–8 digits.';
-  else if (WEAK_PINS.test(p)) e[key] = 'Too easy to guess. Avoid repeated or sequential digits.';
+  else if (!/^\d+$/.test(p)) e[key] = 'Use numbers only.';
+  else if (p.length !== PIN_LEN) e[key] = `PIN must be exactly ${PIN_LEN} digits.`;
+  else if (weakPin(p)) e[key] = 'Too easy to guess. Avoid repeats like 111111, runs like 123456 or patterns like 121212.';
   return e;
 }
 export function checkStaff(b = {}) {

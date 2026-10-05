@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, unique: true },
     pinHash: { type: String, required: true },
+    pinLen: Number,                               // digits in the current PIN (6 = current rule; older PINs must be changed)
     role: { type: String, enum: ['admin', 'cashier'], default: 'cashier' },
     superAdmin: { type: Boolean, default: false }, // the shop owner: always admin, can't be locked, demoted or removed
     active: { type: Boolean, default: true },
@@ -34,6 +35,6 @@ userSchema.methods.checkPin = function (pin) {
   return bcrypt.compare(String(pin), this.pinHash);
 };
 userSchema.statics.hashPin = (pin) => bcrypt.hash(String(pin), 10);
-userSchema.set('toJSON', { transform: (_d, o) => { delete o.pinHash; delete o.sessionVersion; return o; } });
+userSchema.set('toJSON', { transform: (_d, o) => { o.needsNewPin = o.pinLen !== 6; delete o.pinHash; delete o.sessionVersion; delete o.pinLen; return o; } });
 
 export default mongoose.model('User', userSchema);

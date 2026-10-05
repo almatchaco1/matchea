@@ -5,7 +5,7 @@ import { ah, HttpError, assertValid, nameRegex, shopTime, TZ } from '../lib/util
 import Sale from '../models/Sale.js';
 import StaffLog, { logStaff } from '../models/StaffLog.js';
 import { checkId } from '../lib/ids.js';
-import { checkStaff, checkPin, ROLES } from '../../../src/shared/rules.mjs';
+import { checkStaff, checkPin, weakPin, PIN_LEN, ROLES } from '../../../src/shared/rules.mjs';
 
 const r = Router();
 r.param('id', checkId);
@@ -15,7 +15,7 @@ const LOCK_MINUTES = 5;
 
 // Public: list of active staff names for the sign-in screen
 r.get('/staff', ah(async (_req, res) => {
-  res.json(await User.find({ active: true }, 'name role').sort('name'));
+  res.json((await User.find({ active: true }, 'name role').sort('name').lean()).map((u) => ({ _id: u._id, name: u.name, role: u.role })));
 }));
 
 const ipOf = (req) => String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim().slice(0, 60);
@@ -24,7 +24,7 @@ const ONLINE_MS = 2 * 60e3; // seen in the last 2 minutes = online now
 r.post('/login', ah(async (req, res) => {
   const { name, pin } = req.body || {};
   if (!String(name || '').trim()) throw new HttpError(400, 'Choose your name.', { name: 'Choose your name.' });
-  if (!/^\d{4,8}$/.test(String(pin || ''))) throw new HttpError(400, 'Enter your 4–8 digit PIN.', { pin: 'Enter your 4–8 digit PIN.' });
+  if (!/^\d{4,8}$/.test(String(pin || ''))) throw new HttpError(400, `Enter your ${PIN_LEN}-digit PIN.`, { pin: `Enter your ${PIN_LEN}-digit PIN.` });
 
   const user = await User.findOne({ name: String(name).trim() });
   if (!user) throw new HttpError(401, 'Name or PIN is incorrect.');
@@ -55,12 +55,34 @@ r.post('/login', ah(async (req, res) => {
   }
   user.failedLogins = 0; user.lockedUntil = null;
   user.lastLoginAt = new Date(); user.lastSeenAt = new Date();
+  user.pinLen = String(pin).length; // older accounts: now we know if the PIN still needs to become 6 digits
   await user.save();
   logStaff(user, 'login', { ip });
-  res.json({ token: signToken(user), user, weakPin: Object.keys(checkPin(pin)).length > 0 });
+  res.json({ token: signToken(user), user, newPin: user.pinLen !== PIN_LEN, weakPin: user.pinLen === PIN_LEN && weakPin(pin) });
 }));
 
 r.get('/me', requireAuth, (req, res) => res.json(req.user));
+
+// Change my own PIN (also used right after signing in with an old 4–8 digit PIN)
+const selfTries = new Map();
+r.post('/me/pin', requireAuth, ah(async (req, res) => {
+  const { current, pin } = req.body || {};
+  const key = String(req.user._id), now = Date.now();
+  const tries = (selfTries.get(key) || []).filter((t) => now - t < 10 * 60000);
+  if (tries.length >= 5) throw new HttpError(429, 'Too many wrong PINs. Try again in 10 minutes.', { current: 'Too many tries. Wait 10 minutes.' });
+  const user = await User.findById(req.user._id);
+  if (!(await user.checkPin(String(current || '')))) {
+    tries.push(now); selfTries.set(key, tries);
+    throw new HttpError(403, 'Your current PIN is not right.', { current: 'Your current PIN is not right.' });
+  }
+  selfTries.delete(key);
+  assertValid(checkPin(pin));
+  if (String(pin) === String(current)) throw new HttpError(400, 'Choose a different PIN from your old one.', { pin: 'Choose a different PIN from your old one.' });
+  user.pinHash = await User.hashPin(pin); user.pinLen = PIN_LEN; user.failedLogins = 0; user.lockedUntil = null;
+  await user.save();
+  logStaff(user, 'pin_changed', { by: user.name, note: 'Set their own PIN' });
+  res.json({ user, token: signToken(user) });
+}));
 
 r.post('/logout', requireAuth, ah(async (req, res) => {
   await User.updateOne({ _id: req.user._id }, { lastLogoutAt: new Date() });
@@ -128,7 +150,7 @@ r.post('/override', requireAuth, ah(async (req, res) => {
   const tries = (overrideTries.get(key) || []).filter((t) => now - t < 10 * 60000);
   if (tries.length >= 5) throw new HttpError(429, 'Too many wrong admin PINs. Try again in 10 minutes.', { pin: 'Too many tries. Wait 10 minutes.' });
   const pin = String(req.body?.pin || '');
-  if (!/^\d{4,8}$/.test(pin)) throw new HttpError(400, 'Enter the admin’s 4–8 digit PIN.', { pin: 'Enter the admin’s PIN.' });
+  if (!/^\d{4,8}$/.test(pin)) throw new HttpError(400, `Enter the admin’s ${PIN_LEN}-digit PIN.`, { pin: 'Enter the admin’s PIN.' });
   const admins = await User.find({ role: 'admin', active: true });
   let ok = null;
   for (const a of admins) if (await a.checkPin(pin)) { ok = a; break; }
@@ -158,7 +180,7 @@ r.post('/users', requireAuth, requireAdmin, ah(async (req, res) => {
   const name = String(b.name).trim().replace(/\s+/g, ' ');
   if (await User.exists({ name: nameRegex(name) }))
     throw new HttpError(409, 'Someone already has that name.', { name: 'Someone already has that name. Add a last initial.' });
-  const user = await User.create({ name, pinHash: await User.hashPin(b.pin), role: b.role === 'admin' ? 'admin' : 'cashier' });
+  const user = await User.create({ name, pinHash: await User.hashPin(b.pin), pinLen: String(b.pin).length, role: b.role === 'admin' ? 'admin' : 'cashier' });
   logStaff(user, 'created', { by: req.user.name, note: user.role === 'admin' ? 'Admin' : 'Cashier' });
   res.status(201).json(user);
 }));
@@ -182,7 +204,7 @@ r.patch('/users/:id', requireAuth, requireAdmin, ah(async (req, res) => {
 
   if (pin != null) {
     assertValid(checkPin(pin));
-    user.pinHash = await User.hashPin(pin); user.failedLogins = 0; user.lockedUntil = null;
+    user.pinHash = await User.hashPin(pin); user.pinLen = String(pin).length; user.failedLogins = 0; user.lockedUntil = null;
     user.sessionVersion = (user.sessionVersion || 0) + (self ? 0 : 1); // new PIN signs them out elsewhere
     logs.push(['pin_changed']);
   }

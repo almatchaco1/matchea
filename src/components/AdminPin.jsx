@@ -12,7 +12,7 @@ export default function AdminPin({ action, detail, onApproved, onClose }) {
   const [busy, setBusy] = useState(false);
   const submit = async (e) => {
     e?.preventDefault();
-    if (!/^\d{4,8}$/.test(pin)) { setErr('Enter the admin’s 4–8 digit PIN.'); return; }
+    if (!/^\d{4,8}$/.test(pin)) { setErr('Enter the admin’s 6-digit PIN.'); return; }
     setBusy(true); setErr('');
     try { const r = await api.post('/auth/override', { action, pin }); onApproved(r.token, r.by); }
     catch (e2) { setErr(e2.fields?.pin || e2.message); setPin(''); }

@@ -158,7 +158,8 @@ export default function App() {
   useHeaderFit(topRef, `${user?._id}|${training}|${newCount > 0}|${lowCount > 0}|${checking}`);
 
   if (checking) return null;
-  if (!user) return <Login notice={signedOutMsg} onLogin={(token, u, weak) => { setToken(token); setUser(u); setWeakPin(!!weak); setSignedOutMsg(''); }} />;
+  if (!user || user.needsNewPin) return <Login key={user?._id || 'in'} notice={signedOutMsg} pending={user?.needsNewPin ? user : null} onSignOut={logout}
+    onLogin={(token, u, weak) => { setToken(token); setUser(u); setWeakPin(!!weak); setSignedOutMsg(''); }} />;
 
   const shared = { data, refresh, toast, user, isAdmin };
   const shownTab = training && !TRAIN_TABS.includes(tab) ? 'register' : tab;

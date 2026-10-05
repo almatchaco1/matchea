@@ -10,6 +10,8 @@ const secret = () => {
 export const signToken = (user) =>
   jwt.sign({ sub: String(user._id), role: user.role, name: user.name, sv: user.sessionVersion || 0 }, secret(), { expiresIn: '14d' });
 
+const NEW_PIN_OK = new Set(['GET /api/auth/me', 'POST /api/auth/me/pin', 'POST /api/auth/logout']);
+
 export async function requireAuth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
@@ -25,6 +27,9 @@ export async function requireAuth(req, res, next) {
     const now = Date.now();
     if (!user.lastSeenAt || now - user.lastSeenAt > 60e3) User.updateOne({ _id: user._id }, { lastSeenAt: new Date(now) }).catch(() => {});
     req.user = user;
+    // An old 4–8 digit PIN: only "who am I", "set my new PIN" and "sign out" work until a 6-digit PIN is set
+    if (user.pinLen !== 6 && !NEW_PIN_OK.has(`${req.method} ${req.baseUrl}${req.path}`.replace(/\/$/, '')))
+      return res.status(403).json({ error: 'Set your new 6-digit PIN first.', code: 'new_pin' });
     next();
   } catch {
     res.status(401).json({ error: 'Your session expired. Please sign in again.' });

@@ -91,8 +91,8 @@ if (await Ingredient.estimatedDocumentCount()) {
 const adminName = (process.env.ADMIN_NAME || 'Owner').trim();
 if (!(await User.exists({ role: 'admin' }))) {
   const pin = String(process.env.ADMIN_PIN || '1234');
-  await User.create({ name: adminName, pinHash: await User.hashPin(pin), role: 'admin' });
-  console.log(`Created admin "${adminName}" with PIN ${pin}. Change it after you sign in.`);
+  await User.create({ name: adminName, pinHash: await User.hashPin(pin), pinLen: pin.length, role: 'admin' });
+  console.log(`Created admin "${adminName}" with PIN ${pin}. You will be asked to set a new 6-digit PIN when you first sign in.`);
 }
 
 await mongoose.disconnect();
