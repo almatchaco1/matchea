@@ -215,6 +215,13 @@ export function checkPin(pin, key = 'pin') {
   else if (weakPin(p)) e[key] = 'Too easy to guess. Avoid repeats like 111111, runs like 123456 or patterns like 121212.';
   return e;
 }
+/** Just the staff name rules (used when renaming someone). */
+export function checkStaffName(name) {
+  const e = {};
+  text(e, 'name', name, { label: 'a name', required: true, min: 2, max: LIMITS.staffName,
+    pattern: /^[\p{L}][\p{L} .'-]*$/u, patternMsg: 'Use letters, spaces, dots, apostrophes or hyphens.' });
+  return e;
+}
 export function checkStaff(b = {}) {
   const e = {};
   text(e, 'name', b.name, { label: 'a name', required: true, min: 2, max: LIMITS.staffName,

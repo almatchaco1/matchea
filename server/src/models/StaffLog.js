@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 // Staff activity the owner can review: sign-ins, wrong PINs, locks, PIN changes…
-export const LOG_TYPES = ['created', 'login', 'logout', 'wrong_pin', 'pin_lockout', 'blocked_login', 'locked', 'unlocked', 'signed_out', 'pin_changed', 'role_changed', 'lockout_cleared', 'removed', 'approved'];
+export const LOG_TYPES = ['created', 'login', 'logout', 'wrong_pin', 'pin_lockout', 'blocked_login', 'locked', 'unlocked', 'signed_out', 'pin_changed', 'role_changed', 'lockout_cleared', 'removed', 'renamed', 'approved'];
 
 const staffLogSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },

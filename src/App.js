@@ -236,7 +236,7 @@ export default function App() {
           {tab === 'menu' && <Menu {...shared} goInventory={() => go('inventory')} />}
           {tab === 'reports' && <Reports {...shared} goInventory={() => go('inventory')} />}
           {tab === 'customers' && isAdmin && <Customers {...shared} />}
-          {tab === 'staff' && isAdmin && <Staff {...shared} />}
+          {tab === 'staff' && isAdmin && <Staff {...shared} onMe={setUser} />}
           </>}
         </main>
       </div>

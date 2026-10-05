@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { peso, pad } from '../lib/format';
 import Modal, { ConfirmButton } from './Modal';
 import { Field, RowError, useErrors } from './Field';
-import { checkStaff, checkPin, LIMITS } from '../shared/rules.mjs';
+import { checkStaff, checkStaffName, checkPin, LIMITS } from '../shared/rules.mjs';
 
 const STATUS = {
   online: ['ok', 'Online now'],
@@ -16,7 +16,7 @@ const EVENT = {
   created: 'Account created', login: 'Signed in', logout: 'Signed out', wrong_pin: 'Wrong PIN entered',
   pin_lockout: 'Sign-in paused (too many wrong PINs)', blocked_login: 'Tried to sign in while locked',
   locked: 'Account locked', unlocked: 'Account unlocked', signed_out: 'Signed out by owner',
-  pin_changed: 'PIN changed', role_changed: 'Role changed', lockout_cleared: 'Wrong-PIN pause cleared', removed: 'Account removed', approved: 'Approved a cashier action',
+  pin_changed: 'PIN changed', renamed: 'Name changed', role_changed: 'Role changed', lockout_cleared: 'Wrong-PIN pause cleared', removed: 'Account removed', approved: 'Approved a cashier action',
 };
 const ALERT = new Set(['wrong_pin', 'pin_lockout', 'blocked_login', 'locked']);
 
@@ -31,7 +31,7 @@ export function ago(d) {
 }
 const when = (d) => new Date(d).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-export default function Staff({ toast, user: me }) {
+export default function Staff({ toast, user: me, onMe }) {
   const [users, setUsers] = useState(null);
   const [err, setErr] = useState('');
   const [modal, setModal] = useState(null); // { kind: 'lock'|'pin'|'activity', u }
@@ -84,7 +84,8 @@ export default function Staff({ toast, user: me }) {
               <header>
                 <div className="staff-av" aria-hidden="true">{u.name.slice(0, 1).toUpperCase()}<i className={`sdot ${u.status}`} /></div>
                 <div className="grow">
-                  <b>{u.name}{isMe && <span className="muted" style={{ fontWeight: 400 }}> (you)</span>}</b>
+                  <b className="staff-nm">{u.name}{isMe && <span className="muted" style={{ fontWeight: 400 }}> (you)</span>}
+                    {(!u.superAdmin || isMe) && <button type="button" className="staff-rename" onClick={() => setModal({ kind: 'rename', u })} aria-label={`Change ${u.name}'s name`} title="Change name"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.6-2.7L10.8 3a1.4 1.4 0 0 1 2 0l.2.2a1.4 1.4 0 0 1 0 2L5.8 12.4 3 13Z" /></svg></button>}</b>
                   <small className="muted">{u.superAdmin ? 'Super admin' : u.role === 'admin' ? 'Admin' : 'Cashier'}</small>
                 </div>
                 <span className={`pill ${tone}`}>{label}</span>
@@ -140,6 +141,7 @@ export default function Staff({ toast, user: me }) {
 
       {modal?.kind === 'lock' && <LockModal u={modal.u} onClose={() => setModal(null)} onLock={(reason) => patch(modal.u, { active: false, reason }, `${modal.u.name} is locked and signed out`).then((ok) => ok && setModal(null))} />}
       {modal?.kind === 'pin' && <PinModal u={modal.u} me={me} toast={toast} onClose={() => setModal(null)} onDone={() => { setModal(null); load(); }} />}
+      {modal?.kind === 'rename' && <RenameModal u={modal.u} toast={toast} onClose={() => setModal(null)} onDone={(nu) => { setModal(null); load(); if (nu._id === me._id) onMe?.({ ...me, name: nu.name }); }} />}
       {modal?.kind === 'activity' && <ActivityModal u={modal.u} onClose={() => setModal(null)} />}
       {modal?.kind === 'remove' && <RemoveModal u={modal.u} toast={toast} onClose={() => setModal(null)} onLock={() => setModal({ kind: 'lock', u: modal.u })} onDone={() => { setModal(null); load(); }} />}
     </>
@@ -194,6 +196,32 @@ function RemoveModal({ u, toast, onClose, onLock, onDone }) {
         </ul>
         <Field id="rmName" label={`Type ${u.name} to confirm`} error={err}>
           <input id="rmName" value={typed} autoComplete="off" autoFocus onChange={(e) => { setTyped(e.target.value); setErr(''); }} />
+        </Field>
+      </form>
+    </Modal>
+  );
+}
+
+function RenameModal({ u, toast, onClose, onDone }) {
+  const [name, setName] = useState(u.name);
+  const [e, setE] = useState('');
+  const [busy, setBusy] = useState(false);
+  const save = async (ev) => {
+    ev.preventDefault();
+    const ne = checkStaffName(name);
+    if (ne.name) return setE(ne.name);
+    if (name.trim().replace(/\s+/g, ' ') === u.name) return onClose();
+    setBusy(true);
+    try { const nu = await api.patch(`/auth/users/${u._id}`, { name }); toast(`${u.name} is now ${nu.name}`); onDone(nu); }
+    catch (err) { setE(err.fields?.name || err.message); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Modal title={`Change ${u.name}'s name`} onClose={onClose}
+      footer={<><button className="btn ghost" onClick={onClose}>Cancel</button><button className="btn primary" form="renf" disabled={busy}>{busy ? 'Saving…' : 'Save name'}</button></>}>
+      <form id="renf" onSubmit={save} noValidate>
+        <Field id="renName" label="Name" error={e} hint="Shown on the sign-in screen and on new sales. Past sales keep the old name.">
+          <input id="renName" value={name} maxLength={LIMITS.staffName} autoComplete="off" autoFocus onChange={(x) => { setName(x.target.value); setE(''); }} />
         </Field>
       </form>
     </Modal>

@@ -45,3 +45,8 @@
   .cu-table td:first-child::before{display:none}
   .cu-table .r{text-align:right}
 }
+/* Staff: change name (pencil next to the name) */
+.staff-nm{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.staff-rename{border:0;background:transparent;color:var(--muted);width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;cursor:pointer}
+.staff-rename:hover{background:var(--surface2);color:var(--matcha)}
+.staff-rename svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}

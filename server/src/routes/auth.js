@@ -5,7 +5,7 @@ import { ah, HttpError, assertValid, nameRegex, shopTime, TZ } from '../lib/util
 import Sale from '../models/Sale.js';
 import StaffLog, { logStaff } from '../models/StaffLog.js';
 import { checkId } from '../lib/ids.js';
-import { checkStaff, checkPin, weakPin, PIN_LEN, ROLES } from '../../../src/shared/rules.mjs';
+import { checkStaff, checkStaffName, checkPin, weakPin, PIN_LEN, ROLES } from '../../../src/shared/rules.mjs';
 
 const r = Router();
 r.param('id', checkId);
@@ -188,7 +188,7 @@ r.post('/users', requireAuth, requireAdmin, ah(async (req, res) => {
 r.patch('/users/:id', requireAuth, requireAdmin, ah(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new HttpError(404, 'Staff member not found.');
-  const { pin, role, active, reason, signOut, clearLockout } = req.body || {};
+  const { pin, role, active, reason, signOut, clearLockout, name } = req.body || {};
   const self = String(user._id) === String(req.user._id);
   const by = req.user.name;
   const logs = [];
@@ -196,7 +196,7 @@ r.patch('/users/:id', requireAuth, requireAdmin, ah(async (req, res) => {
   if (user.superAdmin) {
     if (role != null && role !== 'admin') throw new HttpError(403, 'The super admin always stays super admin.');
     if (active === false) throw new HttpError(403, 'The super admin account can’t be locked.');
-    if (!self && (pin != null || signOut)) throw new HttpError(403, 'Only the super admin can change their own PIN or sign themselves out.');
+    if (!self && (pin != null || signOut || name != null)) throw new HttpError(403, 'Only the super admin can change their own name, PIN or sign themselves out.');
   }
   // Admins can make a cashier an admin; only the super admin can change an admin back to cashier.
   if (role === 'cashier' && user.role === 'admin' && !req.user.superAdmin)
@@ -207,6 +207,16 @@ r.patch('/users/:id', requireAuth, requireAdmin, ah(async (req, res) => {
     user.pinHash = await User.hashPin(pin); user.pinLen = String(pin).length; user.failedLogins = 0; user.lockedUntil = null;
     user.sessionVersion = (user.sessionVersion || 0) + (self ? 0 : 1); // new PIN signs them out elsewhere
     logs.push(['pin_changed']);
+  }
+  if (name != null) {
+    assertValid(checkStaffName(name));
+    const clean = String(name).trim().replace(/\s+/g, ' ');
+    if (clean !== user.name) {
+      if (await User.exists({ name: nameRegex(clean), _id: { $ne: user._id } }))
+        throw new HttpError(409, 'Someone already has that name.', { name: 'Someone already has that name. Add a last initial.' });
+      logs.push(['renamed', `Was ${user.name}`]);
+      user.name = clean;
+    }
   }
   if (clearLockout) { user.failedLogins = 0; user.lockedUntil = null; logs.push(['lockout_cleared']); }
   if (role != null && role !== user.role) {
