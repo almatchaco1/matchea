@@ -88,3 +88,36 @@
 .shop .pw-match.ok{color:var(--ok)}
 .shop .pw-match.bad{color:var(--amber)}
 @media (max-width:560px){.shop .pw-rules{grid-template-columns:1fr}}
+/* ===== "Password changed" pop-up ===== */
+.pwd-scrim{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px;background:rgba(18,28,14,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:pwdFade .25s ease-out}
+@keyframes pwdFade{from{opacity:0}}
+.pwd-card{position:relative;width:min(360px,100%);padding:30px 26px 24px;border-radius:30px;text-align:center;background:var(--cream);box-shadow:0 30px 70px -30px rgba(10,20,6,.75);overflow:hidden;
+  animation:pwdPop .55s var(--spring,cubic-bezier(.34,1.56,.64,1))}
+@keyframes pwdPop{from{opacity:0;transform:translateY(24px) scale(.86)}}
+.pwd-card h2{margin:14px 0 6px;font-size:26px;color:var(--green)}
+.pwd-card p{margin:0 0 20px;font-size:14.5px;color:var(--ink-2);line-height:1.5}
+.pwd-card .sh-btn{min-width:150px}
+.pwd-art{position:relative;width:112px;height:112px;margin:0 auto;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,var(--matcha-2) 0 58%,transparent 59%)}
+.pwd-art::before{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--green);opacity:0;animation:pwdRing .9s ease-out .75s}
+@keyframes pwdRing{0%{opacity:.6;transform:scale(.8)}100%{opacity:0;transform:scale(1.35)}}
+.pwd-lock{width:72px;height:72px;overflow:visible}
+.pwd-shackle{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;transform:translateY(-9px);animation:pwdShut .4s cubic-bezier(.5,0,.75,0) .35s forwards}
+@keyframes pwdShut{60%{transform:translateY(1.5px)}100%{transform:translateY(0)}}
+.pwd-body{fill:var(--green);transform-origin:32px 43px;animation:pwdThunk .3s ease-out .62s}
+@keyframes pwdThunk{50%{transform:scale(1.08,.94)}}
+.pwd-tick{fill:none;stroke:#FFF6E2;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;animation:pwdTick .4s ease-out .8s forwards}
+@keyframes pwdTick{to{stroke-dashoffset:0}}
+/* little leaves bursting out */
+.pwd-burst{position:absolute;left:50%;top:86px;width:0;height:0}
+.pwd-burst i{position:absolute;left:-5px;top:-8px;width:10px;height:16px;border-radius:10px 0;background:var(--matcha);opacity:0;transform:rotate(var(--a)) translateY(0) scale(.4);animation:pwdLeaf .9s cubic-bezier(.2,.8,.3,1) calc(.85s + var(--d)) forwards}
+.pwd-burst i:nth-child(3n){background:#F3B6C6}
+.pwd-burst i:nth-child(3n+1){background:var(--green)}
+@keyframes pwdLeaf{0%{opacity:1;transform:rotate(var(--a)) translateY(-40px) scale(.4)}100%{opacity:0;transform:rotate(var(--a)) translateY(-120px) scale(1) rotate(90deg)}}
+/* shows the pop-up closes by itself */
+.pwd-timer{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--matcha);transform-origin:left;animation:pwdTime 5s linear forwards}
+@keyframes pwdTime{to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){
+  .pwd-card,.pwd-scrim,.pwd-burst i,.pwd-art::before,.pwd-body{animation:none}
+  .pwd-shackle{animation:none;transform:none}
+  .pwd-tick{animation:none;stroke-dashoffset:0}
+}

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePullRefresh } from './fx';
 import { call } from './api';
 import { checkCustomerName, checkPhone, checkPassword, normPhone, fmtPhoneInput, cleanName } from '../shared/rules.mjs';
@@ -63,6 +64,7 @@ export function AccountPage({ me, setMe, go, signOut }) {
   const [busy, setBusy] = useState('');
   const [verify, setVerify] = useState(null);
   const [pwOpen, setPwOpen] = useState(false);
+  const [pwDone, setPwDone] = useState(''); // 'changed' | 'set' → the success pop-up
 
   const save = async (e) => {
     e.preventDefault(); setOk('');
@@ -90,7 +92,7 @@ export function AccountPage({ me, setMe, go, signOut }) {
     else if (pw.confirmPassword !== pw.newPassword) v.confirmPassword = 'The passwords don’t match.';
     setErrs(v); if (Object.keys(v).length) return;
     setBusy('pw');
-    try { const r = await call('PATCH', '/customer/me', pw); setMe(r.customer); setPw({ currentPassword: '', newPassword: '', confirmPassword: '' }); setPwOpen(false); setOk(me.hasPassword ? 'Password changed. Use your new password next time you sign in.' : 'Password set. You can now also sign in with your mobile number.'); }
+    try { const r = await call('PATCH', '/customer/me', pw); setMe(r.customer); setPw({ currentPassword: '', newPassword: '', confirmPassword: '' }); setPwOpen(false); setPwDone(me.hasPassword ? 'changed' : 'set'); }
     catch (err) { setErrs(err.fields || { newPassword: err.message }); }
     finally { setBusy(''); }
   };
@@ -202,9 +204,42 @@ export function AccountPage({ me, setMe, go, signOut }) {
         )}
       </section>
 
+      {pwDone && <PwDone kind={pwDone} onClose={() => setPwDone('')} />}
+
       <div className="acct-actions ac2-out">
         <button className="shop-link" onClick={signOut}><Ico d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10" />Sign out</button>
       </div>
     </div>
+  );
+}
+
+/** "Password changed" pop-up: the padlock clicks shut, a tick draws itself, a few leaves burst out. */
+function PwDone({ kind, onClose }) {
+  const close = useRef(onClose); close.current = onClose;
+  useEffect(() => {
+    const t = setTimeout(() => close.current(), 5000);
+    const k = (e) => e.key === 'Escape' && close.current();
+    document.addEventListener('keydown', k);
+    return () => { clearTimeout(t); document.removeEventListener('keydown', k); };
+  }, []);
+  const host = document.querySelector('.shop') || document.body;
+  return createPortal(
+    <div className="pwd-scrim" onClick={onClose}>
+      <div className="pwd-card" role="alertdialog" aria-modal="true" aria-labelledby="pwdT" onClick={(e) => e.stopPropagation()}>
+        <div className="pwd-burst" aria-hidden="true">{Array.from({ length: 10 }, (_, i) => <i key={i} style={{ '--a': `${i * 36}deg`, '--d': `${(i % 3) * 40}ms` }} />)}</div>
+        <div className="pwd-art" aria-hidden="true">
+          <svg className="pwd-lock" viewBox="0 0 64 64">
+            <path className="pwd-shackle" d="M20 30V21a12 12 0 0 1 24 0v9" />
+            <rect className="pwd-body" x="13" y="29" width="38" height="28" rx="8" />
+            <path className="pwd-tick" d="M23 43.5l6.5 6.5L42 37.5" />
+          </svg>
+        </div>
+        <h2 id="pwdT">{kind === 'set' ? 'Password set!' : 'Password changed!'}</h2>
+        <p>{kind === 'set' ? 'You can now also sign in with your mobile number and this password.' : 'Your account is safe. Use your new password the next time you sign in.'}</p>
+        <button type="button" className="sh-btn" onClick={onClose} autoFocus>Got it</button>
+        <span className="pwd-timer" aria-hidden="true" />
+      </div>
+    </div>,
+    host,
   );
 }
