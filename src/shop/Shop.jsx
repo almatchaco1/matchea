@@ -247,8 +247,8 @@ function Header({ me, go, path, count, shop, activeCount, decor }) {
         </nav>
       ) : (
         <nav className="sh-nav">
-          {path !== '/signin' && <a href="/signin" className="sh-signin" onClick={(e) => { e.preventDefault(); go('/signin'); }}>Sign in</a>}
-          {path !== '/signup' && <a href="/signup" className="sh-btn sm" onClick={(e) => { e.preventDefault(); go('/signup'); }}>Sign up</a>}
+          <a href="/signin" className={`sh-signin ${path === '/signin' ? 'on' : ''}`} aria-current={path === '/signin' ? 'page' : undefined} onClick={(e) => { e.preventDefault(); go('/signin'); }}>Sign in</a>
+          <a href="/signup" className="sh-btn sm" aria-current={path === '/signup' ? 'page' : undefined} onClick={(e) => { e.preventDefault(); go('/signup'); }}>Sign up</a>
         </nav>
       )}
     </header>
