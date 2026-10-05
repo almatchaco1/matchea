@@ -210,7 +210,6 @@ function TabBar({ path, go, count, activeCount, me }) {
 }
 
 // Shop devices only: a staff member is signed in to the POS in this browser
-const staffDevice = () => { try { return !!localStorage.getItem('matchaPos.token'); } catch { return false; } };
 const toPos = () => window.location.assign('/pos');
 
 function Header({ me, go, path, count, shop, activeCount, decor }) {
@@ -223,7 +222,6 @@ function Header({ me, go, path, count, shop, activeCount, decor }) {
     if (taps.current.length >= 5) { taps.current = []; toPos(); return; }
     go('/');
   };
-  const posBtn = staffDevice() && <a href="/pos" className="sh-pos" title="Back to the staff POS"><span className="full">Staff POS</span><span className="short">POS</span></a>;
   const link = (to, label) => (
     <a href={to} className={path === to ? 'on' : ''} onClick={(e) => { e.preventDefault(); go(to); }}>{label}</a>
   );
@@ -237,7 +235,6 @@ function Header({ me, go, path, count, shop, activeCount, decor }) {
       </a>
       {me ? (
         <nav className="sh-nav">
-          {posBtn}
           {link('/menu', 'Menu')}
           {link('/orders', <>Orders{activeCount > 0 && <i className="sh-dot">{activeCount}</i>}</>)}
           <button className="sh-cart" data-cart="" onClick={() => go('/cart')} aria-label={`Cart, ${count} items`}>
@@ -250,7 +247,6 @@ function Header({ me, go, path, count, shop, activeCount, decor }) {
         </nav>
       ) : (
         <nav className="sh-nav">
-          {posBtn}
           {path !== '/signin' && <a href="/signin" className="sh-signin" onClick={(e) => { e.preventDefault(); go('/signin'); }}>Sign in</a>}
           {path !== '/signup' && <a href="/signup" className="sh-btn sm" onClick={(e) => { e.preventDefault(); go('/signup'); }}>Sign up</a>}
         </nav>
