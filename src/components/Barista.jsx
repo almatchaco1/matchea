@@ -9,6 +9,7 @@ import { howTo } from '../lib/recipe';
 import { ProductModal } from './Menu';
 import { ConfirmButton } from './Modal';
 import { useFlip, leave } from '../lib/motion';
+import '../barista-v2.css';
 
 function chime() {
   try {
@@ -39,13 +40,16 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
   const box = useRef(null);
   const seen = useRef(null);
 
-  const load = useCallback(() => (training ? Promise.resolve() : api.get('/barista')).then((d) => {
+  // A refresh that started before a tick was saved would show the old state, so those are skipped
+  const writing = useRef(0), lastWrite = useRef(0);
+  const load = useCallback(() => { const started = Date.now(); return (training ? Promise.resolve() : api.get('/barista')).then((d) => {
     if (training) return;
+    if (writing.current > 0 || started < lastWrite.current) return;
     setData(d); setErr('');
     const ids = new Set(d.tickets.map((t) => t._id));
     if (seen.current && d.tickets.some((t) => !seen.current.has(t._id))) chime();
     seen.current = ids;
-  }).catch((e) => setErr(e.message)), [training]);
+  }).catch((e) => setErr(e.message)); }, [training]);
   // Training: practice tickets live on this device only
   useEffect(() => {
     if (!training) return;
@@ -68,7 +72,11 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
     // show it straight away, then save
     setData((d) => ({ ...d, tickets: d.tickets.map((x) => (x._id !== t._id ? x : { ...x, lines: x.lines.map((y) => (y.i === l.i ? { ...y, done: !l.done } : y)) })) }));
     if (training) { setTrainTickets((ts) => ts.map((x) => (x._id !== t._id ? x : { ...x, lines: x.lines.map((y) => (y.i === l.i ? { ...y, done: !l.done } : y)) }))); return; }
-    try { await api.post(`/barista/${t._id}/line/${l.i}`, { done: !l.done }); } catch (e) { toast(e.message); load(); }
+    writing.current += 1;
+    let failed = false;
+    try { await api.post(`/barista/${t._id}/line/${l.i}`, { done: !l.done }); } catch (e) { toast(e.message); failed = true; }
+    finally { writing.current -= 1; lastWrite.current = Date.now(); }
+    if (failed) load(); // put back what's really saved
   };
   const done = async (t) => {
     const card = grid.current?.querySelector(`[data-flip="${t._id}"]`);
@@ -98,7 +106,8 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
       <div className="bar-top">
         <div>
           <h2 className="sec">To make</h2>
-          <span className="muted">{tickets.length} {tickets.length === 1 ? 'order' : 'orders'} · {drinks} {drinks === 1 ? 'drink' : 'drinks'}</span>
+          <span className="bt-count"><b>{tickets.length}</b> {tickets.length === 1 ? 'order' : 'orders'}</span>
+          <span className="bt-count"><b>{drinks}</b> {drinks === 1 ? 'drink' : 'drinks'}</span>
         </div>
         {data?.waiting > 0 && <span className="pill warn bar-wait">{data.waiting} online {data.waiting === 1 ? 'order' : 'orders'} waiting to be accepted</span>}
         {tickets.some((t) => ['pos', 'training', 'staff'].includes(t.source)) && (
@@ -113,39 +122,55 @@ export default function Barista({ toast, data: menu, refresh, isAdmin, training,
       <div className="bar-grid" ref={grid}>
         {tickets.map((t) => {
           const m = mins(t.createdAt, now);
+          const total = t.lines.reduce((x, l) => x + l.qty, 0);
+          const made = t.lines.filter((l) => l.done).reduce((x, l) => x + l.qty, 0);
+          const allMade = made === total && total > 0;
+          const src = t.source === 'online' ? 'Online' : t.source === 'training' ? 'Practice' : t.source === 'staff' ? 'Staff' : 'Counter';
           return (
-            <article key={t._id} data-flip={t._id} className={`ticket ${m >= 10 ? 'late' : m >= 5 ? 'slow' : ''}`} style={{ '--age': Math.min(1, m / 12).toFixed(2) }}>
-              <i className="t-warm" aria-hidden="true" />
-              <header>
-                <span className="t-no"><i>#</i>{pad(t.no)}</span>
-                <span className={`t-src ${t.source}`}>{t.source === 'online' ? 'Online' : t.source === 'training' ? 'Practice' : t.source === 'staff' ? 'Staff' : 'Counter'}</span>
-                {t.delivery && <span className="dtag">Delivery</span>}
-                <span className="t-time" title="Minutes since ordered">{m < 1 ? 'now' : `${m} min`}</span>
+            <article key={t._id} data-flip={t._id} className={`ticket bt ${m >= 10 ? 'late' : m >= 5 ? 'slow' : 'fresh'} ${allMade ? 'ready' : ''}`} style={{ '--age': Math.min(1, m / 12).toFixed(2) }}>
+              <header className="bt-head">
+                <span className="t-no">#{pad(t.no)}</span>
+                <span className="bt-tags">
+                  <span className={`t-src bt-src ${t.source}`}>{src}</span>
+                  {t.delivery && <span className="dtag">Delivery</span>}
+                </span>
+                <span className="t-time bt-time" title="Minutes since ordered">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6V8l2.2 1.5" /></svg>
+                  {m < 1 ? 'now' : `${m} min`}
+                </span>
               </header>
-              {t.customer && <div className="t-name">{t.customer}</div>}
-              {t.note && <div className="t-note">“{t.note}”</div>}
-              <ul>
+              {t.customer && <div className="t-name bt-name"><small>For</small>{t.customer}</div>}
+              {t.note && <div className="t-note bt-note">“{t.note}”</div>}
+              <div className="bt-prog" aria-label={`${made} of ${total} drinks made`}>
+                <span className="bt-bar"><i style={{ width: `${total ? (made / total) * 100 : 0}%` }} /></span>
+                <small>{made} of {total} made</small>
+              </div>
+              <ul className="bt-lines">
                 {t.lines.map((l) => {
                   const k = `${t._id}:${l.i}`, isOpen = open.has(k);
                   const product = l.product ? byId(menu.products, l.product) : menu.products.find((p) => p.name === l.name);
                   return (
                     <li key={l.i}>
-                      <div className={`t-line ${l.done ? 'done' : ''} ${isOpen ? 'open' : ''}`}>
-                        <button className="t-check" onClick={() => tick(t, l)} aria-pressed={l.done} aria-label={l.done ? 'Mark as not made' : 'Mark as made'}>✓</button>
+                      <div className={`t-line bt-line ${l.done ? 'done' : ''} ${isOpen ? 'open' : ''}`}>
+                        <span className="bt-qty" aria-hidden="true">{l.qty}</span>
                         <div className="t-body">
                           <button className="t-main" onClick={() => toggleOpen(k)} aria-expanded={isOpen}>
                             <span className="t-drink"><b><span className="t-qty">{l.qty}×</span> {l.name.replace(/ Matcha Latte$/, '')}</b>
                               {l.mods && <small>{l.mods.split(' · ').map((x, j) => <em key={j} className={/upsize|extra|“/i.test(x) ? 'hl' : ''}>{x}</em>)}</small>}</span>
-                            <span className="t-how">{isOpen ? 'Hide recipe' : 'Recipe'} <i aria-hidden="true">▾</i></span>
+                            <span className="t-how"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2v-9Z" /><path d="M3 11.5a2 2 0 0 1 2-2h7.5M6 5.5h4" /></svg>{isOpen ? 'Hide recipe' : 'Recipe'}</span>
                           </button>
                         </div>
+                        <button className="t-check" onClick={() => tick(t, l)} aria-pressed={l.done} aria-label={l.done ? 'Mark as not made' : 'Mark as made'}>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                        </button>
                       </div>
                       {isOpen && <Recipe line={l} product={product} menu={menu} isAdmin={isAdmin} toast={toast} refresh={refresh} onMore={() => setEdit(product)} />}
                     </li>
                   );
                 })}
               </ul>
-              <button className="btn primary t-done" disabled={busy === t._id} onClick={() => done(t)}>
+              <button className={`btn primary t-done ${allMade ? 'go' : ''}`} disabled={busy === t._id} onClick={() => done(t)}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                 {busy === t._id ? 'Saving…' : t.delivery ? 'Done · ready for the rider' : t.source === 'online' ? 'Done · ready for pickup' : 'Done'}
               </button>
             </article>

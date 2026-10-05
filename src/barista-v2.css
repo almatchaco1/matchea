@@ -1,0 +1,90 @@
+/* ===== Barista v2: clear kitchen tickets =====
+   Coloured header by wait time (green → amber at 5 min → red at 10 min), big order number,
+   the name to call out, a "made" progress bar, big tick buttons on the right. */
+
+/* top bar */
+.barista .bar-top>div{align-items:center;gap:10px;flex-wrap:wrap}
+.bt-count{display:inline-flex;align-items:baseline;gap:5px;padding:5px 12px;border-radius:999px;background:var(--surface);box-shadow:0 0 0 1px var(--line);font-size:13px;color:var(--muted)}
+.bt-count b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:17px;color:var(--ink)}
+.barista .bar-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:6px}
+
+/* card */
+.barista .ticket.bt{--band:#2B6020;--band-2:#1A4413;--band-ink:#FFF6E2;
+  display:flex;flex-direction:column;overflow:hidden;margin:0;border:0;border-radius:22px;background:var(--surface);
+  box-shadow:0 0 0 1px var(--line),0 18px 30px -24px rgba(22,51,15,.55);animation:none}
+.barista .ticket.bt::before,.barista .ticket.bt::after{display:none}
+.barista .ticket.bt.slow{--band:#C98A16;--band-2:#A86F0A;--band-ink:#FFF8E6}
+.barista .ticket.bt.late{--band:#C2412D;--band-2:#9E2F1E;--band-ink:#FFF3EF;box-shadow:0 0 0 2px color-mix(in srgb,#C2412D 45%,transparent),0 18px 30px -24px rgba(120,30,20,.6)}
+.barista .ticket.bt.late .bt-time{animation:btBlink 1.6s ease-in-out infinite}
+@keyframes btBlink{50%{opacity:.55}}
+.barista .ticket.bt.ready{box-shadow:0 0 0 2px color-mix(in srgb,var(--matcha) 55%,transparent),0 18px 30px -24px rgba(22,51,15,.6)}
+
+/* header band */
+.bt-head{display:flex;align-items:center;gap:10px;padding:12px 14px 12px 16px;background:linear-gradient(135deg,var(--band),var(--band-2));color:var(--band-ink)}
+.barista .bt .t-no{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:30px;font-weight:700;line-height:1;letter-spacing:-.02em;color:var(--band-ink)}
+.bt-tags{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.barista .bt .bt-src{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.16);color:var(--band-ink);font-size:12px;font-weight:700;letter-spacing:.02em}
+.barista .bt .bt-src::before{display:none}
+.barista .bt .dtag{background:rgba(0,0,0,.22);color:var(--band-ink)}
+.barista .bt .bt-time{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.2);color:var(--band-ink);font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.bt-time svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+
+/* who + note */
+.barista .bt .bt-name{display:flex;align-items:baseline;gap:8px;padding:12px 16px 0;font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:22px;font-weight:700;line-height:1.15;color:var(--ink)}
+.bt-name small{font-family:var(--sans,inherit);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.barista .bt .bt-note{margin:10px 16px 0;padding:8px 12px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-weight:700;font-size:14px}
+
+/* made progress */
+.bt-prog{display:flex;align-items:center;gap:10px;padding:10px 16px 2px}
+.bt-bar{flex:1;height:6px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.bt-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#5E9A3A,#2F6A22);transition:width .45s cubic-bezier(.22,1,.36,1)}
+.bt-prog small{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* drink lines */
+.barista .bt>ul.bt-lines{margin:8px 0 0;padding:0 10px;border:0;display:flex;flex-direction:column;gap:6px}
+.barista .bt>ul.bt-lines>li+li{border:0}
+.barista .bt .bt-line{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 12px;border-radius:16px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);transition:background .25s,box-shadow .25s}
+.bt-qty{flex:none;width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:800;font-size:18px;color:var(--matcha-deep,#163310)}
+.barista .bt .t-body{flex:1;min-width:0}
+.barista .bt .t-main{gap:6px;padding:0}
+.barista .bt .t-drink b{font-size:17.5px;line-height:1.25}
+.barista .bt .t-drink .t-qty{display:none}
+.barista .bt .t-drink em{font-size:12.5px;border-radius:999px;padding:2px 9px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.barista .bt .t-drink em.hl{background:#FCEBB0;color:#5A4200;box-shadow:none}
+.barista .bt .t-how{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--matcha)}
+.barista .bt .t-how svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+/* big tick on the right */
+.barista .bt .t-check{flex:none;width:48px;height:48px;margin:0;border-radius:16px;border:0;background:var(--surface);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--muted) 35%,transparent);color:transparent;display:grid;place-items:center;font-size:0}
+.barista .bt .t-check svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.barista .bt .t-check:hover{box-shadow:inset 0 0 0 2px var(--matcha);color:color-mix(in srgb,var(--matcha) 35%,transparent)}
+.barista .bt .t-check[aria-pressed="true"]{background:var(--matcha);color:var(--on-matcha);box-shadow:none}
+.barista .bt .bt-line.done{background:color-mix(in srgb,var(--matcha) 7%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--matcha) 25%,transparent)}
+.barista .bt .bt-line.done .t-drink{opacity:.5}
+.barista .bt .bt-line.done .bt-qty{opacity:.5}
+.barista .bt .t-recipe{margin:6px 2px 4px}
+
+/* done */
+.barista .bt .t-done{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 14px 14px;min-height:52px;border-radius:16px;font-size:16px;font-weight:700;
+  background:var(--surface2);color:var(--ink);border:0;box-shadow:inset 0 0 0 1.5px var(--line);animation:none}
+.barista .bt .t-done svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.barista .bt .t-done:hover:not(:disabled){box-shadow:inset 0 0 0 1.5px var(--matcha);color:var(--matcha)}
+.barista .bt .t-done.go{background:linear-gradient(180deg,#2B6020,#1A4413);color:#FFF8E8;box-shadow:0 10px 18px -12px rgba(22,51,15,.7);animation:btReady 2s ease-in-out infinite}
+@keyframes btReady{50%{box-shadow:0 0 0 5px color-mix(in srgb,#5E9A3A 25%,transparent),0 10px 18px -12px rgba(22,51,15,.7)}}
+
+/* empty */
+.barista .bar-empty{border-radius:22px;background:var(--surface);box-shadow:0 0 0 1px var(--line);margin-top:6px}
+
+/* dark */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .barista .ticket.bt{--band:#2E5A22;--band-2:#1D3B15;background:#151D12;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 18px 30px -24px rgba(0,0,0,.9)}
+  :root:not([data-theme="light"]) .barista .ticket.bt.slow{--band:#8A5E0E;--band-2:#6B4708}
+  :root:not([data-theme="light"]) .barista .ticket.bt.late{--band:#8E2B1E;--band-2:#6E1F15}
+  :root:not([data-theme="light"]) .barista .bt .t-done.go{background:linear-gradient(180deg,#AEDA8C,#8CBF68);color:#10200B}
+  :root:not([data-theme="light"]) .barista .bt .t-drink em.hl{background:#4A3B10;color:#F6D77C}
+}
+:root[data-theme="dark"] .barista .ticket.bt{--band:#2E5A22;--band-2:#1D3B15;background:#151D12}
+@media (max-width:640px){.barista .bar-grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.barista .ticket.bt.late .bt-time,.barista .bt .t-done.go{animation:none}}
+.barista .ticket.bt.slow .bt-time,.barista .ticket.bt.late .bt-time{background:rgba(0,0,0,.2);color:var(--band-ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .barista .bt .t-done:not(.go){background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.12)}}
+:root[data-theme="dark"] .barista .bt .t-done:not(.go){background:rgba(255,255,255,.05);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.12)}
