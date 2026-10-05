@@ -47,6 +47,12 @@ r.post('/', ah(async (req, res) => {
   }
   if (discount.type === 'scpwd') Object.assign(t.discount, { idNo: String(discount.idNo).trim().toUpperCase(), idName: String(discount.idName).trim().replace(/\s+/g, ' ') });
   if (approvedBy) t.discount.approvedBy = approvedBy;
+  // GCash / Maya reference: stored without spaces; one receipt can't pay for two sales
+  const payRef = method === 'cash' ? '' : String(b.pay.ref || '').replace(/[\s-]/g, '').toUpperCase().slice(0, 60);
+  if (payRef) {
+    const used = await Sale.findOne({ $or: [{ 'pay.ref': payRef }, { 'qrPay.ref': payRef }], status: { $nin: ['void', 'cancelled'] } }, 'no date');
+    if (used) throw new HttpError(409, `That reference no. was already used for order #${String(used.no).padStart(3, '0')} (${used.date}). Check the customer's receipt.`, { ref: 'Already used for another sale.' });
+  }
   let tendered = t.total, change = 0;
   if (method === 'cash') {
     tendered = r2(+b.pay.tendered);
@@ -62,7 +68,7 @@ r.post('/', ah(async (req, res) => {
     customer: String(b.customer || '').trim().replace(/\s+/g, ' ').slice(0, 60),
     lines: priced,
     subtotal: t.subtotal, discount: t.discount, total: t.total, vat: t.vat, vatExempt: t.vatExempt,
-    pay: { method, tendered, change, ref: String(b.pay.ref || '').trim().slice(0, 60) },
+    pay: { method, tendered, change, ref: payRef },
     usage: usageList(usage), cost,
     customerId: cust?._id, stampsUsed: useReward ? 9 : 0,
   }); } catch (e) {

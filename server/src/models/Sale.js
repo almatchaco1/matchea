@@ -30,7 +30,7 @@ const saleSchema = new mongoose.Schema(
     fulfil: { type: String, enum: ['pickup', 'delivery'], default: 'pickup' }, // online orders
     deliveryFee: { type: Number, default: 0 }, // part of total: what the customer paid for delivery
     delivery: {
-      lat: Number, lng: Number, label: String, detail: String, landmark: String, note: String,
+      area: String, lat: Number, lng: Number, label: String, detail: String, landmark: String, note: String, // area: from the shop's list (lat/lng/label: older orders made with the map)
       km: Number, approx: Boolean, fee: Number, free: Boolean, // fee: Lalamove estimate; free: 5+ drinks, the shop pays
       from: { lat: Number, lng: Number }, route: String, // shop pin and the road ("lat,lng;lat,lng;…"), for the map on the order page
       state: { type: String, enum: ['waiting', 'booked', 'picked', 'delivered'] },

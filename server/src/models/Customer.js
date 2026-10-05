@@ -21,7 +21,7 @@ const customerSchema = new mongoose.Schema(
     rewardsUsed: { type: Number, default: 0 },
     smsReady: { type: Boolean, default: true }, // text me when my order is ready
     // Last delivery address, filled in for the next order
-    address: { lat: Number, lng: Number, label: { type: String, maxlength: 200 }, detail: { type: String, maxlength: 120 }, landmark: { type: String, maxlength: 120 }, note: { type: String, maxlength: 160 } },
+    address: { area: { type: String, maxlength: 80 }, lat: Number, lng: Number, label: { type: String, maxlength: 200 }, detail: { type: String, maxlength: 120 }, landmark: { type: String, maxlength: 120 }, note: { type: String, maxlength: 160 } },
     // Saved drinks with their options, for one-tap ordering (max 10)
     favorites: [{
       label: { type: String, trim: true, maxlength: 40 },
@@ -43,7 +43,7 @@ customerSchema.set('toJSON', {
     hasPassword: !!o.passwordHash, google: !!o.googleId, facebook: !!o.facebookId, createdAt: o.createdAt,
     favorites: (o.favorites || []).map((f) => ({ _id: f._id, label: f.label || '', productId: f.productId, sizeId: f.sizeId || null, sweet: f.sweet || '', addonIds: f.addonIds || [], note: f.note || '' })),
     stamps: o.stamps || 0, lifetimeStamps: o.lifetimeStamps || 0, rewardsUsed: o.rewardsUsed || 0, smsReady: o.smsReady !== false,
-    address: o.address?.lat != null ? { lat: o.address.lat, lng: o.address.lng, label: o.address.label || '', detail: o.address.detail || '', landmark: o.address.landmark || '', note: o.address.note || '' } : null,
+    address: o.address?.area || o.address?.detail ? { area: o.address.area || '', detail: o.address.detail || '', landmark: o.address.landmark || '', note: o.address.note || '' } : null,
   }),
 });
 

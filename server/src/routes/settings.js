@@ -7,7 +7,7 @@ import Asset from '../models/Asset.js';
 import { isQrPh } from '../../../src/shared/qrph.mjs';
 import { checkSettings, isObjectId, checkStoreInfo, socialUrl, normPhone } from '../../../src/shared/rules.mjs';
 import { cleanDecor, GREETING_MAX } from '../../../src/shared/decor.mjs';
-import { checkDeliverySettings, DELIVERY_DEFAULTS } from '../../../src/shared/delivery.mjs';
+import { checkDeliverySettings, cleanAreas, DELIVERY_DEFAULTS } from '../../../src/shared/delivery.mjs';
 
 const r = Router();
 
@@ -61,8 +61,7 @@ r.put('/', requireAdmin, ah(async (req, res) => {
     const cur = { ...DELIVERY_DEFAULTS, ...(s.delivery?.toObject?.() || s.delivery || {}) };
     const d = { ...cur, ...b.delivery };
     assertValid(checkDeliverySettings(d));
-    s.delivery = { enabled: !!d.enabled, lat: d.lat == null || d.lat === '' ? undefined : +d.lat, lng: d.lng == null || d.lng === '' ? undefined : +d.lng,
-      label: String(d.label || '').trim().slice(0, 200), baseFee: +d.baseFee, baseKm: +d.baseKm, perKm: +d.perKm, maxKm: +d.maxKm, freeDrinks: Math.round(+d.freeDrinks) };
+    s.delivery = { enabled: !!d.enabled, label: String(d.label || '').trim().slice(0, 200), areas: cleanAreas(d.areas), freeDrinks: Math.round(+d.freeDrinks) };
   }
   if (b.onlineMessage != null) s.onlineMessage = String(b.onlineMessage).trim().slice(0, 160);
   if (Array.isArray(b.sweetness) && b.sweetness.length && b.sweetness.length <= 10) s.sweetness = b.sweetness.map((x) => String(x).slice(0, 10));

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { peso, pad, toneFor } from '../lib/format';
-import { priceLine, computeTotals, r2 } from '../shared/pricing.mjs';
+import { priceLine, computeTotals, r2, PAY_METHODS } from '../shared/pricing.mjs';
 import { CountUp } from '../shop/fx';
 import PayPicker from './PayPicker';
 import Modal from './Modal';
@@ -27,7 +27,8 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const [discount, setDiscount] = useState({ type: 'none', pct: 10, idNo: '', idName: '' });
   const [asking, setAsking] = useState(false); // admin PIN pop-up for a big discount
   const override = useRef(null);
-  const [pay, setPay] = useState({ method: 'cash', tendered: '', ref: '' });
+  const [pay, setPay] = useState({ method: 'cash', tendered: '', ref: '', got: false }); // got: cashier saw the GCash / Maya payment
+  const [refTaken, setRefTaken] = useState(null); // { ref, msg } from the server
   // Staff drink: free for a staff member, takes stock off, not counted as a sale
   const [staffMode, setStaffMode] = useState(false);
   const [staffList, setStaffList] = useState([]);
@@ -116,11 +117,14 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const touch = (k) => setTouched((p) => (p[k] ? p : { ...p, [k]: true }));
   const cErr = checkCheckout({ lineCount: cart.length, total: t.total, discount: rewardOn ? { type: 'none' } : discount, pay, customer, needName: true });
   const errFor = (k) => (touched[k] || touched.all ? cErr[k] : undefined);
+  const qrPay = pay.method !== 'cash';
+  const needGot = qrPay && !pay.got; // GCash / Maya: tick that the money arrived before charging
+  const cashState = !tendered || !cart.length ? 'idle' : cErr.tendered ? (change < 0 ? 'short' : 'warn') : 'ok';
   const stampPending = stampPhone.trim() && !stampCust; // typed a number but it isn't linked yet
   const staffOn = staffMode && !training;
   const staffErr = staffOn && (cart.length > 5 || cart.some((l) => l.qty > 5)) ? 'A staff drink order can have up to 5 drinks.' : '';
   const dupBlock = !training && !!dupOf && dupOk !== typedName; // same name already waiting: add a letter, or keep it on purpose
-  const canCharge = staffOn ? cart.length && !busy && !hasMissing && !staffErr && staffFor : cart.length && !busy && !hasMissing && !Object.keys(cErr).length && !stampPending && !dupBlock;
+  const canCharge = staffOn ? cart.length && !busy && !hasMissing && !staffErr && staffFor : cart.length && !busy && !hasMissing && !Object.keys(cErr).length && !stampPending && !dupBlock && !needGot;
 
   const chargeRef = useRef(null);
   const charge = async () => {
@@ -149,7 +153,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
         pay: { method: pay.method, tendered: pay.method === 'cash' ? tendered : t.total, change: pay.method === 'cash' ? change : 0, ref: pay.ref },
       };
       addTrainingSale(sale);
-      setSheet(false); setCart([]); setCustomer(''); setDiscount({ type: 'none', pct: discount.pct, idNo: '', idName: '' }); setPay({ method: pay.method, tendered: '', ref: '' }); setTouched({});
+      setSheet(false); setCart([]); setCustomer(''); setDiscount({ type: 'none', pct: discount.pct, idNo: '', idName: '' }); setPay({ method: pay.method, tendered: '', ref: '', got: false }); setTouched({});
       setReceipt(sale);
       return;
     }
@@ -161,7 +165,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
         loyaltyPhone: stampCust ? normPhone(stampPhone) : undefined, useReward: rewardOn || undefined, override: override.current || undefined,
       });
       override.current = null;
-      clearStamps(); setSheet(false); setCart([]); setCustomer(''); setDiscount({ type: 'none', pct: discount.pct, idNo: '', idName: '' }); setPay({ method: pay.method, tendered: '', ref: '' }); setTouched({});
+      clearStamps(); setSheet(false); setCart([]); setCustomer(''); setDiscount({ type: 'none', pct: discount.pct, idNo: '', idName: '' }); setPay({ method: pay.method, tendered: '', ref: '', got: false }); setTouched({});
       // Receipt printer: print straight away when set up on this device
       const ps = loadPrinterSettings();
       let printed = '';
@@ -177,6 +181,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
       if (e.fields?.override === 'discount') { setAsking(true); return; } // a cashier's big discount: ask an admin
       if (e.fields) setTouched({ all: true });
       setServerErr(e.fields ? '' : e.message); // e.g. an item removed from the menu while it was in the cart
+      setRefTaken(e.fields?.ref ? { ref: pay.ref, msg: e.message } : null); // the reference no. was already used: show it under the box
       toast(e.message);
     }
     finally { setBusy(false); }
@@ -305,22 +310,43 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               </div>
             )}
           </div>}
-          <PayPicker value={pay.method} onChange={(k) => setPay({ ...pay, method: k })} />
-          {pay.method === 'cash' ? <>
-            <Field id="tendered" label="Cash received" error={cart.length && pay.tendered !== '' ? cErr.tendered : errFor('tendered')}>
-              <input id="tendered" type="number" inputMode="decimal" min="0" step="any" placeholder="0.00" value={pay.tendered} onChange={(e) => { setPay({ ...pay, tendered: e.target.value }); touch('tendered'); }} /></Field>
-            {cart.length > 0 && <div className="quick">{quick.map((n) => <button key={n} className="num" onClick={() => setPay({ ...pay, tendered: String(n) })}>₱{n.toLocaleString('en-PH')}</button>)}</div>}
-            <div className="change"><span>Change</span><span className="num" style={{ color: change < 0 ? 'var(--bad)' : 'var(--ok)' }}>{tendered ? peso(change) : '—'}</span></div>
+          <PayPicker value={pay.method} onChange={(k) => setPay({ ...pay, method: k, got: false })} />
+          <div className={`pay-box ${qrPay ? 'is-qr' : 'is-cash'}`}>
+          {!qrPay ? <>
+            <div className="pb-due"><span>Amount due</span><b className="num">{peso(t.total)}</b></div>
+            <Field id="tendered" label="Cash received" className="pb-cash">
+              <div className={`pb-in ${cashState}`}><i aria-hidden="true">₱</i>
+                <input id="tendered" type="number" inputMode="decimal" min="0" step="any" placeholder="0.00" value={pay.tendered} aria-invalid={cashState === 'short' || cashState === 'warn'} aria-describedby="pbChange"
+                  onChange={(e) => { setPay({ ...pay, tendered: e.target.value }); touch('tendered'); }} onFocus={(e) => e.target.select()} />
+                {pay.tendered !== '' && <button type="button" className="pb-clear" onClick={() => setPay({ ...pay, tendered: '' })} aria-label="Clear cash received">×</button>}
+              </div></Field>
+            {cart.length > 0 && <div className="quick pb-quick">
+              <button type="button" className={`num ${+pay.tendered === t.total ? 'on' : ''}`} onClick={() => setPay({ ...pay, tendered: String(t.total) })}>Exact</button>
+              {quick.filter((n) => n !== t.total).map((n) => <button type="button" key={n} className={`num ${+pay.tendered === n ? 'on' : ''}`} onClick={() => setPay({ ...pay, tendered: String(n) })}>₱{n.toLocaleString('en-PH')}</button>)}
+            </div>}
+            <div id="pbChange" className={`change pb-change ${cashState}`} aria-live="polite">
+              {cashState === 'idle' ? <><span>Change</span><span className="pb-hint">{cart.length ? 'Type the cash given, or tap an amount' : 'Add a drink first'}</span></>
+                : cashState === 'short' ? <><span>Short by</span><b className="num">{peso(-change)}</b><small>Collect {peso(-change)} more before charging.</small></>
+                : cashState === 'warn' ? <><span>Check the amount</span><small>{cErr.tendered}</small></>
+                : <><span>Change</span><b className="num">{peso(change)}</b>{change === 0 && <small>Exact amount, no change.</small>}</>}
+            </div>
           </> : (<>
             <QrHint kind={pay.method} settings={settings} amount={cart.length ? t.total : null} onShow={() => setShowQr(pay.method)} />
-            <Field id="payRef" label="Reference no. (optional)" error={errFor('ref')}>
-              <input id="payRef" maxLength={LIMITS.ref} placeholder="Transaction ref" value={pay.ref} onChange={(e) => { setPay({ ...pay, ref: e.target.value.trim() }); touch('ref'); }} /></Field>
+            <label className={`pb-got ${pay.got ? 'on' : ''} ${!pay.got && touched.all ? 'need' : ''}`}>
+              <input type="checkbox" checked={!!pay.got} disabled={!cart.length} onChange={(e) => setPay({ ...pay, got: e.target.checked })} />
+              <span><b>{cart.length ? `I received ${peso(t.total)} in our ${PAY_METHODS[pay.method]} app` : `Payment received in our ${PAY_METHODS[pay.method]} app`}</b>
+                <small>Check the amount and the sender’s name in the app before charging.</small></span>
+            </label>
+            <Field id="payRef" label="Reference no. (optional)" error={pay.ref ? cErr.ref || (refTaken?.ref === pay.ref ? refTaken.msg : undefined) : errFor('ref')} hint={pay.method === 'gcash' ? '13 digits, from the GCash notification' : 'From the Maya notification'}>
+              <input id="payRef" maxLength={LIMITS.ref + 6} inputMode={pay.method === 'gcash' ? 'numeric' : 'text'} placeholder={pay.method === 'gcash' ? '1011 234 567890' : 'Reference ID'} value={pay.ref}
+                onChange={(e) => { setPay({ ...pay, ref: e.target.value.replace(/[^0-9A-Za-z -]/g, '') }); touch('ref'); }} /></Field>
           </>)}
+          </div>
           {showQr && <ShowQr kind={showQr} settings={settings} amount={cart.length ? t.total : null} onClose={() => { setShowQr(null); setTimeout(() => document.getElementById('payRef')?.focus(), 50); }} />}
           </>)}
           {serverErr && <div className="formerr" role="alert">{serverErr}</div>}
           {hasMissing && <div className="formerr" role="alert">Remove the items that are no longer on the menu to continue.</div>}
-          <button className={`btn primary charge ${!staffOn && bigArmed ? 'big-cash' : ''}`} disabled={!canCharge} onClick={charge} aria-live="polite">{busy ? 'Saving…' : staffOn ? 'Save staff drink' : bigArmed ? `Confirm ${peso(tendered)} cash` : `Charge ${peso(t.total)}`}</button>
+          <button className={`btn primary charge ${!staffOn && bigArmed ? 'big-cash' : ''}`} disabled={!canCharge} onClick={charge} aria-live="polite">{busy ? 'Saving…' : staffOn ? 'Save staff drink' : bigArmed ? `Confirm ${peso(tendered)} cash` : needGot && cart.length ? `Tick “received” to charge` : `Charge ${peso(t.total)}`}</button>
           {cart.length > 0 && <button className="btn ghost sm" onClick={() => { if (armClear) { setCart([]); setArmClear(false); } else { setArmClear(true); setTimeout(() => setArmClear(false), 4000); } }}>{armClear ? 'Tap again to clear' : 'Clear order'}</button>}
         </div>
       </aside>

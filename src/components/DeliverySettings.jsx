@@ -1,45 +1,54 @@
-// Menu → Shop & options: delivery by Lalamove. Shop pin on the map, fee by distance, free from N drinks.
-import { useState } from 'react';
+// Menu → Shop & options: delivery by Lalamove. The nearby areas you deliver to, each with its fee; free from N drinks.
 import { Field } from './Field';
-import PlaceSearch from './PlaceSearch';
-import MapView from '../lib/map';
-import { DELIVERY_DEFAULTS, feeFor } from '../shared/delivery.mjs';
+import { DELIVERY_DEFAULTS, AREA_LIMITS } from '../shared/delivery.mjs';
 import { peso } from '../lib/format';
 
 export default function DeliverySettings({ f, setF, errs = {} }) {
   const d = { ...DELIVERY_DEFAULTS, ...(f.delivery || {}) };
+  const areas = Array.isArray(d.areas) ? d.areas : [];
   const set = (patch) => setF({ ...f, delivery: { ...d, ...patch } });
-  const has = d.lat != null && d.lng != null;
-  const [goTo, setGoTo] = useState(null); // place picked in the search box
-  const num = (k, label, hint, step = 'any') => (
-    <Field id={`dl-${k}`} label={label} hint={hint} error={errs[`delivery.${k}`]}>
-      <input id={`dl-${k}`} type="number" inputMode="decimal" min="0" step={step} value={d[k]} onChange={(e) => set({ [k]: e.target.value })} />
-    </Field>
-  );
+  const setArea = (i, patch) => set({ areas: areas.map((a, j) => (j === i ? { ...a, ...patch } : a)) });
+  const addArea = () => set({ areas: [...areas, { name: '', fee: areas.length ? areas[areas.length - 1].fee : 49 }] });
+  const removeArea = (i) => set({ areas: areas.filter((_, j) => j !== i) });
+  const free = Math.round(+d.freeDrinks) || 0;
   return (
     <div className="opt-group dl-set">
       <h4>Delivery <span className="muted" style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· you book Lalamove in the Lalamove app</span></h4>
       <label className={`check ${d.enabled ? 'on' : ''}`}>
         <input type="checkbox" checked={!!d.enabled} onChange={(e) => set({ enabled: e.target.checked })} /> <span>Customers can choose delivery (paid first by GCash or Maya)</span>
       </label>
-      <p className="muted" style={{ margin: 0 }}>Search your address or move the map so the pin is on your shop. Distances and fees are counted from here.</p>
-      <PlaceSearch onGo={(h) => { setGoTo({ lat: h.lat, lng: h.lng }); if (h.label && !d.label) set({ label: h.label }); }} />
-      <MapView mode="pick" center={goTo || (has ? { lat: +d.lat, lng: +d.lng } : null)} onPick={(p, byUser) => { if (byUser) setGoTo(null); set({ lat: p.lat, lng: p.lng }); }} />
-      <span className="dl-pin">{has ? `Shop pin: ${(+d.lat).toFixed(5)}, ${(+d.lng).toFixed(5)}` : 'No shop pin yet: move the map to your shop.'}</span>
-      {errs['delivery.pin'] && <div className="ferr" role="alert">{errs['delivery.pin']}</div>}
-      <Field id="dl-label" label="Shop address for the Lalamove pick-up (optional)">
-        <input id="dl-label" maxLength={200} value={d.label || ''} onChange={(e) => set({ label: e.target.value })} placeholder="e.g. 123 Rizal St., Brgy. San Roque" />
-      </Field>
-      <div className="row">
-        {num('baseFee', 'Base fee ₱', 'Covers the first km below')}
-        {num('baseKm', 'First km included', '')}
-        {num('perKm', '₱ per extra km', '')}
+
+      <div className="dl-areas">
+        <div className="dl-areas-h"><b>Areas you deliver to</b><small className="muted">Customers pick one. Use the same fee for all if you charge one price.</small></div>
+        {!areas.length && <p className="muted" style={{ margin: 0 }}>No areas yet. Add the barangays or villages near the shop.</p>}
+        {areas.map((a, i) => (
+          <div className="dl-area" key={i}>
+            <Field id={`dl-an-${i}`} label={i === 0 ? 'Area' : ''} error={errs[`delivery.areas.${i}.name`]} className="grow">
+              <input id={`dl-an-${i}`} maxLength={AREA_LIMITS.name} value={a.name || ''} onChange={(e) => setArea(i, { name: e.target.value })} placeholder="e.g. Brgy. Kapitolyo" aria-label={`Area ${i + 1} name`} />
+            </Field>
+            <Field id={`dl-af-${i}`} label={i === 0 ? 'Fee ₱' : ''} error={errs[`delivery.areas.${i}.fee`]} className="dl-fee">
+              <input id={`dl-af-${i}`} type="number" inputMode="numeric" min="0" max={AREA_LIMITS.fee} step="1" value={a.fee ?? ''} onChange={(e) => setArea(i, { fee: e.target.value })} aria-label={`Area ${i + 1} fee`} />
+            </Field>
+            <button type="button" className="btn ghost sm dl-rm" onClick={() => removeArea(i)} aria-label={`Remove ${a.name || `area ${i + 1}`}`}>Remove</button>
+          </div>
+        ))}
+        {errs['delivery.areas'] && <div className="ferr" role="alert">{errs['delivery.areas']}</div>}
+        {areas.length < AREA_LIMITS.max && <button type="button" className="btn sm dl-add" onClick={addArea}>+ Add area</button>}
       </div>
+
       <div className="row">
-        {num('maxKm', 'Farthest delivery (km)', '')}
-        {num('freeDrinks', 'Free delivery from (drinks)', '0 = never free. The shop pays Lalamove.', 1)}
+        <Field id="dl-free" label="Free from (drinks)" hint="0 = never free. The shop pays Lalamove." error={errs['delivery.freeDrinks']}>
+          <input id="dl-free" type="number" inputMode="numeric" min="0" max="100" step="1" value={d.freeDrinks} onChange={(e) => set({ freeDrinks: e.target.value })} />
+        </Field>
+        <Field id="dl-label" label="Shop address for the Lalamove pick-up (optional)" style={{ flex: '2 1 240px' }}>
+          <input id="dl-label" maxLength={200} value={d.label || ''} onChange={(e) => set({ label: e.target.value })} placeholder="e.g. 123 Rizal St., Brgy. San Roque" />
+        </Field>
       </div>
-      <p className="fhint" style={{ margin: 0 }}>Example: 3 km costs the customer {peso(feeFor(3, d))}, 6 km costs {peso(feeFor(6, d))}. Set these close to what Lalamove charges you.</p>
+      {areas.some((a) => a.name) && (
+        <p className="fhint" style={{ margin: 0 }}>
+          Example: {areas.filter((a) => a.name)[0].name} costs the customer {peso(+areas.filter((a) => a.name)[0].fee || 0)}{free ? `, free from ${free} drinks` : ''}. Set fees close to what Lalamove charges you.
+        </p>
+      )}
     </div>
   );
 }

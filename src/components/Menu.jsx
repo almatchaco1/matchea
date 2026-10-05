@@ -12,6 +12,7 @@ import { AdminBtn } from './Locked';
 import { QrSettingsModal } from './PayQr';
 import DecorPicker from './DecorPicker';
 import DeliverySettings from './DeliverySettings';
+import { checkDeliverySettings, DELIVERY_DEFAULTS } from '../shared/delivery.mjs';
 
 export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
   const [switching, setSwitching] = useState('');
@@ -217,7 +218,7 @@ function ShopModal({ s, ingredients, onClose, done, toast }) {
   const setOpt = (key, i, patch) => { setF({ ...f, [key]: f[key].map((o, k) => (k === i ? { ...o, ...patch } : o)) }); clear(...Object.keys(patch).map((p) => `${key}.${i}.${p}`), key); };
   const removeOpt = (key, i) => { setF({ ...f, [key]: f[key].filter((_, k) => k !== i) }); clear(...Object.keys(errs).filter((k) => k.startsWith(key + '.'))); };
   const save = async () => {
-    if (!check({ ...checkSettings(f), ...checkStoreInfo(f) })) return;
+    if (!check({ ...checkSettings(f), ...checkStoreInfo(f), ...checkDeliverySettings({ ...DELIVERY_DEFAULTS, ...(f.delivery || {}) }) })) return;
     try { await api.put('/settings', f); done('Saved'); } catch (e) { fromServer(e, toast); }
   };
   const inv = (k) => ({ 'aria-invalid': !!errs[k] });

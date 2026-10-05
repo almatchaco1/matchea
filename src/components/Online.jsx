@@ -9,7 +9,7 @@ import Modal from './Modal';
 import { Field, useErrors } from './Field';
 import ReceiptModal, { printCupLabels, printHtml } from './Receipt';
 import { qrPng } from '../lib/payqr';
-import { mapsLink } from '../shared/delivery.mjs';
+import { mapsLink, addressLine } from '../shared/delivery.mjs';
 import AdminPin from './AdminPin';
 import { QrHint, ShowQr, QR_LABEL } from './PayQr';
 import { useFlip, flyInto } from '../lib/motion';
@@ -88,7 +88,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                 <article key={o._id} data-flip={o._id} className={`kcard panel ${o.fulfil === 'delivery' ? 'is-deliv' : ''}`}>
                   <header>
                     <span className="kno num">#{pad(o.no)}</span>
-                    {o.fulfil === 'delivery' && <span className="dtag">Delivery · {o.delivery?.km} km</span>}
+                    {o.fulfil === 'delivery' && <span className="dtag">Delivery{o.delivery?.area ? ` · ${o.delivery.area}` : o.delivery?.km ? ` · ${o.delivery.km} km` : ''}</span>}
                     <span className="muted" style={{ fontSize: 12 }}>{o.date !== new Date().toISOString().slice(0, 10) && st === 'new' ? o.date + ' · ' : ''}{ago(o.createdAt)}</span>
                   </header>
                   <div className="kcust"><b>{o.customer}</b> <span className="muted num">{o.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span></div>
@@ -323,7 +323,7 @@ function ShotModal({ order, onClose }) {
 
 const STATE_PILL = { waiting: ['warn', 'Book a rider'], booked: ['mute', 'Waiting for the rider'], picked: ['ok', 'On the way'], delivered: ['ok', 'Delivered'] };
 const since = (t) => { const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000)); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
-const addrText = (d) => [d.detail, d.landmark && `Landmark: ${d.landmark}`, d.label].filter(Boolean).join('\n');
+const addrText = (d) => [[d.detail, d.area].filter(Boolean).join(', '), d.landmark && `Landmark: ${d.landmark}`, !d.area && d.label].filter(Boolean).join('\n');
 
 /** Delivery address and rider status on an order card. */
 function DeliveryInfo({ o }) {
@@ -334,12 +334,12 @@ function DeliveryInfo({ o }) {
       <div className="kdeliv-h"><span className={`pill ${cls}`}>{label}</span>
         <span className="num">{d.free ? <>Free delivery <small className="muted">(shop pays ~{peso(d.fee)})</small></> : <>Fee paid {peso(o.deliveryFee)}</>}</span></div>
       <b>{d.detail}</b>
-      <small>{d.landmark && <>Landmark: {d.landmark}<br /></>}{d.label}</small>
+      <small>{d.area && <>{d.area}<br /></>}{d.landmark && <>Landmark: {d.landmark}<br /></>}{!d.area && d.label}</small>
       {d.note && <small className="knote-r">Rider note: “{d.note}”</small>}
       {d.state === 'picked' && d.rider?.name && <small>Rider: <b>{d.rider.name}</b>{d.rider.plate ? ` · ${d.rider.plate}` : ''}{d.rider.phone ? ` · ${d.rider.phone}` : ''}</small>}
       {d.state === 'picked' && d.pickedAt && <small>Left the shop {timeOf(d.pickedAt)} · {since(d.pickedAt)}</small>}
       {d.state === 'booked' && o.status === 'preparing' && <small className="muted">Mark the drinks ready before the rider takes them.</small>}
-      <a className="linkbtn" href={mapsLink(d.lat, d.lng)} target="_blank" rel="noopener noreferrer">Open pin in Google Maps ↗</a>
+      <a className="linkbtn" href={mapsLink(d)} target="_blank" rel="noopener noreferrer">Find in Google Maps ↗</a>
     </div>
   );
 }
@@ -360,18 +360,18 @@ function BookModal({ order, settings, onClose, onDone }) {
   const [busy, setBusy] = useState(false);
   const drop = `${order.customer} · ${order.phone}\n${addrText(d)}`;
   return (
-    <Modal title={`Book Lalamove · #${pad(order.no)}`} aside={<span className="pill">{d.km} km</span>} onClose={onClose}
+    <Modal title={`Book Lalamove · #${pad(order.no)}`} aside={<span className="pill">{d.area || (d.km ? `${d.km} km` : '')}</span>} onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={async () => { const le = trackErr(link); setLinkErr(le); if (le) return; setBusy(true); await onDone(cost, link); setBusy(false); }}>{busy ? 'Saving…' : 'I booked it · Waiting for rider'}</button></>}>
       <ol className="book-steps">
         <li>Open the <b>Lalamove</b> app and choose <b>Motorcycle</b>.</li>
         <li><b>Pick-up:</b> {settings?.name || 'your shop'}{settings?.delivery?.label ? ` (${settings.delivery.label})` : ''}.</li>
-        <li><b>Drop-off:</b> paste the pin link, then add the details below for the rider.</li>
+        <li><b>Drop-off:</b> paste the address below (tap Copy) and check the pin Lalamove shows.</li>
         <li>Book it, then tap <b>Share</b> on the booking and paste the link below, so the customer can watch the rider live.</li>
         <li>Tap <b>I booked it</b>. The customer sees “Waiting for a rider”.</li>
       </ol>
       <div className="book-box">
-        <div><small>Drop-off pin</small><span className="num">{(+d.lat).toFixed(6)}, {(+d.lng).toFixed(6)}</span></div>
-        <button className="btn sm" onClick={() => copy(mapsLink(d.lat, d.lng), setMsg)}>Copy pin link</button>
+        <div><small>Drop-off address</small><span>{addressLine(d)}</span></div>
+        <button className="btn sm" onClick={() => copy(addressLine(d), setMsg)}>Copy address</button>
       </div>
       <div className="book-box">
         <div><small>Details for the rider</small><span style={{ whiteSpace: 'pre-line' }}>{drop}{d.note ? `\nNote: ${d.note}` : ''}</span></div>
@@ -449,13 +449,13 @@ const SLIP_CSS = `
   hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; } ul { margin: 0; padding-left: 16px; }
 `;
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-/** Delivery slip for the rider / the bag: address, landmark, mobile, drinks and a QR that opens the pin in Google Maps. */
+/** Delivery slip for the rider / the bag: address, landmark, mobile, drinks and a QR that finds the address in Google Maps. */
 function printSlip(o, s) {
   const d = o.delivery;
-  const qr = qrPng(mapsLink(d.lat, d.lng));
-  printHtml(`<div class="slip"><h1>${esc(s?.name || 'Matchéa')} · #${pad(o.no)}</h1><div>Delivery by Lalamove · ${esc(d.km)} km</div><hr>
-    <h2>Deliver to</h2><div class="big">${esc(o.customer)} · ${esc(o.phone)}</div><div>${esc(d.detail)}</div>${d.landmark ? `<div>Landmark: <b>${esc(d.landmark)}</b></div>` : ''}<div>${esc(d.label)}</div>${d.note ? `<div>Note: ${esc(d.note)}</div>` : ''}
-    <div class="qr"><img src="${qr}" alt=""><div>Scan to open the pin in Google Maps</div></div><hr>
+  const qr = qrPng(mapsLink(d));
+  printHtml(`<div class="slip"><h1>${esc(s?.name || 'Matchéa')} · #${pad(o.no)}</h1><div>Delivery by Lalamove${d.area ? ` · ${esc(d.area)}` : ''}</div><hr>
+    <h2>Deliver to</h2><div class="big">${esc(o.customer)} · ${esc(o.phone)}</div><div>${esc(d.detail)}</div>${d.landmark ? `<div>Landmark: <b>${esc(d.landmark)}</b></div>` : ''}<div>${esc(d.area || d.label)}</div>${d.note ? `<div>Note: ${esc(d.note)}</div>` : ''}
+    <div class="qr"><img src="${qr}" alt=""><div>Scan to find the address in Google Maps</div></div><hr>
     <h2>Drinks</h2><ul>${o.lines.map((l) => `<li>${l.qty}× ${esc(l.name)}${l.mods ? ` <small>(${esc(l.mods)})</small>` : ''}</li>`).join('')}</ul><hr>
     <div class="big">PAID${d.free ? ' · Free delivery' : ''}</div></div>`, SLIP_CSS, `Delivery slip #${pad(o.no)}`);
 }

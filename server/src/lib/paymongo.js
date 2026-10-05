@@ -41,7 +41,7 @@ export async function createCheckout({ sale, shopName, successUrl, cancelUrl, ty
       name: l.name.slice(0, 100), description: (l.mods || l.name).slice(0, 100),
       amount: Math.round(l.unit * 100), currency: 'PHP', quantity: l.qty,
     }));
-  if (sale.deliveryFee > 0 && !(sale.discount?.amount > 0)) items.push({ name: 'Delivery', description: `Lalamove delivery, about ${sale.delivery?.km ?? ''} km`.trim(), amount: Math.round(sale.deliveryFee * 100), currency: 'PHP', quantity: 1 });
+  if (sale.deliveryFee > 0 && !(sale.discount?.amount > 0)) items.push({ name: 'Delivery', description: `Lalamove delivery${sale.delivery?.area ? ` to ${sale.delivery.area}` : ''}`.trim(), amount: Math.round(sale.deliveryFee * 100), currency: 'PHP', quantity: 1 });
   if (sale.onlineFee > 0) items.push({ name: 'Online payment fee', description: 'PayMongo fee for paying online', amount: Math.round(sale.onlineFee * 100), currency: 'PHP', quantity: 1 });
   const s = await pm('POST', '/v1/checkout_sessions', {
     data: {

@@ -131,7 +131,7 @@ export function QrHint({ kind, settings, amount, onShow }) {
   return (
     <button type="button" className="qr-hint-btn" onClick={onShow}>
       <img src={qrSrc(kind, settings.qr[kind].v)} alt="" />
-      <span><b>Show {QR_LABEL[kind]} QR to customer</b><small>{amount != null ? `${peso(amount)} · ` : ''}then type the reference number below</small></span>
+      <span><b>Show {QR_LABEL[kind]} QR to customer</b><small>{amount != null ? `${peso(amount)} · ` : ''}then tick “received” below</small></span>
     </button>
   );
 }

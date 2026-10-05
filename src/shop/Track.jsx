@@ -8,7 +8,6 @@ import { confetti } from './fx';
 import { Loader, Doodle, TrackCup } from './art';
 import { ShareDrink } from './share';
 import { createPortal } from 'react-dom';
-import MapView from '../lib/map';
 
 const STEPS = [
   ['new', 'Order received', 'The shop will confirm it shortly.'],
@@ -169,7 +168,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
         </div>
       )}
       {o.fulfil === 'delivery' && o.delivery && (
-        <div className="ck-disc ck-deliv"><span>Delivery · {o.delivery.km} km</span><b>{o.delivery.free ? 'Free' : `+${peso(o.deliveryFee)}`}</b></div>
+        <div className="ck-disc ck-deliv"><span>Delivery{o.delivery.area ? ` · ${o.delivery.area}` : ''}</span><b>{o.delivery.free ? 'Free' : `+${peso(o.deliveryFee)}`}</b></div>
       )}
       {o.onlineFee > 0 && <div className="ck-disc ck-fee"><span>Online payment fee</span><b>+{peso(o.onlineFee)}</b></div>}
       <div className="ck-total">
@@ -214,7 +213,6 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
 function DeliveryBox({ o, busy, onReceived }) {
   const d = o.delivery;
   const [sure, setSure] = useState(false);
-  const dest = { lat: d.lat, lng: d.lng };
   return (
     <div className="dl-box">
       {d.trackUrl && ['booked', 'picked'].includes(d.state) && (
@@ -224,7 +222,6 @@ function DeliveryBox({ o, busy, onReceived }) {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
         </a>
       )}
-      <MapView mode="view" shop={d.from} dest={dest} route={d.route?.length > 1 ? d.route : null} />
       {d.state === 'picked' && d.rider && (
         <div className="dl-rider">
           <span className="dl-av" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg></span>
@@ -248,7 +245,7 @@ function DeliveryBox({ o, busy, onReceived }) {
       )}
       <div className="dl-addr">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="10" r="2.6" /></svg>
-        <div><b>{d.detail}</b><small>{[d.landmark && `Landmark: ${d.landmark}`, d.label].filter(Boolean).join(' · ')}</small>{d.note && <small>Note: {d.note}</small>}</div>
+        <div><b>{d.detail}</b><small>{[d.area || d.label, d.landmark && `Landmark: ${d.landmark}`].filter(Boolean).join(' · ')}</small>{d.note && <small>Note: {d.note}</small>}</div>
       </div>
     </div>
   );

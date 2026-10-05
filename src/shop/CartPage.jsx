@@ -8,7 +8,7 @@ import { RollNum } from './fx';
 import { sceneBg } from '../lib/drinkImages';
 import { Doodle } from './art';
 import { useAmountQr, saveQr, openGcash, isPhone } from '../lib/payqr';
-import { checkAddress } from '../shared/delivery.mjs';
+import { checkAddress, findArea, quoteFor } from '../shared/delivery.mjs';
 import AddressPicker from './AddressPicker';
 import { readReceipt, warmReader } from './receiptRead';
 
@@ -25,10 +25,12 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const [fulfil, setFulfil] = useState(() => { try { return sessionStorage.getItem('alm.fulfil') === 'delivery' ? 'delivery' : 'pickup'; } catch { return 'pickup'; } });
   const delivering = canDeliver && fulfil === 'delivery';
   const chooseFulfil = (v) => { setFulfil(v); try { sessionStorage.setItem('alm.fulfil', v); } catch {} };
-  const [addr, setAddr] = useState(() => (me.address?.lat ? { ...me.address, pinned: true } : { pinned: false }));
-  const [quote, setQuote] = useState(null);
+  // last address is filled in again (the area only if the shop still delivers there)
+  const [addr, setAddr] = useState(() => { const a = me.address || {}; return { area: findArea(dcfg, a.area)?.name || '', detail: a.detail || '', landmark: a.landmark || '', note: a.note || '' }; });
   const [addrErrs, setAddrErrs] = useState({});
-  const deliveryCharge = delivering && quote && !quote.tooFar ? quote.charge : 0;
+  const area = delivering ? findArea(dcfg, addr.area) : null;
+  const quote = area ? quoteFor(area, drinkCount, dcfg) : null;
+  const deliveryCharge = quote ? quote.charge : 0;
   const pickupOk = menu?.shop?.payAtPickup !== false && !noShowRule && !bigOrder && !delivering;
   // How to pay: 'gcash' | 'maya' (scan the shop's QR) | 'pm:gcash' | 'pm:paymaya' (PayMongo, opens the app) | 'pickup'
   const pmTypes = payOnline ? (menu?.shop?.payTypes || []).filter((t) => ONLINE_FEE_PCT[t]) : [];
@@ -94,11 +96,9 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
     if (bad.length) { setMsg('Remove the items that are no longer available first.'); return; }
     if (note.length > ONLINE.pickupNote) { setMsg(`The note can be at most ${ONLINE.pickupNote} characters.`); return; }
     if (delivering) {
-      const e = { ...checkAddress(addr), ...(addr.pinned ? {} : { pin: 'Move the map so the pin is on your place.' }) };
+      const e = checkAddress(addr, dcfg);
       setAddrErrs(e);
       if (Object.keys(e).length) { setMsg('Check your delivery address.'); return; }
-      if (!quote) { setMsg('Please wait for the delivery fee, then try again.'); return; }
-      if (quote.tooFar) { setMsg(`Sorry, we only deliver up to ${dcfg.maxKm} km away. Please choose pickup.`); return; }
     }
     if (needQr) {
       if (!shot) { setShotMsg(`Upload a screenshot of your ${appName} receipt.`); setMsg(`Pay with ${appName} first, then upload the receipt screenshot.`); return; }
@@ -110,7 +110,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
     try {
       const o = await call('POST', '/public/orders', {
         pickupNote: note, payNow: payable,
-        ...(delivering ? { fulfil: 'delivery', delivery: { lat: addr.lat, lng: addr.lng, label: addr.label || '', detail: addr.detail, landmark: addr.landmark, note: addr.note || '' } } : {}), ...(payable ? { payType } : {}), useReward: useReward && canReward,
+        ...(delivering ? { fulfil: 'delivery', delivery: { area: addr.area, detail: addr.detail, landmark: addr.landmark, note: addr.note || '' } } : {}), ...(payable ? { payType } : {}), useReward: useReward && canReward,
         qrPay: needQr ? { method: qrMethod, ref: readRef, paidTime: readTime && !readTime.err ? read.time : '', ...(read?.date && readTime && !readTime.err ? { paidDate: read.date } : {}), ...(read?.amount != null ? { readAmount: read.amount } : {}), shot, shotPrint } : undefined,
         lines: cart.map(({ productId, sizeId, addonIds, sweet, note: n, qty }) => ({ productId, sizeId, addonIds, sweet, note: n, qty })),
       });
@@ -180,7 +180,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg><span><b>Delivery</b><small>{dcfg.freeDrinks ? `Free from ${dcfg.freeDrinks} drinks` : 'By Lalamove'}</small></span></button>
           </div>
         )}
-        {delivering && <AddressPicker cfg={dcfg} drinks={drinkCount} value={addr} onChange={(a) => { setAddr(a); setAddrErrs({}); }} quote={quote} onQuote={setQuote} errs={addrErrs} />}
+        {delivering && <AddressPicker cfg={dcfg} quote={quote} value={addr} onChange={(a, k) => { setAddr(a); setAddrErrs((e) => ({ ...e, [k]: '' })); }} errs={addrErrs} />}
         <div className="ck-who">
           <div><span className="muted">{delivering ? 'Deliver to' : 'Pickup for'}</span><b>{me.name}</b>{me.phone ? <span className="num">{me.phone.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span> : me.email ? <span>{me.email}</span> : null}</div>
           <button className="shop-link" onClick={() => go('/account')}>Change</button>
@@ -203,8 +203,8 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
             {options.map((k) => (
               <label key={k} className={method === k ? 'on' : ''}>
                 <input type="radio" name="pay" checked={method === k} onChange={() => { setMethod(k); clearShot(); }} />
-                <span>{k === 'gcash' ? <><b>Pay now with GCash</b><small>Scan our QR, then type the reference number</small></>
-                  : k === 'maya' ? <><b>Pay now with Maya</b><small>Scan our QR, then type the reference number</small></>
+                <span>{k === 'gcash' ? <><b>Pay now with GCash</b><small>Scan our QR, then upload your receipt</small></>
+                  : k === 'maya' ? <><b>Pay now with Maya</b><small>Scan our QR, then upload your receipt</small></>
                   : k.startsWith('pm:') ? <><b>Pay in the {PM_NAME[k.slice(3)]} app</b><small>Log in and pay, confirmed right away · +{peso(withOnlineFee(total, k.slice(3)).fee)} online fee</small></>
                   : <><b>Pay at pickup</b><small>Cash, GCash or Maya at the counter</small></>}</span>
               </label>
@@ -278,8 +278,8 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
           </div>
         )}
         {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - itemsTotal)}</b></div>}
-        {delivering && quote && !quote.tooFar && (
-          <div className="ck-disc ck-deliv"><span>Delivery · {quote.km} km{quote.free ? ` · free from ${dcfg.freeDrinks} drinks` : ''}</span><b>{quote.free ? <><s>{peso(quote.fee)}</s> Free</> : `+${peso(quote.charge)}`}</b></div>
+        {delivering && quote && (
+          <div className="ck-disc ck-deliv"><span>Delivery · {quote.area}{quote.free ? ` · free from ${dcfg.freeDrinks} drinks` : ''}</span><b>{quote.free ? <><s>{peso(quote.fee)}</s> Free</> : `+${peso(quote.charge)}`}</b></div>
         )}
         {fee.fee > 0 && <div className="ck-disc ck-fee"><span>Online payment fee ({PM_NAME[payType]})</span><b>+{peso(fee.fee)}</b></div>}
         <div className="ck-total"><span>Total</span><b className="num"><RollNum value={fee.total} format={peso} /></b></div>
@@ -288,7 +288,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         <button className="sh-btn big" disabled={busy || !menu.shop.open} onClick={place}>
           {busy ? (payable ? 'Opening secure payment…' : 'Placing order…') : payable ? `Pay ${peso(fee.total)} with ${PM_NAME[payType]}` : needQr ? `I’ve paid · Place order` : `Place order · ${peso(total)}`}
         </button>
-        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your reference number.' : 'Pay at the counter by cash, GCash or Maya.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
+        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your receipt screenshot.' : 'Pay at the counter by cash, GCash or Maya.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
       </aside>
     </div>
   );

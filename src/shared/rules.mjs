@@ -235,7 +235,11 @@ export function checkCheckout({ lineCount, total, discount = {}, pay = {}, custo
     else if (Number(pay.tendered) + 1e-9 < total) e.tendered = `That's ₱${(total - Number(pay.tendered)).toFixed(2)} short.`;
     else if (Number(pay.tendered) - total >= LIMITS.maxChange - 1e-9) e.tendered = `That would be ₱${(Number(pay.tendered) - total).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} change. Check the cash received.`;
   } else {
-    text(e, 'ref', pay.ref, { label: 'reference no.', max: LIMITS.ref, pattern: /^[A-Za-z0-9-]+$/, patternMsg: 'Use letters, numbers and dashes only.' });
+    // Reference no. is optional at the counter, but when typed it must look like a real one
+    const ref = String(pay.ref || '').replace(/[\s-]/g, '');
+    if (ref.length > LIMITS.ref) e.ref = `At most ${LIMITS.ref} characters.`;
+    else if (ref && pay.method === 'gcash' && !/^\d{13}$/.test(ref)) e.ref = /\D/.test(ref) ? 'A GCash reference no. has numbers only.' : `A GCash reference no. has 13 digits (this has ${ref.length}).`;
+    else if (ref && pay.method === 'maya' && !/^[A-Za-z0-9]{6,20}$/.test(ref)) e.ref = 'A Maya reference ID has 6 to 20 letters or numbers.';
   }
   return e;
 }

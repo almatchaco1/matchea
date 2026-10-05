@@ -18,8 +18,7 @@ import Customer from '../models/Customer.js';
 import Asset from '../models/Asset.js';
 import { paymongoEnabled, methodTypes, createCheckout, getCheckout, expireCheckout, paidPayment, methodFrom, verifyWebhook } from '../lib/paymongo.js';
 import { cleanDecor } from '../../../src/shared/decor.mjs';
-import { quoteFor, checkAddress, inPH } from '../../../src/shared/delivery.mjs';
-import { roadKm, searchPlaces, placeName } from '../lib/geo.js';
+import { quoteFor, checkAddress, findArea } from '../../../src/shared/delivery.mjs';
 import { finishDelivery } from '../lib/delivery.js';
 
 const PAY_WINDOW_MIN = 45; // unpaid "pay now" orders are cancelled after this many minutes
@@ -137,36 +136,13 @@ async function findReusedShot(hash, fileHash) {
 }
 
 // ---------- Delivery ----------
-/** Delivery settings the website needs, or null when delivery is off. */
+/** Delivery settings the website needs, or null when delivery is off (or no areas set yet). */
 function deliveryInfo(s) {
   const d = s.delivery || {};
-  if (!d.enabled || !inPH(+d.lat, +d.lng)) return null;
-  return { lat: d.lat, lng: d.lng, label: d.label || '', baseFee: d.baseFee, baseKm: d.baseKm, perKm: d.perKm, maxKm: d.maxKm, freeDrinks: d.freeDrinks };
+  const areas = (d.areas || []).filter((a) => a?.name).map((a) => ({ name: a.name, fee: Math.round(+a.fee || 0) }));
+  if (!d.enabled || !areas.length) return null;
+  return { label: d.label || '', areas, freeDrinks: d.freeDrinks ?? 5 };
 }
-const pinOf = (q) => ({ lat: +q.lat, lng: +q.lng });
-
-// Delivery fee for a pin: { km, fee, free, charge, tooFar, moreForFree, route }
-r.get('/delivery/quote', rateLimit(60, 60 * 1000), ah(async (req, res) => {
-  const d = deliveryInfo(await Settings.get());
-  if (!d) throw new HttpError(409, 'Delivery isn’t available right now.');
-  const to = pinOf(req.query);
-  if (!inPH(to.lat, to.lng)) throw new HttpError(400, 'Move the map so the pin is on your place.');
-  const drinks = Math.max(0, Math.min(200, Math.round(+req.query.drinks || 0)));
-  const rt = await roadKm({ lat: d.lat, lng: d.lng }, to);
-  res.json({ ...quoteFor(rt.km, drinks, d), route: rt.route, approx: rt.approx });
-}));
-
-// Place search and pin → address (OpenStreetMap)
-r.get('/geo/search', rateLimit(30, 60 * 1000), ah(async (req, res) => {
-  const q = String(req.query.q || '').trim().slice(0, 120);
-  if (q.length < 3) return res.json([]);
-  try { res.json(await searchPlaces(q)); } catch { throw new HttpError(503, 'Search isn’t working right now. Move the map to your place instead.'); }
-}));
-r.get('/geo/reverse', rateLimit(40, 60 * 1000), ah(async (req, res) => {
-  const p = pinOf(req.query);
-  if (!inPH(p.lat, p.lng)) return res.json({ label: '' });
-  try { res.json(await placeName(p.lat, p.lng)); } catch { res.json({ label: '' }); }
-}));
 
 // Place an order (pay at pickup)
 r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, res) => {
@@ -217,14 +193,15 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
     }
     payNow = false;
   }
-  // Delivery: fee by road distance (free from 5 drinks); delivery orders are always paid first
+  // Delivery: fee by area (free from 5 drinks); delivery orders are always paid first
   let delivery = null;
   if (b.fulfil === 'delivery') {
     const d = deliveryInfo(settings);
     if (!d) throw new HttpError(409, 'Delivery isn’t available right now. Please choose pickup.');
     const a = b.delivery || {};
-    assertValid(checkAddress(a));
-    delivery = { cfg: d, lat: +a.lat, lng: +a.lng, label: String(a.label || '').trim().slice(0, 200), detail: String(a.detail).trim(), landmark: String(a.landmark).trim(), note: String(a.note || '').trim() };
+    assertValid(checkAddress(a, d));
+    const one = (v) => String(v || '').trim().replace(/\s+/g, ' ');
+    delivery = { cfg: d, area: findArea(d, a.area).name, detail: one(a.detail), landmark: one(a.landmark), note: one(a.note) };
   }
   const useReward = b.useReward === true;
   if (payNow && !paymongoEnabled()) throw new HttpError(409, 'Online payment is not available right now. Please choose pay at pickup.');
@@ -238,10 +215,8 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
   const t = computeTotals(subtotal, useReward ? { type: 'reward', amount: rewardValue(priced.map((l) => l.base)) } : { type: 'none' }, settings.vat);
   const drinkCount = priced.reduce((a, l) => a + (+l.qty || 0), 0);
   if (delivery) {
-    const rt = await roadKm({ lat: delivery.cfg.lat, lng: delivery.cfg.lng }, delivery);
-    const q = quoteFor(rt.km, drinkCount, delivery.cfg);
-    if (q.tooFar) throw new HttpError(400, `Sorry, we only deliver up to ${delivery.cfg.maxKm} km away (yours is about ${q.km} km). Please choose pickup.`, { pin: 'Too far for delivery.' });
-    Object.assign(delivery, { km: q.km, approx: rt.approx, fee: q.fee, free: q.free, charge: q.charge, route: (rt.route || []).slice(0, 400).map((p) => p.join(',')).join(';') });
+    const q = quoteFor(findArea(delivery.cfg, delivery.area), drinkCount, delivery.cfg);
+    Object.assign(delivery, { fee: q.fee, free: q.free, charge: q.charge });
     t.total = Math.round((t.total + q.charge) * 100) / 100;
     if (t.total > 0 && !payNow && !qrPay) throw new HttpError(400, 'Delivery orders are paid first. Choose GCash or Maya.', { pay: 'Please pay first for delivery.' });
   }
@@ -263,7 +238,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
     pickupCode: String(crypto.randomInt(1000, 10000)), // told to staff at pickup
     customer: String(b.customer).trim().replace(/\s+/g, ' '), phone, pickupNote: String(b.pickupNote || '').trim(),
     ...(delivery ? { fulfil: 'delivery', deliveryFee: delivery.charge, pickupCode: undefined,
-      delivery: { lat: delivery.lat, lng: delivery.lng, label: delivery.label, detail: delivery.detail, landmark: delivery.landmark, note: delivery.note, km: delivery.km, approx: delivery.approx, fee: delivery.fee, free: delivery.free, state: 'waiting', from: { lat: delivery.cfg.lat, lng: delivery.cfg.lng }, route: delivery.route } } : {}),
+      delivery: { area: delivery.area, detail: delivery.detail, landmark: delivery.landmark, note: delivery.note, fee: delivery.fee, free: delivery.free, state: 'waiting' } } : {}),
     lines: priced, subtotal: t.subtotal, discount: t.discount, total: t.total, vat: t.vat, vatExempt: t.vatExempt,
     onlineFee: payNow ? withOnlineFee(t.total, payType).fee : 0,
     pay: { method: 'unpaid', tendered: 0, change: 0, ref: '' },
@@ -275,7 +250,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
     if (useReward) await Customer.updateOne({ _id: cust._id }, { $inc: { stamps: 9, rewardsUsed: -1 } });
     throw e;
   }
-  if (delivery) await Customer.updateOne({ _id: cust._id }, { address: { lat: delivery.lat, lng: delivery.lng, label: delivery.label, detail: delivery.detail, landmark: delivery.landmark, note: delivery.note } }).catch(() => {});
+  if (delivery) await Customer.updateOne({ _id: cust._id }, { address: { area: delivery.area, detail: delivery.detail, landmark: delivery.landmark, note: delivery.note } }).catch(() => {});
   if (qrPay?.shotData) {
     const [, type, data] = /^data:([^;]+);base64,(.*)$/.exec(qrPay.shotData);
     await Asset.create({ key: `receipt-${sale._id}`, type, data: Buffer.from(data, 'base64') }).catch(() => Sale.updateOne({ _id: sale._id }, { 'qrPay.shot': false }));
@@ -383,9 +358,8 @@ const publicView = (s) => ({
   freeDrink: s.stampsUsed > 0, stampsAwarded: s.stampsAwarded ?? null, stampsBalance: s.stampsBalance ?? null,
   fulfil: s.fulfil || 'pickup', deliveryFee: s.deliveryFee || 0,
   delivery: s.fulfil === 'delivery' && s.delivery ? {
-    lat: s.delivery.lat, lng: s.delivery.lng, label: s.delivery.label || '', detail: s.delivery.detail || '', landmark: s.delivery.landmark || '', note: s.delivery.note || '',
-    from: s.delivery.from?.lat != null ? { lat: s.delivery.from.lat, lng: s.delivery.from.lng } : null, route: String(s.delivery.route || '').split(';').filter(Boolean).map((p) => p.split(',').map(Number)),
-    km: s.delivery.km, free: !!s.delivery.free, state: s.delivery.state || 'waiting', bookedAt: s.delivery.bookedAt || null, pickedAt: s.delivery.pickedAt || null, deliveredAt: s.delivery.deliveredAt || null, receivedBy: s.delivery.receivedBy || '',
+    area: s.delivery.area || '', label: s.delivery.label || '', detail: s.delivery.detail || '', landmark: s.delivery.landmark || '', note: s.delivery.note || '',
+    free: !!s.delivery.free, state: s.delivery.state || 'waiting', bookedAt: s.delivery.bookedAt || null, pickedAt: s.delivery.pickedAt || null, deliveredAt: s.delivery.deliveredAt || null, receivedBy: s.delivery.receivedBy || '',
     rider: s.delivery.state === 'picked' || s.delivery.state === 'delivered' ? { name: s.delivery.rider?.name || '', phone: s.delivery.rider?.phone || '', plate: s.delivery.rider?.plate || '' } : null,
     trackUrl: ['booked', 'picked'].includes(s.delivery.state) ? s.delivery.trackUrl || '' : '',
   } : null,
