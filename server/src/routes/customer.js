@@ -205,6 +205,7 @@ r.post('/me/email/verify', requireCustomer, limit(30, 15 * 60000), ah(async (req
 r.get('/me', requireCustomer, ah(async (req, res) => res.json({ customer: req.customer, needsPhone: !req.customer.phone, payFirst: await mustPayFirst(req.customer._id) })));
 
 // Update name / mobile number (Google & Facebook customers add their number here)
+const pwTries = new Map(); // customer id → times of wrong current-password tries
 r.patch('/me', requireCustomer, limit(30, 15 * 60000), ah(async (req, res) => {
   const b = req.body || {}, c = req.customer;
   const errs = {};
@@ -213,8 +214,22 @@ r.patch('/me', requireCustomer, limit(30, 15 * 60000), ah(async (req, res) => {
   const newEmail = b.email != null ? String(b.email).trim().toLowerCase() : null;
   if (newEmail && (newEmail.length > 80 || !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(newEmail))) errs.email = 'Enter an email like name@gmail.com.';
   if (b.newPassword != null) {
+    // Wrong current passwords: at most 5 tries in 15 minutes, so nobody can guess it from an open phone
+    const key = String(c._id), now = Date.now();
+    const tries = (pwTries.get(key) || []).filter((t) => now - t < 15 * 60000);
+    if (c.passwordHash && tries.length >= 5) throw new HttpError(429, 'Too many wrong passwords. Try again in 15 minutes, or reset it with “Forgot your current password?”.', { currentPassword: 'Too many tries. Wait 15 minutes or reset it by email.' });
     Object.assign(errs, checkPassword(b.newPassword, 'newPassword'));
-    if (c.passwordHash && !(await c.checkPassword(b.currentPassword || ''))) errs.currentPassword = 'Your current password is incorrect.';
+    if (b.confirmPassword != null && String(b.confirmPassword) !== String(b.newPassword)) errs.confirmPassword = 'The passwords don’t match.';
+    if (c.passwordHash) {
+      if (!b.currentPassword) errs.currentPassword = 'Enter your current password.';
+      else if (!(await c.checkPassword(b.currentPassword))) { errs.currentPassword = 'Your current password is incorrect.'; tries.push(now); pwTries.set(key, tries); }
+      else { pwTries.delete(key); if (!errs.newPassword && String(b.newPassword) === String(b.currentPassword)) errs.newPassword = 'Choose a new password that’s different from your current one.'; }
+    }
+    if (!errs.newPassword) {
+      const low = String(b.newPassword).toLowerCase();
+      const bits = [c.phone, c.phone && c.phone.slice(1), String(c.name || '').toLowerCase().replace(/\s+/g, '')].filter((x) => x && x.length >= 4);
+      if (bits.some((x) => low.includes(x))) errs.newPassword = 'Don’t use your name or mobile number in your password.';
+    }
   }
   assertValid(errs);
   let newPhone = null;

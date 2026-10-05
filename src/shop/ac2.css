@@ -70,3 +70,21 @@
   .shop .ac2-card{padding:18px 16px}
 }
 .shop .ac2 .stampcard{max-width:none;width:100%;margin:0}
+/* password checks */
+.shop .pw-meter{display:flex;align-items:center;gap:10px;margin:-4px 0 0}
+.shop .pw-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;flex:1}
+.shop .pw-bar i{height:6px;border-radius:999px;background:var(--pink-3);transition:background .25s}
+.shop .pw-bar.s1 i.on{background:#C2412D}
+.shop .pw-bar.s2 i.on{background:#D99A1E}
+.shop .pw-bar.s3 i.on{background:#6E9A3A}
+.shop .pw-bar.s4 i.on{background:var(--green)}
+.shop .pw-meter span{min-width:110px;text-align:right;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.shop .pw-rules{list-style:none;margin:0;padding:10px 12px;border-radius:14px;background:var(--pink-2);display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.shop .pw-rules li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+.shop .pw-rules i{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;box-shadow:inset 0 0 0 1.5px var(--pink-3);color:#fff;transition:background .2s}
+.shop .pw-rules li.ok{color:var(--ok)}
+.shop .pw-rules li.ok i{background:var(--green);box-shadow:none}
+.shop .pw-match{margin:-6px 0 0;font-size:13px;font-weight:700}
+.shop .pw-match.ok{color:var(--ok)}
+.shop .pw-match.bad{color:var(--amber)}
+@media (max-width:560px){.shop .pw-rules{grid-template-columns:1fr}}

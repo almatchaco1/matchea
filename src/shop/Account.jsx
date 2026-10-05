@@ -57,7 +57,7 @@ export function OrdersPage({ orders, go, reload }) {
 export function AccountPage({ me, setMe, go, signOut }) {
   const [f, setF] = useState({ name: me.name, phone: me.phone ? fmtPhoneInput(me.phone) : '', email: me.email || '' });
   const [verifyEmail, setVerifyEmail] = useState(null);
-  const [pw, setPw] = useState({ currentPassword: '', newPassword: '' });
+  const [pw, setPw] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [errs, setErrs] = useState({});
   const [ok, setOk] = useState('');
   const [busy, setBusy] = useState('');
@@ -84,12 +84,32 @@ export function AccountPage({ me, setMe, go, signOut }) {
     e.preventDefault(); setOk('');
     const v = checkPassword(pw.newPassword, 'newPassword');
     if (me.hasPassword && !pw.currentPassword) v.currentPassword = 'Enter your current password.';
+    if (!v.newPassword && me.hasPassword && pw.newPassword === pw.currentPassword) v.newPassword = 'Choose a new password that’s different from your current one.';
+    if (!v.newPassword && pwHasMe(pw.newPassword)) v.newPassword = 'Don’t use your name or mobile number in your password.';
+    if (!pw.confirmPassword) v.confirmPassword = 'Type your new password again.';
+    else if (pw.confirmPassword !== pw.newPassword) v.confirmPassword = 'The passwords don’t match.';
     setErrs(v); if (Object.keys(v).length) return;
     setBusy('pw');
-    try { const r = await call('PATCH', '/customer/me', pw); setMe(r.customer); setPw({ currentPassword: '', newPassword: '' }); setOk(me.hasPassword ? 'Password changed.' : 'Password set. You can now also sign in with your mobile number.'); }
+    try { const r = await call('PATCH', '/customer/me', pw); setMe(r.customer); setPw({ currentPassword: '', newPassword: '', confirmPassword: '' }); setPwOpen(false); setOk(me.hasPassword ? 'Password changed. Use your new password next time you sign in.' : 'Password set. You can now also sign in with your mobile number.'); }
     catch (err) { setErrs(err.fields || { newPassword: err.message }); }
     finally { setBusy(''); }
   };
+
+  // The new password shouldn't contain the customer's name or number
+  const pwHasMe = (p) => {
+    const low = String(p || '').toLowerCase();
+    return [me.phone, me.phone && me.phone.slice(1), String(me.name || '').toLowerCase().replace(/\s+/g, '')].filter((x) => x && x.length >= 4).some((x) => low.includes(x));
+  };
+  const setPwField = (k, v) => { setPw((x) => ({ ...x, [k]: v })); setErrs((e) => { const n = { ...e }; delete n[k]; if (k === 'newPassword') delete n.confirmPassword; return n; }); };
+  const np = pw.newPassword;
+  const rules = [
+    ['At least 8 characters', np.length >= 8],
+    ['Letters and numbers', /[A-Za-z]/.test(np) && /\d/.test(np)],
+    ...(me.hasPassword ? [['Different from your current one', !!np && np !== pw.currentPassword]] : []),
+    ['Not your name or number', !!np && !pwHasMe(np)],
+  ];
+  const strength = !np ? 0 : Math.min(4, (np.length >= 8) + (np.length >= 12) + (/[A-Za-z]/.test(np) && /\d/.test(np)) + (/[^A-Za-z0-9]/.test(np) || (/[a-z]/.test(np) && /[A-Z]/.test(np))));
+  const match = pw.confirmPassword ? pw.confirmPassword === np : null;
 
   const toggleSms = async () => {
     setBusy('sms');
@@ -153,19 +173,30 @@ export function AccountPage({ me, setMe, go, signOut }) {
         <ReadyAlerts />
       </section>
 
-      <section className={`ac2-card ac2-pw ${pwOpen || errs.currentPassword || errs.newPassword ? 'open' : ''}`}>
+      <section className={`ac2-card ac2-pw ${pwOpen || errs.currentPassword || errs.newPassword || errs.confirmPassword ? 'open' : ''}`}>
         <button type="button" className="ac2-h ac2-toggle" onClick={() => setPwOpen(!pwOpen)} aria-expanded={pwOpen}>
           <span className="ac2-ico"><Ico d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5V11Zm7 4v2" /></span>
           <div><h2>{me.hasPassword ? 'Password' : 'Set a password'}</h2><p>{me.hasPassword ? 'Change the password you sign in with.' : 'Optional. Lets you also sign in with your mobile number.'}</p></div>
           <i className="ac2-chev" aria-hidden="true">▾</i>
         </button>
-        {(pwOpen || errs.currentPassword || errs.newPassword) && (
+        {(pwOpen || errs.currentPassword || errs.newPassword || errs.confirmPassword) && (
           <form onSubmit={changePw} noValidate className="au-form">
-            {me.hasPassword && <Field label="Current password" error={errs.currentPassword}><PasswordBox autoComplete="current-password" value={pw.currentPassword} onChange={(e) => setPw({ ...pw, currentPassword: e.target.value })} /></Field>}
+            {me.hasPassword && <Field label="Current password" error={errs.currentPassword}><PasswordBox autoComplete="current-password" value={pw.currentPassword} onChange={(e) => setPwField('currentPassword', e.target.value)} /></Field>}
             {me.hasPassword && (me.email
               ? <p className="au-fine acct-forgot"><a href="/forgot" onClick={(e) => { e.preventDefault(); go('/forgot?who=' + encodeURIComponent(me.email)); }}>Forgot your current password?</a> We’ll email a code to {me.email.replace(/^(.)(.*?)(.?)@/, (_, a, m, b) => `${a}${'•'.repeat(Math.min(6, Math.max(2, m.length)))}${b}@`)}.</p>
               : <p className="au-fine acct-forgot">Forgot your current password? Add your email above first, then you can reset it by email.</p>)}
-            <Field label="New password" error={errs.newPassword} hint="At least 8 characters, with letters and numbers."><PasswordBox autoComplete="new-password" value={pw.newPassword} onChange={(e) => setPw({ ...pw, newPassword: e.target.value })} /></Field>
+            <Field label="New password" error={errs.newPassword}><PasswordBox autoComplete="new-password" value={pw.newPassword} onChange={(e) => setPwField('newPassword', e.target.value)} /></Field>
+            <div className="pw-meter" aria-hidden={!np}>
+              <div className={`pw-bar s${strength}`}>{[1, 2, 3, 4].map((i) => <i key={i} className={i <= strength ? 'on' : ''} />)}</div>
+              <span>{['Type a new password', 'Weak', 'Okay', 'Good', 'Strong'][strength]}</span>
+            </div>
+            <ul className="pw-rules" aria-label="Password rules">
+              {rules.map(([t, okk]) => <li key={t} className={okk ? 'ok' : ''}><i aria-hidden="true">{okk ? '✓' : ''}</i>{t}</li>)}
+            </ul>
+            <Field label="Confirm new password" error={errs.confirmPassword}>
+              <PasswordBox autoComplete="new-password" value={pw.confirmPassword} onChange={(e) => setPwField('confirmPassword', e.target.value)} />
+            </Field>
+            {match != null && !errs.confirmPassword && <p className={`pw-match ${match ? 'ok' : 'bad'}`} role="status">{match ? '✓ Passwords match' : 'The passwords don’t match yet'}</p>}
             <button className="sh-btn ghost" disabled={busy === 'pw'}>{busy === 'pw' ? 'Saving…' : me.hasPassword ? 'Change password' : 'Set password'}</button>
           </form>
         )}
