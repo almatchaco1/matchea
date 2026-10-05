@@ -12,6 +12,7 @@ import { checkAddress, findArea, quoteFor } from '../shared/delivery.mjs';
 import AddressPicker from './AddressPicker';
 import { readReceipt, warmReader } from './receiptRead';
 import './pay2.css';
+import './qp2.css';
 
 // Payment option icons (same look as the POS)
 const PAY_ICON = {
@@ -222,15 +223,15 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
           </fieldset>
         )}
         {needQr && (
-          <div className="qrpay">
+          <div className={`qrpay qp2 qp-${qrMethod}`}>
             <div className="qp-head">
-              <span className={`qp-app ${qrMethod}`}>{appName}</span>
+              <span className={`qp-app ${qrMethod}`}><i aria-hidden="true">{PAY_ICON[qrMethod]}</i>{appName}</span>
               <div className="qp-amt"><small>Amount to pay</small><b className="num">{peso(total)}</b></div>
               {qrs[qrMethod].name && <div className="qp-to"><small>Send to</small><b>{qrs[qrMethod].name}</b>{qrs[qrMethod].number && <span className="num">{qrs[qrMethod].number.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span>}</div>}
             </div>
             <div className="qp-body">
               <div className="qp-code">
-                <img className="qrpay-img" src={qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`} alt={`Our ${appName} QR code for ${peso(total)}`} />
+                <span className="qp-frame"><i aria-hidden="true" /><img className="qrpay-img" src={qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`} alt={`Our ${appName} QR code for ${peso(total)}`} /></span>
                 <div className="qrpay-btns">
                   <button type="button" className="sh-btn ghost sm" onClick={async () => { const r = await saveQr(qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`, `matchea-${qrMethod}-${Math.round(total)}.png`); if (r !== 'cancelled') setSaved(r); }}>{saved ? 'Saved ✓' : 'Save QR'}</button>
                   {phone && qrMethod === 'gcash' && <button type="button" className="sh-btn sm" onClick={openGcash}>Open GCash</button>}
@@ -284,7 +285,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
               ) : null}
               {shotMsg && <small className="au-err" role="alert">{shotMsg}</small>}
             </div>
-            <p className="qp-note">The shop checks your payment, then starts your drinks.</p>
+            <p className="qp-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>The shop checks your payment, then starts your drinks.</p>
           </div>
         )}
         {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - itemsTotal)}</b></div>}
