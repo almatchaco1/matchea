@@ -41,3 +41,4 @@ Claude outputs/
 
 # Render environment file (has passwords): never upload
 render-env*.txt
+new-drinks/

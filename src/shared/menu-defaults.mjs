@@ -2,7 +2,7 @@
 // Used by seed.js (new databases) and update-menu.js (existing databases).
 
 export const slug = (name) => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/'/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-export const PHOTO_V = 8; // bump when the photos in public/drinks change, so browsers fetch the new ones
+export const PHOTO_V = 9; // bump when the photos in public/drinks change, so browsers fetch the new ones
 // Bundled photos are cut-outs (transparent background, .webp); the old .jpg paths saved in the database map to them
 export const imageFor = (name) => `/drinks/${slug(name)}.webp?v=${PHOTO_V}`;
 /** A bundled photo path saved in the database -> the current cut-out photo. */
