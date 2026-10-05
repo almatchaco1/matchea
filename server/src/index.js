@@ -27,7 +27,6 @@ import { requireAuth } from './middleware/auth.js';
 import { applyMenuDefaults } from './update-menu.js';
 import { installDefaultQr } from './lib/defaultQr.js';
 import { startDecorPicker } from './lib/decorStart.js';
-import { renameToMatchea } from './lib/brandStart.js';
 import { freshStartIfRequested } from './lib/freshStart.js';
 import User from './models/User.js';
 
@@ -93,7 +92,6 @@ mongoose
     try { const who = await User.ensureSuperAdmin(); if (who) console.log(`${who} is the super admin.`); } catch (e) { console.error('Could not set the super admin:', e.message); }
     try { await installDefaultQr(); } catch (e) { console.error('Could not add the GCash QR:', e.message); }
     try { await startDecorPicker(); } catch (e) { console.error('Could not set up decorations:', e.message); }
-    try { await renameToMatchea(); } catch (e) { console.error('Could not rename the shop:', e.message); }
     scheduleDailyBackups();
     app.listen(PORT, () => console.log(`Matcha POS API on http://localhost:${PORT}`));
     checkMail(); // logs whether the Gmail login for sign-up codes works

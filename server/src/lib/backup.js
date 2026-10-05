@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url';
 import mongoose from 'mongoose';
 import { shopTime } from './util.js';
 
+const BACKUP_APP = 'matchea-pos';
+const BACKUP_APPS = [BACKUP_APP, 'al-matcha-pos']; // second one: backup files made before the shop was renamed, so they can still be restored
+
 const { EJSON } = mongoose.mongo.BSON;
 export const BACKUP_DIR = path.resolve(process.env.BACKUP_DIR || path.join(path.dirname(fileURLToPath(import.meta.url)), '../../backups'));
 export const KEEP = Math.max(3, +process.env.BACKUP_KEEP || 30);
@@ -31,7 +34,7 @@ export function createBackup(reason = 'manual') {
     const data = {};
     const counts = {};
     for (const n of cols) { data[n] = await db.collection(n).find({}).toArray(); counts[n] = data[n].length; }
-    const doc = { app: 'al-matcha-pos', version: 1, createdAt: new Date(), reason, counts, collections: data };
+    const doc = { app: BACKUP_APP, version: 1, createdAt: new Date(), reason, counts, collections: data };
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
     const file = `backup-${stamp()}${reason === 'manual' ? '' : `-${reason === 'before-restore' ? 'prerestore' : reason}`}.json.gz`;
     const tmp = path.join(BACKUP_DIR, `.${file}.tmp`);
@@ -91,7 +94,7 @@ function prune() {
 
 export function readBackup(file) {
   const doc = EJSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8'), { relaxed: false });
-  if (doc?.app !== 'al-matcha-pos' || !doc.collections) throw new Error('This is not a Matchéa backup file.');
+  if (!BACKUP_APPS.includes(doc?.app) || !doc.collections) throw new Error('This is not a Matchéa backup file.');
   return doc;
 }
 

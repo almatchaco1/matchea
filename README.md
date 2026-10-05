@@ -1,4 +1,4 @@
-# AL Matcha Co POS: how to run it
+# Matchéa POS: how to run it
 
 Your old movie app is saved in `_backup_movie_app/`.
 
@@ -13,7 +13,7 @@ Your old movie app is saved in `_backup_movie_app/`.
    ```
    npm run seed
    ```
-   This loads the AL Matcha Co menu and creates the admin **Owner** with PIN **1234**.
+   This loads the Matchéa menu and creates the admin **Owner** with PIN **1234**. The first time you sign in, you are asked to choose a new 6-digit PIN.
 
 ## Every time
 
@@ -52,10 +52,10 @@ Your computer's `localhost` only works on your own Mac. To let everyone in, depl
    - Start command: `npm run serve`
 4. **Environment variables** (Render → Environment): `MONGODB_URI`, `JWT_SECRET`, `SHOP_TZ=Asia/Manila` — copy the values from `server/.env`.
 5. In MongoDB Atlas → Network Access, keep `0.0.0.0/0` (Render's IP changes).
-6. Deploy. Render gives you an address like `https://al-matcha-co.onrender.com`.
-   - Customers: `https://al-matcha-co.onrender.com/`
-   - Staff: `https://al-matcha-co.onrender.com/pos`
-7. Optional: buy a domain (e.g. `almatchaco.com`) and add it under Render → Settings → Custom Domains.
+6. Deploy. Render gives you an address like `https://matchea.onrender.com`.
+   - Customers: `https://matchea.onrender.com/`
+   - Staff: `https://matchea.onrender.com/pos`
+7. Optional: buy a domain (e.g. `matchea.com`) and add it under Render → Settings → Custom Domains.
 
 Note: Render's free plan sleeps after 15 minutes without visitors, so the first page load can take ~50 seconds.
 For a shop that's open all day, use the paid "Starter" plan so it stays awake.
@@ -84,7 +84,7 @@ Customers must sign in before they can see the menu and order. Mobile number + p
 **Google**
 1. Go to console.cloud.google.com → create a project → APIs & Services → OAuth consent screen (External, add your shop name and email).
 2. Credentials → Create credentials → OAuth client ID → Web application.
-3. Authorized JavaScript origins: `http://localhost:3000` and later your live address (e.g. `https://almatcha.onrender.com`).
+3. Authorized JavaScript origins: `http://localhost:3000` and later your live address (e.g. `https://matchea.onrender.com`).
 4. Copy the Client ID into `GOOGLE_CLIENT_ID=` in `server/.env`.
 
 **Facebook**
@@ -109,7 +109,7 @@ After Google/Facebook sign-in, customers are asked once for their mobile number.
 **Order-ready text:** when staff tap Ready on an online order, the customer gets one SMS.
 1. Sign up at semaphore.co and buy credits (₱0.56 per text plus VAT, as listed on semaphore.co in Sept 2026).
 2. Account → API: copy your API key into `SEMAPHORE_API_KEY=` in `server/.env`.
-3. Optional: register a sender name (like ALMATCHA) and put it in `SEMAPHORE_SENDER=`.
+3. Optional: register a sender name (like MATCHEA) and put it in `SEMAPHORE_SENDER=`.
 4. Restart `npm run server`. When you go live, set `PUBLIC_URL=` so the text includes the tracking link.
 Without a key, no texts are sent; customers still get a chime, a banner and a notification on the ordering site.
 

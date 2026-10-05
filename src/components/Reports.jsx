@@ -92,7 +92,7 @@ export default function Reports({ data, toast, isAdmin, refresh, goInventory }) 
         { name: 'By hour', title, columns: [{ header: 'Hour', width: 12 }, { header: 'Orders', type: 'int', width: 9 }, { header: 'Net sales', type: 'peso', width: 14 }],
           rows: s.hours.map((n, h) => [`${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`, b.hours[h], n]).filter((r) => r[1] || r[2]) },
       ];
-      saveXlsx(`al-matcha-report-${from}${from !== to ? '-to-' + to : ''}.xlsx`, sheets);
+      saveXlsx(`matchea-report-${from}${from !== to ? '-to-' + to : ''}.xlsx`, sheets);
     } catch (e) { toast(e.message); }
     finally { setXl(false); }
   };

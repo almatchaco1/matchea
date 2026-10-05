@@ -3,7 +3,7 @@ const UPDATED = 'September 25, 2026';
 
 export function Privacy({ shop }) {
   const name = shop?.name || 'Matchéa';
-  const email = shop?.email || 'almatchaco1@gmail.com';
+  const email = shop?.email || '';
   return (
     <article className="panel legal">
       <p className="legal-kicker">Last updated {UPDATED}</p>
@@ -37,21 +37,21 @@ export function Privacy({ shop }) {
       <ul>
         <li>See and change your name and mobile number on your Account page.</li>
         <li>Turn “order ready” texts on or off on your Account page.</li>
-        <li>Ask for a copy of your data, a correction, or to delete your account by emailing <a href={`mailto:${email}`}>{email}</a>.</li>
+        <li>Ask for a copy of your data, a correction, or to delete your account by {email ? <>emailing <a href={`mailto:${email}`}>{email}</a></> : 'contacting us (our details are on the home page)'}.</li>
       </ul>
 
       <h2>Keeping it safe</h2>
       <p>The site uses a secure (HTTPS) connection, passwords are stored scrambled, and repeated wrong sign-in attempts are blocked. No website is perfectly secure, but we work to protect your information.</p>
 
       <h2>Contact</h2>
-      <p>Questions about your privacy? Email <a href={`mailto:${email}`}>{email}</a>{shop?.phone ? <> or call {shop.phone}</> : null}.</p>
+      <p>Questions about your privacy? {email ? <>Email <a href={`mailto:${email}`}>{email}</a></> : 'Contact us'}{shop?.phone ? <> or call {shop.phone}</> : null}.</p>
     </article>
   );
 }
 
 export function Terms({ shop }) {
   const name = shop?.name || 'Matchéa';
-  const email = shop?.email || 'almatchaco1@gmail.com';
+  const email = shop?.email || '';
   return (
     <article className="panel legal">
       <p className="legal-kicker">Last updated {UPDATED}</p>
@@ -94,7 +94,7 @@ export function Terms({ shop }) {
       <p>Please don’t misuse the site, for example with fake orders or by trying to break it. We may close accounts that do.</p>
 
       <h2>Contact</h2>
-      <p>{name} · <a href={`mailto:${email}`}>{email}</a>{shop?.phone ? <> · {shop.phone}</> : null}</p>
+      <p>{name}{email ? <> · <a href={`mailto:${email}`}>{email}</a></> : null}{shop?.phone ? <> · {shop.phone}</> : null}</p>
     </article>
   );
 }
