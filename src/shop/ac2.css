@@ -1,0 +1,72 @@
+/* ===== My account v2 ===== */
+.shop .ac2{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+/* hero */
+.shop .ac2-hero{position:relative;display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:center;padding:24px;border-radius:28px;overflow:hidden;isolation:isolate;color:#FFF6E2;
+  background:radial-gradient(90% 120% at 100% 0%,rgba(255,255,255,.12),transparent 55%),linear-gradient(140deg,#2B6020,#163310 75%);box-shadow:0 24px 44px -30px rgba(22,51,15,.8)}
+.shop .ac2-hero::after{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(200,230,168,.18),transparent 70%);z-index:-1}
+.shop .ac2-av{width:84px;height:84px;margin:0;border-radius:28px;font-size:34px;background:#FFF6E2;color:#1F4A17;box-shadow:0 12px 24px -12px rgba(0,0,0,.55)}
+.shop .ac2-av img{border-radius:28px}
+.shop .ac2-who{min-width:0}
+.shop .ac2-hi{margin:0;font-family:"Caveat",cursive;font-size:22px;line-height:1;color:#C8E6A8}
+.shop .ac2-who h1{margin:2px 0 4px;font-size:clamp(26px,5vw,34px);line-height:1.05;color:#FFF6E2;overflow-wrap:anywhere}
+.shop .ac2-meta{margin:0;font-size:13px;color:rgba(255,246,226,.72)}
+.shop .ac2-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.shop .ac2-stats div{padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.shop .ac2-stats b{display:block;font-family:var(--serif,inherit);font-size:24px;line-height:1.1;color:#FFF6E2}
+.shop .ac2-stats small{font-size:12px;color:rgba(255,246,226,.72)}
+/* quick links */
+.shop .ac2-quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shop .ac2-quick button{display:flex;align-items:center;gap:12px;padding:14px 16px;border:0;border-radius:20px;background:var(--cream);box-shadow:var(--shadow);text-align:left;color:var(--ink);cursor:pointer;transition:transform .25s var(--spring),box-shadow .2s}
+.shop .ac2-quick button:hover{transform:translateY(-2px)}
+.shop .ac2-quick button:active{transform:scale(.98)}
+.shop .ac2-quick svg,.shop .ac2-ico svg,.shop .ac2-out svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.shop .ac2-quick svg{width:40px;height:40px;padding:9px;border-radius:13px;background:var(--matcha-2);color:var(--green)}
+.shop .ac2-quick span{display:flex;flex-direction:column;min-width:0}
+.shop .ac2-quick b{font-size:15px}
+.shop .ac2-quick small{font-size:12.5px;color:var(--ink-2)}
+.shop .ac2 .stampcard{margin:0}
+.shop .ac2-ok{margin:0}
+/* cards */
+.shop .ac2-card{background:var(--cream);border-radius:24px;padding:20px 22px;box-shadow:var(--shadow)}
+.shop .ac2-h{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;width:100%;border:0;background:none;padding:0;text-align:left;color:inherit}
+.shop .ac2-ico{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:var(--matcha-2);color:var(--green)}
+.shop .ac2-h h2{margin:0;font-size:20px}
+.shop .ac2-h p{margin:2px 0 0;font-size:13.5px;color:var(--ink-2)}
+.shop .ac2-card .au-form{margin:0}
+/* password: folds open */
+.shop .ac2-pw:not(.open) .ac2-h{margin-bottom:0}
+.shop .ac2-toggle{cursor:pointer}
+.shop .ac2-toggle>div{flex:1;min-width:0}
+.shop .ac2-chev{align-self:center;font-style:normal;color:var(--ink-2);transition:transform .25s}
+.shop .ac2-pw.open .ac2-chev{transform:rotate(180deg)}
+/* sms switch */
+.shop .ac2-switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:18px;background:var(--pink-2);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;margin-bottom:8px}
+.shop .ac2-switch span{display:flex;flex-direction:column}
+.shop .ac2-switch small{font-size:12.5px;color:var(--ink-2)}
+.shop .ac2-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.shop .ac2-knob{position:relative;flex:none;width:48px;height:28px;border-radius:999px;background:var(--pink-3);transition:background .25s}
+.shop .ac2-knob::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25);transition:transform .3s var(--spring)}
+.shop .ac2-switch.on .ac2-knob{background:var(--green)}
+.shop .ac2-switch.on .ac2-knob::after{transform:translateX(20px)}
+.shop .ac2-switch input:focus-visible~.ac2-knob{outline:2.5px solid var(--green);outline-offset:2px}
+/* sign out */
+.shop .ac2-out{justify-content:center;padding:6px 0 10px}
+.shop .ac2-out .shop-link{display:inline-flex;align-items:center;gap:8px;color:var(--bad);text-decoration:none;font-weight:700}
+.shop .ac2-out svg{width:18px;height:18px}
+/* dark */
+@media (prefers-color-scheme:dark){
+  .shop .ac2-hero{background:radial-gradient(90% 120% at 100% 0%,rgba(255,255,255,.08),transparent 55%),linear-gradient(140deg,#24451B,#111B0D 75%)}
+  .shop .ac2-switch{background:rgba(255,255,255,.04)}
+}
+@media (max-width:560px){
+  .shop .ac2-hero{padding:20px 18px;gap:4px 14px}
+  .shop .ac2-av{width:68px;height:68px;border-radius:22px;font-size:28px}
+  .shop .ac2-stats b{font-size:20px}
+  .shop .ac2-quick button{padding:12px;gap:10px;border-radius:18px}
+  .shop .ac2-quick small{display:none}
+  .shop .ac2-quick svg{width:36px;height:36px;padding:8px}
+  .shop .ac2-stats small{font-size:11px;line-height:1.25;display:block}
+  .shop .ac2-stats div{padding:9px 10px}
+  .shop .ac2-card{padding:18px 16px}
+}
+.shop .ac2 .stampcard{max-width:none;width:100%;margin:0}
