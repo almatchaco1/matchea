@@ -63,20 +63,21 @@ export function receiptBytes(sale, s = {}, { width = 32, drawer = false, copy = 
   if (copy) text(copy);
   cmd(CMD.left); rule();
   cmd(CMD.center); cmd(CMD.big); text(`#${String(sale.no).padStart(3, '0')}`); cmd(CMD.normal); cmd(CMD.left);
-  text(`${d.toLocaleDateString('en-PH')} ${d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' })}`);
-  if (sale.customer) text(`For: ${sale.customer}`);
-  if (sale.cashierName) text(`Cashier: ${sale.cashierName}`);
-  if (sale.source === 'online') text('Online order');
+  lr('Date', `${d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}, ${d.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}`, w).forEach(text);
+  if (sale.customer) lr('Name', sale.customer, w).forEach(text);
+  text(sale.source === 'online' ? 'Online order' : 'Walk-in');
   if (sale.status === 'void') { cmd(CMD.center); cmd(CMD.boldOn); text('*** VOID ***'); cmd(CMD.boldOff); cmd(CMD.left); }
   if (sale.status === 'staff') { cmd(CMD.center); cmd(CMD.boldOn); text(`*** STAFF DRINK - ${sale.staffForName || ''} ***`); cmd(CMD.boldOff); cmd(CMD.left); }
   if (sale.training) { cmd(CMD.center); cmd(CMD.boldOn); text('*** TRAINING - NOT A SALE ***'); cmd(CMD.boldOff); cmd(CMD.left); }
   rule();
   for (const l of sale.lines || []) {
     lr(`${l.qty} x ${l.name}`, money(l.total), w).forEach(text);
-    if (l.mods) wrap(l.mods, w - 2).forEach((m) => text('  ' + m));
+    const sub = [l.mods, l.qty > 1 && `${money(l.total / l.qty)} each`].filter(Boolean).join(' - ');
+    if (sub) wrap(sub, w - 2).forEach((m) => text('  ' + m));
   }
   rule();
-  lr('Subtotal', money(sale.subtotal), w).forEach(text);
+  const drinks = (sale.lines || []).reduce((a, l) => a + (+l.qty || 0), 0);
+  lr(`Subtotal (${drinks} ${drinks === 1 ? 'drink' : 'drinks'})`, money(sale.subtotal), w).forEach(text);
   if (sale.discount?.amount > 0) {
     const label = sale.discount.type === 'reward' ? 'Free drink (stamp card)' : sale.discount.type === 'scpwd' ? 'Senior/PWD 20%' : `Discount ${sale.discount.pct}%`;
     lr(label, '-' + money(sale.discount.amount), w).forEach(text);
@@ -86,13 +87,13 @@ export function receiptBytes(sale, s = {}, { width = 32, drawer = false, copy = 
   cmd(CMD.boldOn); cmd(CMD.tall); lr('TOTAL', money(sale.total), w).forEach(text); cmd(CMD.normal); cmd(CMD.boldOff);
   rule();
   if (sale.pay) {
-    lr(PAY_LABELS[sale.pay.method] || sale.pay.method, money(sale.pay.tendered), w).forEach(text);
+    lr(sale.pay.method === 'cash' ? 'Cash received' : `Paid by ${PAY_LABELS[sale.pay.method] || sale.pay.method}`, money(sale.pay.tendered), w).forEach(text);
     if (sale.pay.method === 'cash') lr('Change', money(sale.pay.change), w).forEach(text);
-    if (sale.pay.ref) lr('Ref', sale.pay.ref, w).forEach(text);
+    if (sale.pay.ref) lr('Ref no.', sale.pay.ref, w).forEach(text);
   }
   if (sale.stampsAwarded != null) {
     rule(); cmd(CMD.center);
-    text(`Stamp card: +${sale.stampsAwarded}${sale.stampsBalance != null ? `  (${sale.stampsBalance % STAMPS_PER_REWARD}/${STAMPS_PER_REWARD})` : ''}`);
+    text(`Stamp card: +${sale.stampsAwarded}${sale.stampsBalance != null ? ` - ${sale.stampsBalance % STAMPS_PER_REWARD} of ${STAMPS_PER_REWARD}` : ''}`);
     if (sale.stampsBalance >= STAMPS_PER_REWARD) text('Your next drink is FREE!');
     cmd(CMD.left);
   }
