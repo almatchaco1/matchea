@@ -113,6 +113,11 @@ export default function Landing({ menu, err, go, me }) {
           <p>Order now, skip the line, and collect a stamp with every drink.</p>
         </div>
         <a href={start} className="sh-btn light" onClick={nav(go, start)}>{me ? 'Start your order' : 'Create a free account'}</a>
+        {strip.length > 2 && (
+          <div className="ld-cta-cups" aria-hidden="true">
+            {strip.filter((x) => x.image).slice(0, 3).map((x, i) => <img key={x._id} src={x.image} alt="" loading="lazy" style={{ '--k': i }} />)}
+          </div>
+        )}
       </section>
     </div>
   );

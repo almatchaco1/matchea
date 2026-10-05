@@ -1,0 +1,71 @@
+/* ===== Matchéa website v6: the premium layer (loaded last) ===== */
+.shop{--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .25 0 0 0 0 .15 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* paper grain over the whole page, very light */
+.shop::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:var(--grain);opacity:.05;mix-blend-mode:multiply}
+@media (prefers-color-scheme:dark){.shop::after{mix-blend-mode:soft-light;opacity:.1}}
+.shop ::selection{background:rgba(139,165,98,.32)}
+
+/* headings: tighter, more editorial */
+.shop h1{letter-spacing:-.03em}
+.shop h2{letter-spacing:-.02em}
+
+/* buttons: a soft light sweep on hover, deeper press */
+.shop .sh-btn{position:relative;overflow:hidden;isolation:isolate}
+.shop .sh-btn:not(.ghost):not(.light)::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%) -160% 0/250% 100% no-repeat;transition:background-position .7s ease}
+.shop .sh-btn:not(.ghost):not(.light):hover::after{background-position:160% 0}
+.shop .sh-btn:active:not(:disabled){transform:scale(.97)}
+
+/* menu cards: tinted photo stage, price pill, soft ring on hover */
+.shop .mn-card{border-radius:26px;box-shadow:0 0 0 1px rgba(50,70,35,.07),0 18px 36px -26px rgba(30,36,24,.5)}
+.shop .mn-card:hover{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--tone,#8BA562) 55%,transparent),0 26px 44px -26px rgba(30,36,24,.55)}
+.shop .mn-card .mn-body{padding-top:14px}
+.shop .mn-price{font-weight:800;letter-spacing:-.01em}
+.shop .mn-add{box-shadow:0 8px 16px -8px rgba(30,54,20,.8)}
+.shop .mn-add:hover:not(:disabled){transform:rotate(90deg) scale(1.08)}
+.shop .mn-cats button,.shop .mn-cats .chip{transition:transform .25s var(--spring),background .2s,color .2s}
+
+/* panels and forms */
+.shop .panel{border-radius:28px}
+.shop .au-field input,.shop .au-field textarea,.shop .au-field select{transition:border-color .2s,box-shadow .2s,background .2s}
+
+/* footer: the brand block no longer squeezes the tagline into 4 lines */
+.shop .sf-brand{flex-direction:column;align-items:flex-start;gap:10px}
+.shop .sf-brand .sh-script{white-space:nowrap}
+.shop .sh-foot h4{letter-spacing:.14em}
+.shop .sf-social a{transition:transform .25s var(--spring),background .2s}
+.shop .sf-social a:hover{transform:translateY(-2px)}
+
+/* mobile tab bar: glassier */
+@supports (backdrop-filter:blur(1px)){
+  .shop .tabbar{backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2)}
+}
+
+/* page enter */
+.shop .shop-main>.page{animation:v6In .5s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes v6In{from{opacity:0;transform:translateY(10px)}}
+@media (prefers-reduced-motion:reduce){.shop .shop-main>.page{animation:none}.shop .mn-add:hover:not(:disabled){transform:none}}
+
+/* ---------- home page polish ---------- */
+/* how ordering works: a dotted path joins the four steps */
+@media (min-width:861px){
+  .shop .ld-steps ol{position:relative}
+  .shop .ld-steps ol::before{content:"";position:absolute;left:8%;right:8%;top:46px;border-top:2px dashed color-mix(in srgb,var(--green) 25%,transparent);z-index:0}
+  .shop .ld-steps li{position:relative;z-index:1}
+}
+.shop .ld-steps li{border-radius:24px;transition:transform .35s var(--spring),box-shadow .3s}
+.shop .ld-steps li:hover{transform:translateY(-4px)}
+.shop .ld-steps .ld-ico{border-radius:16px;background:linear-gradient(150deg,var(--green-2),var(--green));color:#FFF8E8;box-shadow:0 10px 18px -10px rgba(30,54,20,.8)}
+/* perks band: leaf pattern + glowing icons */
+.shop .ld-info{position:relative;isolation:isolate}
+.shop .ld-info::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.07;
+  background-image:radial-gradient(circle at 20px 20px,#fff 2px,transparent 2.5px);background-size:28px 28px}
+.shop .ld-info .ld-ico{box-shadow:0 0 0 6px rgba(255,255,255,.05),0 0 24px rgba(200,230,168,.25)}
+/* call to action: three cups float on the right */
+.shop .ld-cta{position:relative;overflow:hidden;isolation:isolate}
+.shop .ld-cta-cups{position:absolute;right:max(200px,23%);bottom:-6px;display:flex;align-items:flex-end;pointer-events:none;z-index:-1}
+.shop .ld-cta-cups img{width:96px;height:auto;margin-left:-26px;filter:drop-shadow(0 16px 18px rgba(0,0,0,.45));animation:v6Float 5s ease-in-out infinite;animation-delay:calc(var(--k) * -1.6s)}
+.shop .ld-cta-cups img:nth-child(2){width:124px;z-index:1;margin-bottom:6px}
+@keyframes v6Float{50%{transform:translateY(-8px) rotate(-2deg)}}
+@media (max-width:860px){.shop .ld-cta-cups{display:none}}
+@media (prefers-reduced-motion:reduce){.shop .ld-cta-cups img{animation:none}}

@@ -18,6 +18,7 @@ import { DecorString, DecorHang, DecorBg } from '../lib/decor';
 import './shop.css';
 import './matchea.css';
 import './v3.css';
+import './shop-v6.css';
 
 const PROTECTED = /^\/(menu|cart|account|orders|welcome)(\/|$)/;
 const CART = 'alm.cart';
