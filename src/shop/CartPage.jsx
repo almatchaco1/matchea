@@ -11,6 +11,14 @@ import { useAmountQr, saveQr, openGcash, isPhone } from '../lib/payqr';
 import { checkAddress, findArea, quoteFor } from '../shared/delivery.mjs';
 import AddressPicker from './AddressPicker';
 import { readReceipt, warmReader } from './receiptRead';
+import './pay2.css';
+
+// Payment option icons (same look as the POS)
+const PAY_ICON = {
+  gcash: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0A6DFF" /><path d="M15.6 9.2A4.4 4.4 0 1 0 16.4 12h-4" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></svg>,
+  maya: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#00A86B" /><path d="M7.5 15.5v-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" /></svg>,
+  pickup: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5 5.6 4h12.8L20 9.5M5 9.5V20h14V9.5" /><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0M10 20v-5h4v5" /></svg>,
+};
 
 export default function CartPage({ menu, me, payFirst, cart, setCart, priced, total: subtotal, go, onEdit, onPlaced }) {
   const payOnline = !!menu?.shop?.payOnline;
@@ -198,15 +206,17 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         {bigOrder && !noShowRule && total > 0 && <div className="note-box">For big orders (over {peso(ONLINE.payFirstOver)} or more than {ONLINE.payFirstDrinks} drinks), please pay first with {Object.keys(qrs).map((k) => (k === 'gcash' ? 'GCash' : 'Maya')).join(' or ') || 'online payment'}. Thank you!</div>}
         {noShowRule && total > 0 && <div className="note-box">Because 2 recent orders weren’t picked up, please pay first for this order (GCash, Maya or online). Pay at pickup will be back after a while.</div>}
         {total > 0 && options.length > 1 && (
-          <fieldset className="pay">
-            <legend>Payment</legend>
+          <fieldset className="pay pay2">
+            <legend><span>Payment</span><em>Total <b className="num">{peso(total)}</b></em></legend>
             {options.map((k) => (
-              <label key={k} className={method === k ? 'on' : ''}>
+              <label key={k} className={`${method === k ? 'on' : ''} pk-${k.replace(':', '-')}`}>
                 <input type="radio" name="pay" checked={method === k} onChange={() => { setMethod(k); clearShot(); }} />
+                <i className="pay2-ico" aria-hidden="true">{PAY_ICON[k.startsWith('pm:') ? (k.endsWith('gcash') ? 'gcash' : 'maya') : k] || PAY_ICON.pickup}</i>
                 <span>{k === 'gcash' ? <><b>Pay now with GCash</b><small>Scan our QR, then upload your receipt</small></>
                   : k === 'maya' ? <><b>Pay now with Maya</b><small>Scan our QR, then upload your receipt</small></>
                   : k.startsWith('pm:') ? <><b>Pay in the {PM_NAME[k.slice(3)]} app</b><small>Log in and pay, confirmed right away · +{peso(withOnlineFee(total, k.slice(3)).fee)} online fee</small></>
                   : <><b>Pay at pickup</b><small>Cash, GCash or Maya at the counter</small></>}</span>
+                <i className="pay2-tick" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg></i>
               </label>
             ))}
           </fieldset>
