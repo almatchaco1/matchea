@@ -1,0 +1,14 @@
+/* ===== Phones and iPads: taps feel like an app, not a web page =====
+   No blue/grey tap flash, no text selection or copy pop-up when tapping or holding buttons,
+   no double-tap zoom delay. Text fields and normal reading text still work as usual. */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*,*::before,*::after{-webkit-tap-highlight-color:transparent}
+button,[role="button"],[role="radio"],[role="tab"],[role="switch"],summary,select,
+.btn,.chip,.opt,.prod,.lg2-pad,.lg2-who,.pinpad,.qty,.seg,.tabs,.sh-nav,.cats,.pay-pick,.op-seg,.pb-quick{
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+/* swipeable rows and cards: no text selection while dragging (their own swipe handling stays) */
+.swipe,.kcard,.ticket{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+img{-webkit-touch-callout:none;-webkit-user-drag:none}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+/* a tapped button doesn't keep a focus ring; keyboards still get one */
+button:focus:not(:focus-visible),a:focus:not(:focus-visible),[role="radio"]:focus:not(:focus-visible){outline:none}

@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import './fonts.css';
+import './touch.css';
 
 // Two sites in one app:
 //   /pos, /pos/...  → staff POS (sign-in with PIN)
