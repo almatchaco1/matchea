@@ -1,0 +1,156 @@
+/* ===== Order panel v4 (Register) + digital receipt. Loaded last. =====
+   Calm cream cards, green accents, no dashed boxes, no shouting labels. */
+
+/* ---------- Order lines ---------- */
+.cart .lines{padding:6px 0}
+.cart .line{grid-template-columns:auto 1fr auto;gap:12px;padding:12px 16px;border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);align-items:center}
+.cart .swipe:last-child .line{border-bottom:0}
+.cart .line .nm{font-weight:700;font-size:14.5px;line-height:1.25}
+.cart .line .mods{font-size:12.5px;margin-top:1px}
+.cart .line .amt{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:700;font-size:15px;color:var(--ink);align-self:start;padding-top:1px}
+.cart .line>.qty{flex-direction:row;align-self:start;border:0;border-radius:999px;background:var(--surface2);padding:3px;gap:0;overflow:visible}
+.cart .line>.qty button{width:26px;height:26px;border-radius:50%;background:transparent;color:var(--muted);font-size:16px;line-height:1;display:grid;place-items:center}
+.cart .line>.qty button:hover{background:var(--surface);color:var(--matcha)}
+.cart .line>.qty span{min-width:22px;font-size:14px;line-height:26px;color:var(--ink)}
+.op-acts{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.cart .line .x{display:inline-flex;align-items:center;gap:4px;padding:3px 10px 3px 8px;border-radius:999px;background:var(--surface2);color:var(--muted);font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:background .15s,color .15s}
+.cart .line .x svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cart .line .x:hover{background:color-mix(in srgb,var(--matcha) 12%,var(--surface2));color:var(--matcha)}
+.cart .line .x.x-rm:hover{background:var(--bad-bg);color:var(--bad)}
+
+/* empty order */
+.op-empty{display:flex;flex-direction:column;align-items:center;gap:4px;padding:30px 20px 26px}
+.op-empty::before{display:none !important}
+.op-empty svg{width:54px;height:54px;margin-bottom:8px;fill:none;stroke:color-mix(in srgb,var(--matcha) 70%,transparent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;animation:opFloat 3.2s ease-in-out infinite}
+.op-empty svg .op-fill{stroke-dasharray:3 4}
+.op-empty b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:17px;color:var(--ink)}
+.op-empty span{font-size:13.5px;color:var(--muted)}
+@keyframes opFloat{50%{transform:translateY(-4px) rotate(-2deg)}}
+
+/* ---------- Totals ---------- */
+.cart .sum{padding:12px 16px 14px;gap:4px;background:color-mix(in srgb,var(--surface2) 45%,transparent)}
+.cart .sum .r{font-family:inherit;font-size:13.5px;color:var(--muted)}
+.cart .sum .r .num{color:var(--ink)}
+.cart .sum .r.tot{margin-top:6px;padding-top:10px;border-top:1px solid var(--line);align-items:baseline;color:var(--ink);font-size:18px}
+.cart .sum .r.tot b{font-size:28px;line-height:1}
+
+/* ---------- Pay area: two quiet cards, Customer and Payment ---------- */
+.cart .pay{gap:12px;padding:14px 14px 16px;background:color-mix(in srgb,var(--surface2) 45%,transparent);border-top:1px solid var(--line)}
+.op-sec{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:18px;background:var(--surface);box-shadow:0 0 0 1px var(--line),0 8px 18px -16px rgba(22,51,15,.45)}
+.op-h{margin:0;display:flex;align-items:center;gap:8px;font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:15.5px;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.op-h::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--matcha);box-shadow:0 0 0 3px color-mix(in srgb,var(--matcha) 16%,transparent)}
+.op-sec .row{margin:0;gap:12px}
+.op-sec>.row>.field{flex:1 1 100%;min-width:0}
+.cart .pay .field{margin:0}
+.cart .pay .field>label{text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.cart .pay .fhint{font-size:12px}
+.cart .pay .field input,.cart .pay .field select{min-height:44px;border-radius:12px;background:var(--bg);border:1.5px solid var(--line);font-size:15px}
+.cart .pay .field input:focus,.cart .pay .field select:focus{background:var(--surface)}
+
+/* discount: segmented choice */
+.op-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:4px;border-radius:13px;background:var(--surface2)}
+.op-seg button{border:0;background:transparent;border-radius:10px;padding:9px 4px;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:background .2s,color .2s,box-shadow .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.op-seg button:hover:not(:disabled):not([aria-checked="true"]){color:var(--ink)}
+.op-seg button[aria-checked="true"]{background:var(--surface);color:var(--matcha-deep);box-shadow:0 0 0 1px var(--line),0 2px 6px -2px rgba(22,51,15,.25)}
+.op-seg button:disabled{opacity:.4;cursor:not-allowed}
+
+/* stamp card: a plain row inside the Customer card, Find sits in the field */
+.cart .stamp-box{border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 0 0;margin:0;background:transparent}
+.cart .stamp-in{position:relative;display:block}
+.cart .stamp-in input{width:100%;padding-right:84px}
+.cart .stamp-in .btn{position:absolute;right:5px;top:5px;bottom:5px;min-height:0;padding:0 14px;border-radius:9px}
+.cart .stamp-found{margin-top:2px;padding:10px 12px;border-radius:12px;background:var(--ok-bg)}
+
+/* staff drink: a switch row */
+.staff-toggle.op-switch{position:relative;justify-content:space-between;gap:14px;margin:0;padding:12px 14px;border:0;border-radius:16px;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.op-switch input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.op-switch b{font-size:14.5px}
+.op-knob{position:relative;flex:none;width:46px;height:28px;border-radius:999px;background:color-mix(in srgb,var(--muted) 28%,var(--surface2));transition:background .25s}
+.op-knob::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25);transition:transform .3s var(--spring)}
+.op-switch.on{background:var(--ok-bg);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--matcha) 45%,transparent)}
+.op-switch.on .op-knob{background:var(--matcha)}
+.op-switch.on .op-knob::after{transform:translateX(18px)}
+.op-switch input:focus-visible~.op-knob{outline:2.5px solid var(--matcha);outline-offset:2px}
+
+/* payment card: the cash box sits flat inside it */
+.op-sec .pay-box{padding:0;background:transparent;box-shadow:none;border-radius:0;animation:none}
+.op-sec .pay-box .field>label{margin-bottom:6px}
+.op-sec .pb-in{background:var(--bg);border-radius:14px}
+.op-sec .pb-in input{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:28px}
+.op-sec .pb-quick button{border-radius:999px;padding:8px 6px;font-size:13.5px}
+.op-sec .pb-change{border-radius:14px}
+.op-sec .pb-change.idle{background:transparent;box-shadow:inset 0 0 0 1px var(--line);padding:10px 14px}
+.op-sec .pb-change.idle>span:first-child{color:var(--muted);font-weight:600}
+.op-sec .pb-change b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:26px}
+
+/* charge */
+.cart .charge{min-height:56px;border-radius:16px;font-size:17px;font-weight:700;letter-spacing:.005em}
+.cart .charge:disabled{border:0;background:var(--surface2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.cart .pay>.btn.ghost.sm{align-self:center}
+
+/* ===================== Digital receipt ===================== */
+.rc-wrap{display:flex;justify-content:center}
+.rc{--rc-bg:#FFFDF6;--rc-ink:#1B2614;--rc-muted:#6A6F5E;--rc-line:#EADFC6;
+  position:relative;width:100%;max-width:360px;margin:0 auto 10px;background:var(--rc-bg);color:var(--rc-ink);border-radius:20px 20px 4px 4px;
+  box-shadow:0 0 0 1px var(--rc-line),0 24px 40px -28px rgba(22,51,15,.55);font-size:13.5px;line-height:1.45;overflow:visible}
+/* torn paper edge at the bottom */
+.rc::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:10px;background:radial-gradient(circle at 7px -1px,var(--rc-bg) 6.5px,transparent 7px) 0 0/14px 10px repeat-x;filter:drop-shadow(0 1px 0 var(--rc-line))}
+.rc-top{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 20px 14px;border-radius:20px 20px 0 0;background:linear-gradient(180deg,#1F4A17,#163310);color:#FFF6E2}
+.rc-logo{width:150px;height:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+.rc-top small{font-size:11.5px;opacity:.75;text-align:center}
+.rc-hero{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 20px 16px;text-align:center;border-bottom:1px dashed var(--rc-line)}
+.rc-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px 4px 9px;border-radius:999px;background:#E2EED6;color:#2F6A22;font-size:12.5px;font-weight:700;letter-spacing:.02em}
+.rc-badge svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.rc-void .rc-badge{background:#F4E1DC;color:#9B2C1F}
+.rc-practice .rc-badge,.rc-staff .rc-badge{background:#F3E8CF;color:#7A5A12}
+.rc-total{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:40px;line-height:1.05;font-weight:700;color:#1F4A17;letter-spacing:-.02em}
+.rc-void .rc-total{text-decoration:line-through;color:var(--rc-muted)}
+.rc-via{font-size:13px;color:var(--rc-muted)}
+.rc-change{margin-top:6px;display:inline-flex;align-items:baseline;gap:8px;padding:7px 14px;border-radius:12px;background:#1F4A17;color:#FFF6E2;font-size:13px;font-weight:600}
+.rc-change b{font-size:18px;font-weight:800}
+.rc-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;margin:0;padding:14px 20px;border-bottom:1px dashed var(--rc-line)}
+.rc-meta div{min-width:0}
+.rc-meta dt{font-size:11.5px;color:var(--rc-muted)}
+.rc-meta dd{margin:0;font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-sec{padding:12px 20px 4px}
+.rc-sec-h{display:flex;justify-content:space-between;font-size:11.5px;color:var(--rc-muted);margin-bottom:4px}
+.rc-items{list-style:none;margin:0;padding:0}
+.rc-items li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--rc-line) 60%,transparent)}
+.rc-items li:last-child{border-bottom:0}
+.rc-q{min-width:30px;padding:1px 0;border-radius:8px;background:#EEF4E6;color:#1F4A17;font-weight:800;font-size:12.5px;text-align:center}
+.rc-nm{font-weight:700;min-width:0}
+.rc-nm small{display:block;font-weight:500;font-size:12px;color:var(--rc-muted)}
+.rc-amt{font-weight:700}
+.rc-sums{display:flex;flex-direction:column;gap:3px;margin:4px 14px 0;padding:12px 6px;border-top:1px dashed var(--rc-line)}
+.rc-sums>div{display:flex;justify-content:space-between;gap:10px;color:var(--rc-muted)}
+.rc-sums>div .num{color:var(--rc-ink)}
+.rc-sums .rc-disc,.rc-sums .rc-disc .num{color:#2F6A22}
+.rc-sums small{font-size:11.5px;color:var(--rc-muted)}
+.rc-sums .rc-grand{margin-top:4px;color:var(--rc-ink);align-items:baseline}
+.rc-grand span{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:700;font-size:17px}
+.rc-grand b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-size:22px;color:#1F4A17}
+.rc-pay{display:flex;flex-direction:column;gap:3px;margin:0 14px;padding:10px 12px;border-radius:12px;background:#F6F0E1}
+.rc-pay>div{display:flex;justify-content:space-between;gap:10px}
+.rc-pay>div span:first-child{color:var(--rc-muted)}
+.rc-pay>div .num{font-weight:700}
+.rc-stamps{margin:12px 14px 0;padding:12px;border-radius:14px;box-shadow:inset 0 0 0 1px var(--rc-line)}
+.rc-stamps-h{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.rc-stamps-h span{color:var(--rc-muted)}
+.rc-dots{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.rc-dots i{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #C9D8B6;background:transparent}
+.rc-dots i.on{background:#3F7A2A;box-shadow:none;background-image:radial-gradient(circle,rgba(255,255,255,.55) 0 2.5px,transparent 3px)}
+.rc-stamps small{display:block;margin-top:6px;color:#2F6A22;font-weight:700}
+.rc-foot{padding:16px 20px 20px;text-align:center;font-family:var(--display);font-variation-settings:"SOFT" 100;font-style:italic;font-size:15px;color:#1F4A17}
+.rc-sec:last-child,.rc-sums:last-child,.rc-pay:last-child,.rc-stamps:last-child{margin-bottom:18px}
+
+/* dark mode: the receipt stays paper-cream, framed softly */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rc{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 40px -24px rgba(0,0,0,.9)}}
+:root[data-theme="dark"] .rc{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 40px -24px rgba(0,0,0,.9)}
+
+@media (max-width:420px){
+  .rc-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rc-total{font-size:34px}
+}
+@media (prefers-reduced-motion:reduce){.op-empty svg{animation:none}.op-knob::after{transition:none}}
+.op-sec .qr-hint-btn{border:0;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--matcha) 30%,var(--line));background:color-mix(in srgb,var(--matcha) 5%,var(--surface))}
+.op-sec .qr-hint-btn:hover{box-shadow:inset 0 0 0 1.5px var(--matcha)}

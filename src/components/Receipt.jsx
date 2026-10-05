@@ -52,6 +52,81 @@ export function Receipt({ sale, settings: s = {} }) {
   );
 }
 
+/** On-screen receipt: a clean digital receipt card. (Paper uses <Receipt> above, in the thermal-printer layout.) */
+export function ReceiptCard({ sale, settings: s = {} }) {
+  const d = new Date(sale.createdAt || Date.now());
+  const state = sale.status === 'void' ? 'void' : sale.training ? 'practice' : sale.status === 'staff' ? 'staff' : 'paid';
+  const badge = { void: 'Void', practice: 'Practice · not a sale', staff: `Staff drink${sale.staffForName ? ` · ${sale.staffForName}` : ''}`, paid: 'Paid' }[state];
+  const method = PAY_METHODS[sale.pay?.method] || sale.pay?.method || '';
+  const isCash = sale.pay?.method === 'cash';
+  const discLabel = sale.discount?.type === 'reward' ? 'Free drink (stamp card)' : sale.discount?.type === 'scpwd' ? 'Senior / PWD 20%' : `Discount ${sale.discount?.pct}%`;
+  const drinks = (sale.lines || []).reduce((a, l) => a + (+l.qty || 0), 0);
+  const prog = sale.stampsBalance != null ? sale.stampsBalance % STAMPS_PER_REWARD : null;
+  const free = sale.stampsBalance >= STAMPS_PER_REWARD;
+  return (
+    <article className={`rc rc-${state}`} aria-label={`Receipt for order #${pad(sale.no)}`}>
+      <header className="rc-top">
+        <img className="rc-logo" src="/brand/matchea-word-sm.webp" alt={s.name || 'Matchéa'} width="420" height="128" />
+        {(s.address || s.tin) && <small>{[s.address, s.tin && `TIN ${s.tin}`].filter(Boolean).join(' · ')}</small>}
+      </header>
+
+      <div className="rc-hero">
+        <span className="rc-badge">{state === 'paid' && <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" /></svg>}{badge}</span>
+        <b className="rc-total num">{peso(sale.total)}</b>
+        {state !== 'staff' && method && <span className="rc-via">by {method}</span>}
+        {state !== 'staff' && isCash && sale.pay.change > 0 && <span className="rc-change">Change <b className="num">{peso(sale.pay.change)}</b></span>}
+      </div>
+
+      <dl className="rc-meta">
+        <div><dt>Order</dt><dd className="num">#{pad(sale.no)}</dd></div>
+        <div><dt>Date</dt><dd>{d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</dd></div>
+        <div><dt>Time</dt><dd>{d.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</dd></div>
+        {sale.customer && <div><dt>For</dt><dd>{sale.customer}</dd></div>}
+        {sale.cashierName && <div><dt>Cashier</dt><dd>{sale.cashierName}</dd></div>}
+      </dl>
+
+      <div className="rc-sec">
+        <div className="rc-sec-h"><span>Items</span><span>{drinks} {drinks === 1 ? 'drink' : 'drinks'}</span></div>
+        <ul className="rc-items">
+          {(sale.lines || []).map((l, i) => (
+            <li key={i}>
+              <span className="rc-q num">{l.qty}×</span>
+              <span className="rc-nm">{l.name}{l.mods && <small>{l.mods}</small>}</span>
+              <span className="rc-amt num">{peso(l.total)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="rc-sums">
+        <div><span>Subtotal</span><span className="num">{peso(sale.subtotal)}</span></div>
+        {sale.discount?.amount > 0 && <div className="rc-disc"><span>{discLabel}</span><span className="num">−{peso(sale.discount.amount)}</span></div>}
+        {sale.discount?.type === 'scpwd' && sale.discount.idNo && <small>SC/PWD ID {sale.discount.idNo} · {sale.discount.idName}</small>}
+        {sale.discount?.approvedBy && <small>Discount approved by {sale.discount.approvedBy}</small>}
+        <div className="rc-grand"><span>Total</span><b className="num">{peso(sale.total)}</b></div>
+      </div>
+
+      {state !== 'staff' && sale.pay && (
+        <div className="rc-pay">
+          <div><span>{method}</span><span className="num">{peso(sale.pay.tendered)}</span></div>
+          {isCash && <div><span>Change</span><span className="num">{peso(sale.pay.change)}</span></div>}
+          {sale.pay.ref && <div><span>Reference no.</span><span className="num">{sale.pay.ref}</span></div>}
+        </div>
+      )}
+
+      {sale.stampsAwarded != null && (
+        <div className={`rc-stamps ${free ? 'free' : ''}`}>
+          <div className="rc-stamps-h"><b>Stamp card</b><span>+{sale.stampsAwarded} {sale.stampsAwarded === 1 ? 'stamp' : 'stamps'}{prog != null && <> · {prog}/{STAMPS_PER_REWARD}</>}</span></div>
+          {prog != null && <div className="rc-dots" aria-hidden="true">{Array.from({ length: STAMPS_PER_REWARD }, (_, i) => <i key={i} className={i < prog ? 'on' : ''} />)}</div>}
+          {free && <small>Your next drink is free!</small>}
+        </div>
+      )}
+
+      {s.footer && <footer className="rc-foot">{s.footer}</footer>}
+    </article>
+  );
+}
+
 // Receipt-printer layout (58/80 mm thermal rolls; also fine on A4 or "Save as PDF")
 const PRINT_CSS = `
   @page { size: 80mm auto; margin: 3mm; }
@@ -150,8 +225,8 @@ export default function ReceiptModal({ sale, settings, onClose, justPaid, autoPr
   };
   return (
     <Modal
-      title={sale.status === 'staff' ? `Staff drink · ${sale.staffForName || ''}` : sale.training ? `Practice order #${pad(sale.no)}` : justPaid ? `Paid · ${peso(sale.total)}` : `Order #${pad(sale.no)}`}
-      aside={justPaid && sale.pay.method === 'cash' ? <span className="pill ok">Change {peso(sale.pay.change)}</span> : sale.status === 'void' ? <span className="pill mute">Void</span> : null}
+      title={sale.status === 'staff' ? 'Staff drink saved' : sale.training ? `Practice order #${pad(sale.no)}` : justPaid ? 'Payment complete' : `Receipt · Order #${pad(sale.no)}`}
+      aside={sale.status === 'void' ? <span className="pill mute">Void</span> : null}
       onClose={onClose}
       footer={<>
         {msg && <span className={`print-msg ${/^Sent|^Printed|^Labels/.test(msg) ? 'ok' : 'bad'}`} role="status">{msg}{!/^Sent|^Printed|^Labels/.test(msg) && <> <button className="linkbtn" onClick={browserPrint}>Use print window</button></>}</span>}
@@ -165,7 +240,8 @@ export default function ReceiptModal({ sale, settings, onClose, justPaid, autoPr
           <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="23" /><path d="M15 27.5l7.5 7.5L37.5 19" /></svg>
         </div>
       )}
-      <div ref={ref} className={justPaid ? 'rc-print' : undefined}><Receipt sale={sale} settings={settings} /></div>
+      <div className={`rc-wrap ${justPaid ? 'rc-print' : ''}`}><ReceiptCard sale={sale} settings={settings} /></div>
+      <div ref={ref} className="rc-paper" hidden><Receipt sale={sale} settings={settings} /></div>
     </Modal>
   );
 }

@@ -239,7 +239,12 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
           <button className="btn sm ghost sheet-close" onClick={() => setSheet(false)} aria-label="Back to the menu">Back to menu ▾</button>
         </div>
         <div className="lines">
-          {!cart.length ? <div className="empty">Tap a drink to start an order.</div> : priced.map((l, i) => (
+          {!cart.length ? (
+            <div className="empty op-empty">
+              <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13 15h22l-2.6 25.2A3 3 0 0 1 29.4 43H18.6a3 3 0 0 1-3-2.8L13 15Z" /><path d="M11 15h26M17 15l1.2-5h11.6l1.2 5M24 4v6" /><path d="M15.2 25h17.6" className="op-fill" /></svg>
+              <b>No drinks yet</b><span>Tap a drink to start an order.</span>
+            </div>
+          ) : priced.map((l, i) => (
             <SwipeRow className="line" key={l.key} onRemove={() => setCart((c) => c.filter((x) => x.key !== l.key))}>
               <div className="qty">
                 <button onClick={() => setQty(i, -1)} aria-label="Fewer">−</button><span className="num">{l.qty}</span><button onClick={() => setQty(i, 1)} aria-label="More">+</button>
@@ -247,8 +252,10 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               <div>
                 <div className="nm">{l.name || 'Removed item'}</div>
                 <div className="mods" style={l.missing ? { color: 'var(--bad)' } : undefined}>{l.mods}</div>
-                {!l.missing && <><button className="x" onClick={() => setEditing({ product: prodById[l.productId], line: cart[i], index: i })}>Edit</button> &nbsp; </>}
-                <button className="x" onClick={() => setCart(cart.filter((_, k) => k !== i))}>Remove</button>
+                <div className="op-acts">
+                  {!l.missing && <button className="x" onClick={() => setEditing({ product: prodById[l.productId], line: cart[i], index: i })}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.6-2.7L10.8 3a1.4 1.4 0 0 1 2 0l.2.2a1.4 1.4 0 0 1 0 2L5.8 12.4 3 13Z" /></svg>Edit</button>}
+                  <button className="x x-rm" onClick={() => setCart(cart.filter((_, k) => k !== i))}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>Remove</button>
+                </div>
               </div>
               <div className="amt num">{peso(l.total)}</div>
             </SwipeRow>
@@ -264,9 +271,10 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
 
         <div className="pay">
           {!training && (
-            <label className={`staff-toggle ${staffOn ? 'on' : ''}`}>
-              <input type="checkbox" checked={staffOn} onChange={(e) => { setStaffMode(e.target.checked); setServerErr(''); if (!staffFor) setStaffFor(user?._id || ''); }} />
+            <label className={`staff-toggle op-switch ${staffOn ? 'on' : ''}`}>
               <span><b>Staff drink</b><small>Free for staff · uses stock, not counted as a sale</small></span>
+              <input type="checkbox" role="switch" checked={staffOn} onChange={(e) => { setStaffMode(e.target.checked); setServerErr(''); if (!staffFor) setStaffFor(user?._id || ''); }} />
+              <i className="op-knob" aria-hidden="true" />
             </label>
           )}
           {staffOn ? (
@@ -279,12 +287,16 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               </Field>
             </div>
           ) : (<>
+          <section className="op-sec" aria-label="Customer">
+          <h3 className="op-h">Customer</h3>
           <div className="row">
-            <Field id="custName" label="Customer name" error={cart.length && customer.trim() ? cErr.customer : errFor('customer')} hint={customer.trim() ? undefined : 'Needed: called out when the drink is ready'}><input id="custName" placeholder="Name for the cup" maxLength={LIMITS.customer} value={customer} autoComplete="off" aria-required="true" onChange={(e) => { setCustomer(e.target.value); touch('customer'); }} onBlur={() => touch('customer')} /></Field>
-            <div className="field"><label htmlFor="discSel">Discount</label>
-              <select id="discSel" value={rewardOn ? 'none' : discount.type} disabled={rewardOn} title={rewardOn ? 'A free drink can’t be combined with other discounts' : undefined} onChange={(e) => setDiscount({ ...discount, type: e.target.value })}>
-                <option value="none">None</option><option value="scpwd">Senior / PWD</option><option value="pct">Promo %</option>
-              </select></div>
+            <Field id="custName" label="Name for the cup" error={cart.length && customer.trim() ? cErr.customer : errFor('customer')} hint={customer.trim() ? undefined : 'Needed: called out when the drink is ready'}><input id="custName" placeholder="e.g. Hubert" maxLength={LIMITS.customer} value={customer} autoComplete="off" aria-required="true" onChange={(e) => { setCustomer(e.target.value); touch('customer'); }} onBlur={() => touch('customer')} /></Field>
+            <div className="field op-disc"><label id="discLbl">Discount</label>
+              <div className="op-seg" id="discSel" role="radiogroup" aria-labelledby="discLbl" title={rewardOn ? 'A free drink can’t be combined with other discounts' : undefined}>
+                {[['none', 'None'], ['scpwd', 'Senior / PWD'], ['pct', 'Promo %']].map(([v, lbl]) => (
+                  <button key={v} type="button" role="radio" data-v={v} aria-checked={(rewardOn ? 'none' : discount.type) === v} disabled={rewardOn && v !== 'none'} onClick={() => setDiscount({ ...discount, type: v })}>{lbl}</button>
+                ))}
+              </div></div>
             {discount.type === 'pct' && <Field id="discPct" label="Promo %" style={{ flex: '1 1 100%' }} error={errFor('discountPct')} hint={!isAdmin && +discount.pct > DISC_PIN_OVER ? `Over ${DISC_PIN_OVER}%: an admin’s PIN is needed when you charge` : undefined}><input id="discPct" type="number" inputMode="decimal" min="1" max="100" value={discount.pct} onChange={(e) => { setDiscount({ ...discount, pct: e.target.value }); touch('discountPct'); }} /></Field>}
             {discount.type === 'scpwd' && !rewardOn && <>
               <Field id="scName" label="Name on the ID" error={errFor('scName')}><input id="scName" maxLength={60} autoComplete="off" value={discount.idName} onChange={(e) => { setDiscount({ ...discount, idName: e.target.value }); touch('scName'); }} placeholder="Juan dela Cruz" /></Field>
@@ -293,7 +305,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
           </div>
           {dupBlock && <div className="dup-name" role="alert"><span><b>“{customer.trim()}”</b> already has an order waiting (#{pad(dupOf.no)}). Add a letter so you call the right person, e.g. “{customer.trim()} B.”</span><button className="btn sm ghost" onClick={() => setDupOk(typedName)}>Keep “{customer.trim()}”</button></div>}
           {!training && <div className="stamp-box">
-            <Field id="stampPhone" label="Stamp card (customer's mobile no.)" error={stampErr} hint={stampCust ? undefined : stampPending ? 'Press Enter or Find to link the card' : 'Optional: 1 stamp per drink, 10th drink free'}>
+            <Field id="stampPhone" label="Stamp card · mobile no." error={stampErr} hint={stampCust ? undefined : stampPending ? 'Press Enter or Find to link the card' : 'Optional: 1 stamp per drink, 10th drink free'}>
               <div className="stamp-in">
                 <input id="stampPhone" inputMode="tel" maxLength={16} placeholder="0917 123 4567" value={stampPhone} disabled={!!stampCust}
                   onChange={(e) => { setStampPhone(e.target.value); setStampErr(''); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); lookupStamps(); } }} />
@@ -310,10 +322,12 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               </div>
             )}
           </div>}
+          </section>
+          <section className="op-sec" aria-label="Payment">
+          <h3 className="op-h">Payment</h3>
           <PayPicker value={pay.method} onChange={(k) => setPay({ ...pay, method: k, got: false })} />
           <div className={`pay-box ${qrPay ? 'is-qr' : 'is-cash'}`}>
           {!qrPay ? <>
-            <div className="pb-due"><span>Amount due</span><b className="num">{peso(t.total)}</b></div>
             <Field id="tendered" label="Cash received" className="pb-cash">
               <div className={`pb-in ${cashState}`}><i aria-hidden="true">₱</i>
                 <input id="tendered" type="number" inputMode="decimal" min="0" step="any" placeholder="0.00" value={pay.tendered} aria-invalid={cashState === 'short' || cashState === 'warn'} aria-describedby="pbChange"
@@ -342,6 +356,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
                 onChange={(e) => { setPay({ ...pay, ref: e.target.value.replace(/[^0-9A-Za-z -]/g, '') }); touch('ref'); }} /></Field>
           </>)}
           </div>
+          </section>
           {showQr && <ShowQr kind={showQr} settings={settings} amount={cart.length ? t.total : null} onClose={() => { setShowQr(null); setTimeout(() => document.getElementById('payRef')?.focus(), 50); }} />}
           </>)}
           {serverErr && <div className="formerr" role="alert">{serverErr}</div>}
