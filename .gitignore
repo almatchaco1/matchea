@@ -42,3 +42,7 @@ Claude outputs/
 # Render environment file (has passwords): never upload
 render-env*.txt
 new-drinks/
+
+# one-time reset request / result (server/src/lib/freshStart.js)
+server/fresh-start.request
+server/fresh-start.done
