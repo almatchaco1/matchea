@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { call } from './api';
+import { shrinkImage } from '../lib/shrinkImage';
 import { ONLINE, checkQrRef, checkPaidTime, ONLINE_FEE_PCT, withOnlineFee } from '../shared/rules.mjs';
 import { peso } from '../lib/format';
 import { rewardsReady, rewardValue } from '../shared/loyalty.mjs';
@@ -320,25 +321,6 @@ function ago(mins) {
 function fmtTime(hhmm) {
   const [h, m] = String(hhmm).split(':').map(Number);
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
-}
-
-/** Makes a phone screenshot small (max 1080px, JPEG) so it uploads quickly. */
-function shrinkImage(file) {
-  return new Promise((resolve, reject) => {
-    if (!/^image\//.test(file.type) || file.size > 15e6) { reject(new Error('bad')); return; }
-    const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => {
-      const k = Math.min(1, 1080 / Math.max(img.width, img.height));
-      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      let q = 0.75, out = c.toDataURL('image/jpeg', q);
-      while (out.length > 650000 && q > 0.35) { q -= 0.1; out = c.toDataURL('image/jpeg', q); }
-      out.length > 680000 ? reject(new Error('big')) : resolve(out);
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad')); };
-    img.src = url;
-  });
 }
 
 /** SHA-256 of the original picture file, so the exact same screenshot sent again can be spotted ('' if the browser can't). */

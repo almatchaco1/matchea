@@ -8,6 +8,7 @@ import { confetti } from './fx';
 import { Loader, Doodle, TrackCup } from './art';
 import { ShareDrink } from './share';
 import { createPortal } from 'react-dom';
+import { HelpButton } from './HelpChat';
 
 const STEPS = [
   ['new', 'Order received', 'The shop will confirm it shortly.'],
@@ -128,7 +129,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
           This order was cancelled{o.cancelReason ? `: ${o.cancelReason}` : '.'}{' '}
           {o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total + (o.onlineFee || 0))} will be refunded. The shop may contact you.` : o.qrPay ? '' : 'You were not charged.'}
         </div>
-        <ContactShop shop={menu?.shop} no={o.no} qr={o.qrPay ? qr : ''} />
+        <ContactShop shop={menu?.shop} no={o.no} qr={o.qrPay ? qr : ''} chat={signedIn ? <HelpButton go={go} order={code} /> : null} />
       </>) : (<>
         {o.pickupCode && (
           <div className={`pk-code ${o.status === 'ready' ? 'ready' : ''} ${reveal && o.status === 'ready' ? 'reveal' : ''}`}>
@@ -181,6 +182,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
       {!cancelled && !['paid', 'ready'].includes(o.status) && !waiting && <ReadyAlerts compact />}
       {!cancelled && o.status !== 'paid' && <p className="muted center small">This page updates by itself. You can also find it anytime in Orders.</p>}
       {again && <div className="note">{again}</div>}
+      {signedIn && !cancelled && <HelpButton go={go} order={code} />}
       <div className="actions">
         {signedIn && onReorder ? (
           <button className="sh-btn" onClick={orderAgain}>
@@ -264,7 +266,7 @@ function messenger(fb) {
 }
 
 /** Shown on a cancelled order: how to reach the shop (from Menu → Shop & options) */
-function ContactShop({ shop, no, qr }) {
+function ContactShop({ shop, no, qr, chat }) {
   const s = shop || {};
   const tel = (s.phone || '').replace(/[^\d+]/g, '');
   const msg = `Hi! About my order #${pad(no)}${qr ? ` (paid by ${qr})` : ''}.`;
@@ -285,7 +287,11 @@ function ContactShop({ shop, no, qr }) {
   return (
     <div className="ct-shop">
       <b className="ct-h">Need help with this order?</b>
-      <p className="ct-p">{qr ? `If you already paid by ${qr}, send us your receipt screenshot and order number #${pad(no)}. We’ll sort it out with you.` : `Mention your order number #${pad(no)} so we can help faster.`}</p>
+      <p className="ct-p">{chat
+        ? (qr ? `If you already paid by ${qr}, chat with us and send your receipt screenshot. We’ll sort it out with you.` : 'Chat with us and we’ll sort it out with you.')
+        : (qr ? `If you already paid by ${qr}, send us your receipt screenshot and order number #${pad(no)}. We’ll sort it out with you.` : `Mention your order number #${pad(no)} so we can help faster.`)}</p>
+      {chat}
+      {chat && links.length > 0 && <p className="ct-or">Or reach us on</p>}
       {links.length > 0 ? (
         <div className="ct-links">
           {links.map((l) => (
@@ -295,7 +301,7 @@ function ContactShop({ shop, no, qr }) {
             </a>
           ))}
         </div>
-      ) : (
+      ) : chat ? null : (
         <p className="ct-p">{s.address ? `Visit us at ${s.address} and show this page at the counter.` : 'Show this page at the counter and we’ll help you.'}</p>
       )}
     </div>

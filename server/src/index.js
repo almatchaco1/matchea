@@ -22,6 +22,7 @@ import supplierRoutes from './routes/suppliers.js';
 import customerAdminRoutes from './routes/customers.js';
 import expenseRoutes from './routes/expenses.js';
 import trashRoutes from './routes/trash.js';
+import { help as helpRoutes, support as supportRoutes } from './routes/support.js';
 import { scheduleDailyBackups } from './lib/backup.js';
 import { requireAuth } from './middleware/auth.js';
 import { applyMenuDefaults } from './update-menu.js';
@@ -35,7 +36,7 @@ app.set('trust proxy', 1); // real client IPs behind Render/Railway/Nginx (used 
 const smallJson = express.json({ limit: '200kb', verify: (req, _res, buf) => { req.rawBody = buf.toString('utf8'); } }); // raw body kept for PayMongo webhook signatures
 const bigJson = express.json({ limit: '4mb' }); // QR image uploads only
 const orderJson = express.json({ limit: '1mb' }); // online orders can carry a small receipt screenshot
-app.use((req, res, next) => (/^\/api\/settings\/qr\//.test(req.path) ? bigJson : req.method === 'POST' && req.path === '/api/public/orders' ? orderJson : smallJson)(req, res, next));
+app.use((req, res, next) => (/^\/api\/settings\/qr\//.test(req.path) ? bigJson : req.method === 'POST' && (req.path === '/api/public/orders' || /^\/api\/(help\/messages|support\/[\w]+\/reply)$/.test(req.path)) ? orderJson : smallJson)(req, res, next));
 if (process.env.CLIENT_ORIGIN) app.use(cors({ origin: process.env.CLIENT_ORIGIN.split(',') }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, db: mongoose.connection.readyState === 1 }));
@@ -54,6 +55,8 @@ app.use('/api/suppliers', requireAuth, supplierRoutes);
 app.use('/api/expenses', requireAuth, expenseRoutes);
 app.use('/api/customers', requireAuth, customerAdminRoutes);
 app.use('/api/trash', requireAuth, trashRoutes);
+app.use('/api/help', helpRoutes); // customer service chat (customer side)
+app.use('/api/support', requireAuth, supportRoutes); // customer service chat (staff inbox)
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
 // In production, serve the built React app (npm run build → my-app/build)

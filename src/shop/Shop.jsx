@@ -8,6 +8,7 @@ import { AuthPage, AddPhone, ForgotPage } from './Auth';
 import MenuPage, { ItemSheet } from './MenuPage';
 import CartPage from './CartPage';
 import Track from './Track';
+import HelpChat from './HelpChat';
 import { AccountPage, OrdersPage } from './Account';
 import { alertReady } from './ReadyAlerts';
 import { flyToCart, bumpCart } from './motion';
@@ -20,7 +21,7 @@ import './matchea.css';
 import './v3.css';
 import './shop-v6.css';
 
-const PROTECTED = /^\/(menu|cart|account|orders|welcome)(\/|$)/;
+const PROTECTED = /^\/(menu|cart|account|orders|welcome|help)(\/|$)/;
 const CART = 'alm.cart';
 const loadCart = () => { try { return JSON.parse(sessionStorage.getItem(CART) || '[]'); } catch { return []; } };
 
@@ -52,6 +53,11 @@ export default function Shop() {
   const loadOrders = useCallback(() => call('GET', '/customer/orders').then(setOrders).catch(() => {}), []);
   const refreshMe = useCallback(() => call('GET', '/customer/me').then((r) => { setMe(r.customer); setPayFirst(!!r.payFirst); }).catch(() => {}), []);
   const signedIn = !!me;
+  // New replies from customer service (number on the Me tab)
+  const [helpUnread, setHelpUnread] = useState(0);
+  const loadHelp = useCallback(() => call('GET', '/help/unread').then((r) => setHelpUnread(r.n || 0)).catch(() => {}), []);
+  const seenHelp = useCallback(() => setHelpUnread(0), []);
+  useEffect(() => { if (signedIn) { loadHelp(); const t = setInterval(loadHelp, 20000); return () => clearInterval(t); } return undefined; }, [signedIn, loadHelp]);
   const hasActive = orders.some((o) => ['awaiting_payment', 'new', 'preparing', 'ready'].includes(o.status));
   // Check more often while an order is on its way
   useEffect(() => { if (signedIn) { loadOrders(); const t = setInterval(loadOrders, hasActive ? 10000 : 30000); return () => clearInterval(t); } }, [signedIn, hasActive, loadOrders]);
@@ -139,11 +145,12 @@ export default function Shop() {
     onRemoveFav={async (id) => { const r = await call('DELETE', `/customer/favorites/${id}`); setMe(r.customer); }} />;
   else if (pathname === '/cart') page = <CartPage menu={menu} me={me} payFirst={payFirst} cart={cart} setCart={setCart} priced={priced} total={total} go={go} onEdit={(i) => setPicking({ item: byId[cart[i].productId], index: i })} onPlaced={() => { loadOrders(); refreshMe(); }} />;
   else if (pathname === '/orders') page = <OrdersPage orders={orders} go={go} reload={loadOrders} />;
-  else if (pathname === '/account') page = <AccountPage me={me} setMe={setMe} go={go} signOut={signOut} />;
+  else if (pathname === '/account') page = <AccountPage me={me} setMe={setMe} go={go} signOut={signOut} helpUnread={helpUnread} />;
+  else if (pathname === '/help') page = <HelpChat me={me} go={go} orders={orders} shop={menu?.shop} onSeen={seenHelp} />;
   else page = <Landing menu={menu} err={menuErr} go={go} me={me} />;
 
   const showCartBar = me && count > 0 && pathname === '/menu';
-  const tabbar = !!me && !['/signin', '/signup', '/welcome', '/forgot'].includes(pathname);
+  const tabbar = !!me && !['/signin', '/signup', '/welcome', '/forgot', '/help'].includes(pathname);
   return (
     <div className={`shop ${tabbar ? 'has-tabbar' : ''}`} ref={rootRef}>
       <div className="shop-bg" aria-hidden="true"><i /><i /><i /></div>
@@ -174,8 +181,8 @@ export default function Shop() {
             setPicking(null);
           }} />
       )}
-      <Footer shop={menu?.shop} />
-      {tabbar && <TabBar path={pathname} go={go} count={count} activeCount={active.length} me={me} />}
+      {pathname !== '/help' && <Footer shop={menu?.shop} />}
+      {tabbar && <TabBar path={pathname} go={go} count={count} activeCount={active.length} me={me} helpUnread={helpUnread} />}
     </div>
   );
 }
@@ -189,7 +196,7 @@ const TABS = [
 ];
 
 /** Phones: app-style tabs along the bottom. */
-function TabBar({ path, go, count, activeCount, me }) {
+function TabBar({ path, go, count, activeCount, me, helpUnread = 0 }) {
   const at = TABS.findIndex(([to]) => (to === '/' ? path === '/' : path.startsWith(to) || (to === '/orders' && path.startsWith('/order/'))));
   return (
     <nav className="tabbar" aria-label="Main">
@@ -202,6 +209,7 @@ function TabBar({ path, go, count, activeCount, me }) {
               : <svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon} /></svg>}
             {to === '/cart' && count > 0 && <em key={count}>{count}</em>}
             {to === '/orders' && activeCount > 0 && <em className="live">{activeCount}</em>}
+            {to === '/account' && helpUnread > 0 && <em className="help" aria-label={`${helpUnread} new from customer service`}>{helpUnread}</em>}
           </span>
           <span className="tb-l">{label}</span>
         </a>

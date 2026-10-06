@@ -9,6 +9,7 @@ import ReadyAlerts from './ReadyAlerts';
 import { Stars } from './RateOrder';
 import { Doodle, Avatar } from './art';
 import { Field, CodeStep, PasswordBox } from './Auth';
+import { HelpButton } from './HelpChat';
 import './ac2.css';
 
 const LABEL = { awaiting_payment: 'Waiting for payment', new: 'Order received', preparing: 'Preparing', ready: 'Ready for pickup', paid: 'Picked up', cancelled: 'Cancelled' };
@@ -55,7 +56,7 @@ export function OrdersPage({ orders, go, reload }) {
   );
 }
 
-export function AccountPage({ me, setMe, go, signOut }) {
+export function AccountPage({ me, setMe, go, signOut, helpUnread = 0 }) {
   const [f, setF] = useState({ name: me.name, phone: me.phone ? fmtPhoneInput(me.phone) : '', email: me.email || '' });
   const [verifyEmail, setVerifyEmail] = useState(null);
   const [pw, setPw] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -145,6 +146,7 @@ export function AccountPage({ me, setMe, go, signOut }) {
         <button type="button" onClick={() => go('/orders')}><Ico d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6M9 12h6" /><span><b>My orders</b><small>Track and reorder</small></span></button>
         <button type="button" onClick={() => go('/menu')}><Ico d="M6 8h12l-1.3 11.2A2 2 0 0 1 14.7 21H9.3a2 2 0 0 1-2-1.8L6 8Zm-1 0h14M9 8l1-4h4l1 4" /><span><b>Order a drink</b><small>Open the menu</small></span></button>
       </nav>
+      <HelpButton go={go} unread={helpUnread} className="ac2-help" />
 
       <StampCard stamps={me.stamps} />
 

@@ -10,6 +10,7 @@ import Online from './components/Online';
 import Staff from './components/Staff';
 import Customers from './components/Customers';
 import Barista from './components/Barista';
+import Inbox from './components/Inbox';
 import PrinterSettings from './components/PrinterSettings';
 import { loadPrinterSettings, reconnect } from './lib/printer';
 import { usePosRipples, TabInk, useHeaderFit } from './lib/motion';
@@ -22,7 +23,7 @@ import './order-v4.css';
 import './register-pay.css';
 import './pos-v6.css';
 
-const TABS = [['register', 'Register'], ['online', 'Online'], ['barista', 'Barista'], ['inventory', 'Inventory'], ['menu', 'Menu'], ['reports', 'Reports'], ['customers', 'Customers', 'admin'], ['staff', 'Staff', 'admin']];
+const TABS = [['register', 'Register'], ['online', 'Online'], ['messages', 'Messages'], ['barista', 'Barista'], ['inventory', 'Inventory'], ['menu', 'Menu'], ['reports', 'Reports'], ['customers', 'Customers', 'admin'], ['staff', 'Staff', 'admin']];
 // Short two-note chime for new online orders (browsers may block sound until the page was clicked once)
 function chime() {
   try {
@@ -130,6 +131,15 @@ export default function App() {
     const t = setInterval(loadBar, 5000);
     return () => clearInterval(t);
   }, [user, loadBar, tab, online]);
+  // Customer service chats with unread messages (number on the Messages tab)
+  const [msgCount, setMsgCount] = useState(0);
+  const loadMsgs = useCallback(() => api.get('/support/count').then((d) => setMsgCount(d.n || 0)).catch(() => {}), []);
+  useEffect(() => {
+    if (!user || user.needsNewPin) return undefined;
+    loadMsgs();
+    const t = setInterval(loadMsgs, 8000);
+    return () => clearInterval(t);
+  }, [user, loadMsgs]);
   const trainBar = trainTickets.filter((t) => t.lines.some((l) => !l.done)).length;
   const barShown = training ? trainBar : barCount;
 
@@ -187,12 +197,12 @@ export default function App() {
             <div><h1 className="sr-only">{data.settings?.name || 'Matchéa'}</h1><small>Point of sale · Inventory</small></div>
           </div>
           <nav className="tabs" role="tablist" ref={navRef}>
-            <TabInk nav={navRef} dep={`${shownTab}|${training}|${isAdmin}|${lowCount}|${newCount}|${barShown > 0}`} />
+            <TabInk nav={navRef} dep={`${shownTab}|${training}|${isAdmin}|${lowCount}|${newCount}|${barShown > 0}|${msgCount > 0}`} />
             {TABS.map(([k, n, who]) => {
               const blocked = (who && !isAdmin) ? 'Admins only' : (training && !TRAIN_TABS.includes(k)) ? 'Not open during training' : '';
               return (
               <button key={k} data-tab={k} role="tab" aria-selected={shownTab === k} onClick={() => !blocked && go(k)} disabled={!!blocked} className={blocked ? 'locked' : undefined} title={blocked || undefined}>
-                {blocked && <LockIcon />}{n}{k === 'inventory' && lowCount > 0 && <span className="dot">{lowCount}</span>}{k === 'online' && newCount > 0 && <span className="dot new">{newCount}</span>}{k === 'barista' && barShown > 0 && <span className="dot new" aria-label={`${barShown} to make`}>{barShown}</span>}
+                {blocked && <LockIcon />}{n}{k === 'inventory' && lowCount > 0 && <span className="dot">{lowCount}</span>}{k === 'online' && newCount > 0 && <span className="dot new">{newCount}</span>}{k === 'messages' && msgCount > 0 && <span className="dot new" aria-label={`${msgCount} unread`}>{msgCount}</span>}{k === 'barista' && barShown > 0 && <span className="dot new" aria-label={`${barShown} to make`}>{barShown}</span>}
               </button>
               );
             })}
@@ -244,6 +254,7 @@ export default function App() {
           {(shownTab === 'register' || ((shownTab === 'staff' || shownTab === 'customers') && !isAdmin)) && <Register {...shared} {...trainProps} cart={cart} setCart={setCart} />}
           {shownTab === 'barista' && <Barista {...shared} {...trainProps} key={training ? 'train' : 'real'} />}
           {!training && <>
+          {tab === 'messages' && <Inbox toast={toast} onCount={loadMsgs} />}
           {tab === 'online' && <Online {...shared} orders={online} meta={onlineMeta} reload={loadOnline} />}
           {tab === 'inventory' && <Inventory {...shared} openRestock={openRestock} onRestockShown={() => setOpenRestock(false)} />}
           {tab === 'menu' && <Menu {...shared} goInventory={() => go('inventory')} />}
