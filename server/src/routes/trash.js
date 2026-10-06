@@ -1,9 +1,8 @@
-// Owner: the recycle bin. Deleted drinks, ingredients, suppliers and expenses can be restored for 30 days.
+// Owner: the recycle bin. Deleted drinks, ingredients and expenses can be restored for 30 days.
 import { Router } from 'express';
 import Trash from '../models/Trash.js';
 import Product from '../models/Product.js';
 import Ingredient from '../models/Ingredient.js';
-import Supplier from '../models/Supplier.js';
 import Expense from '../models/Expense.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { ah, HttpError, nameRegex } from '../lib/util.js';
@@ -12,8 +11,8 @@ import { checkId } from '../lib/ids.js';
 const r = Router();
 r.use(requireAdmin);
 r.param('id', checkId);
-const MODELS = { product: Product, ingredient: Ingredient, supplier: Supplier, expense: Expense };
-const LABEL = { product: 'drink', ingredient: 'ingredient', supplier: 'supplier', expense: 'expense' };
+const MODELS = { product: Product, ingredient: Ingredient, expense: Expense };
+const LABEL = { product: 'drink', ingredient: 'ingredient', expense: 'expense' };
 
 r.get('/', ah(async (_req, res) => {
   await Trash.deleteMany({ expiresAt: { $lt: new Date() } }); // in case the database doesn't expire them itself

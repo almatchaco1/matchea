@@ -20,7 +20,7 @@ if (await Ingredient.estimatedDocumentCount()) {
   console.log('Ingredients already exist — skipping menu seed (use --reset to start over).');
 } else {
   // Stock levels, costs and recipe amounts below are PLACEHOLDERS: adjust them in
-  // the Inventory and Menu tabs to match your real recipes and supplier prices.
+  // the Inventory and Menu tabs to match your real recipes and prices.
   const I = {};
   const ings = [
     // key, name, group, unit, on hand, reorder at, cost per unit (₱)

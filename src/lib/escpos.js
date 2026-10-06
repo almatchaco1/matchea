@@ -156,7 +156,6 @@ export function closingBytes(c, s = {}, { width = 32, cash = '', note = '' } = {
   rule();
   for (const [k, v] of Object.entries(c.discounts || {})) if (v.count) row(`${DISC[k]} (${v.count})`, '-' + money(v.amount));
   row(`Voids (${c.voids.length})`, money(c.voids.reduce((a, v) => a + v.total, 0)));
-  row(`Waste (${c.waste.count})`, money(c.waste.value));
   if (c.staff?.drinks) row(`Staff drinks (${c.staff.drinks})`, money(c.staff.cost));
   if (c.refs.length) row('E-payments checked', `${c.refs.filter((r) => r.checked).length}/${c.refs.length}`);
   if (c.top.length) { rule(); text('Best sellers'); for (const t of c.top) row(`${t.qty} x ${t.name}`, money(t.sales)); }

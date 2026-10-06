@@ -1,9 +1,9 @@
-// Owner: deleted drinks, ingredients, suppliers and expenses, kept 30 days so a wrong tap can be undone.
+// Owner: deleted drinks, ingredients and expenses, kept 30 days so a wrong tap can be undone.
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { ConfirmButton } from './Modal';
 
-const KIND = { product: ['Drink', 'Menu'], ingredient: ['Ingredient', 'Inventory'], supplier: ['Supplier', 'Inventory → Suppliers'], expense: ['Expense', 'Reports → Expenses'] };
+const KIND = { product: ['Drink', 'Menu'], ingredient: ['Ingredient', 'Inventory'], expense: ['Expense', 'Reports → Expenses'] };
 const when = (d) => new Date(d).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const daysLeft = (d) => Math.max(0, Math.ceil((new Date(d) - Date.now()) / 864e5));
 
@@ -16,7 +16,7 @@ export default function RecycleBin({ toast, refresh }) {
     setBusy(t._id);
     try {
       const r = await api.post(`/trash/${t._id}/restore`);
-      toast(`${t.name} is back in ${KIND[t.kind][1]}.${r.notes?.length ? ' ' + r.notes.join(' ') : ''}`);
+      toast(`${t.name} is back in ${KIND[t.kind]?.[1] || 'its tab'}.${r.notes?.length ? ' ' + r.notes.join(' ') : ''}`);
       load(); refresh?.();
     } catch (e) { toast(e.message); }
     finally { setBusy(''); }
@@ -24,7 +24,7 @@ export default function RecycleBin({ toast, refresh }) {
   const forever = async (t) => { try { await api.del(`/trash/${t._id}`); load(); } catch (e) { toast(e.message); } };
   return (
     <>
-      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>Deleted drinks, ingredients, suppliers and expenses stay here for 30 days. Tap <b>Restore</b> to put one back exactly as it was.</p>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>Deleted drinks, ingredients and expenses stay here for 30 days. Tap <b>Restore</b> to put one back exactly as it was.</p>
       <div className="panel tbl-wrap">
         {!list ? <div className="empty">Loading…</div> : !list.length ? <div className="empty">The recycle bin is empty.</div> : (
           <table>

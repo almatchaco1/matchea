@@ -94,7 +94,6 @@ ${s.orders ? dayChart(month, s.byDay) : '<p class="note">No sales this month.</p
  <div class="keep"><h2>Profit</h2><table>
   <tr><td>Net sales</td><td class="r num">${peso(p?.net ?? s.net)}</td></tr>
   <tr class="sub"><td>− Ingredients</td><td class="r num">${peso(p?.ingCost)}</td></tr>
-  <tr class="sub"><td>− Waste</td><td class="r num">${peso(p?.waste)}</td></tr>
   <tr class="sub"><td>− Staff drinks${p?.staff?.drinks ? ` (${p.staff.drinks})` : ''}</td><td class="r num">${peso(p?.staff?.cost)}</td></tr>
   <tr><td><b>Gross profit</b></td><td class="r num"><b>${peso(p?.profit)}</b></td></tr>
   <tr class="sub"><td>− Expenses</td><td class="r num">${peso(p?.expenses)}</td></tr>
@@ -155,7 +154,7 @@ export default function MonthlyReport({ settings, toast, onClose }) {
         <select value={month} onChange={(e) => setMonth(e.target.value)} className="rp-select" style={{ width: '100%' }}>
           {months.map((m) => <option key={m} value={m}>{monthLabel(m)}{m === thisMonth ? ' (so far)' : ''}</option>)}
         </select></label>
-      <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }}>One page with sales, a daily chart, profit after ingredients, waste and expenses, best sellers, payments and your busiest times. A print window opens: choose <b>Save as PDF</b> to keep it, or print it.</p>
+      <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }}>One page with sales, a daily chart, profit after ingredients and expenses, best sellers, payments and your busiest times. A print window opens: choose <b>Save as PDF</b> to keep it, or print it.</p>
     </Modal>
   );
 }

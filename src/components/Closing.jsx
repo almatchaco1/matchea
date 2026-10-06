@@ -142,7 +142,7 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
               </div>
             </div>
             <div className="panel">
-              <div className="card-h"><h3>Discounts, voids & waste</h3></div>
+              <div className="card-h"><h3>Discounts & voids</h3></div>
               <div className="card-b">
                 {discounts.length ? discounts.map(([k, v]) => <div className="cl-row" key={k}><span>{DISC[k]} <span className="muted">×{v.count}</span></span><span className="num">−{peso(v.amount)}</span></div>) : <div className="cl-row"><span className="muted">No discounts</span><span /></div>}
                 <div className="cl-row"><span>Voided orders <span className="muted">×{c.voids.length}</span></span><span className="num">{peso(c.voids.reduce((a, v) => a + v.total, 0))}</span></div>
@@ -152,7 +152,6 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
                   <div className="cl-row"><span>Staff drinks <span className="muted">×{c.staff.drinks}</span></span><span className="num">{peso(c.staff.cost)} cost</span></div>
                   {c.staff.people.map((p) => <div className="cl-row sub" key={p.name}><span>{p.name} · {p.drinks} {p.drinks === 1 ? 'drink' : 'drinks'}</span><span className="num">menu value {peso(p.value)}</span></div>)}
                 </>}
-                <div className="cl-row"><span>Waste <span className="muted">×{c.waste.count}</span>{goInventory && <button className="linkbtn" onClick={goInventory} style={{ marginLeft: 6 }}>see</button>}</span><span className="num">{peso(c.waste.value)}</span></div>
               </div>
             </div>
           </div>
@@ -203,7 +202,6 @@ const ClosingSlip = ({ ref, c, s = {}, cash, note }) => {
       <hr />
       {Object.entries(c.discounts).filter(([, v]) => v.count).map(([k, v]) => <R key={k} l={`${DISC[k]} (${v.count})`} r={`-${peso(v.amount)}`} />)}
       <R l={`Voids (${c.voids.length})`} r={peso(c.voids.reduce((a, v) => a + v.total, 0))} />
-      <R l={`Waste (${c.waste.count})`} r={peso(c.waste.value)} />
       {c.staff?.drinks > 0 && <R l={`Staff drinks (${c.staff.drinks})`} r={`${peso(c.staff.cost)} cost`} />}
       {c.refs.length > 0 && <R l="E-payments checked" r={`${c.refs.filter((r) => r.checked).length}/${c.refs.length}`} />}
       {c.top.length > 0 && <><hr /><div>Best sellers</div>{c.top.map((t) => <R key={t.name} l={`${t.qty} × ${t.name}`} r={peso(t.sales)} />)}</>}

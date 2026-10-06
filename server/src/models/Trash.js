@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-// Recycle bin: deleted drinks, ingredients, suppliers and expenses, kept 30 days so they can be restored
+// Recycle bin: deleted drinks, ingredients and expenses, kept 30 days so they can be restored
 const trashSchema = new mongoose.Schema(
   {
     kind: { type: String, enum: ['product', 'ingredient', 'supplier', 'expense'], required: true },

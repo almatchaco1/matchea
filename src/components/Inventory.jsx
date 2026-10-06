@@ -1,47 +1,31 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { peso, qfmt, download } from '../lib/format';
+import { peso, qfmt } from '../lib/format';
 import Modal, { ConfirmButton } from './Modal';
 import { Field, useErrors } from './Field';
-import { checkIngredient, checkStockQty, checkSupplier, LIMITS, UNITS, WASTE_WHY, PACK_NAMES, unitCostOf } from '../shared/rules.mjs';
-import { AdminBtn } from './Locked';
+import { checkIngredient, checkStockQty, LIMITS, UNITS, PACK_NAMES, unitCostOf } from '../shared/rules.mjs';
 import StockBoard from './StockBoard';
-import { dayKey } from '../lib/format';
 
-const REASON = { sale: 'Sale', void: 'Void', receive: 'Received', count: 'Count', create: 'Opening stock', waste: 'Waste', staff: 'Staff drink' };
-const VIEWS = [['stock', 'Stock'], ['purchases', 'Purchases'], ['waste', 'Waste'], ['suppliers', 'Suppliers']];
+const REASON = { sale: 'Sale', void: 'Void', receive: 'Received', count: 'Count', create: 'Opening stock', waste: 'Waste (old)', staff: 'Staff drink' };
 
 export default function Inventory({ data, refresh, toast, isAdmin, openRestock, onRestockShown }) {
-  const [modal, setModal] = useState(null); // { kind: 'recv'|'count'|'edit'|'new'|'history'|'countall'|'waste', ing }
-  const [view, setView] = useState('stock');
-  const [suppliers, setSuppliers] = useState([]);
-  const [logKey, setLogKey] = useState(0); // reload purchase/waste lists after a change
-  const loadSuppliers = () => api.get('/suppliers').then(setSuppliers).catch(() => {});
-  useEffect(() => { loadSuppliers(); }, []);
-  const changed = (m) => { setModal(null); toast(m); refresh(); loadSuppliers(); setLogKey((k) => k + 1); };
+  const [modal, setModal] = useState(null); // { kind: 'recv'|'count'|'edit'|'new'|'history'|'countall', ing }
+  const changed = (m) => { setModal(null); toast(m); refresh(); };
   const list = data.ingredients;
 
   return (
     <>
       <div className="toolbar rp-head">
         <h2 className="sec grow">Inventory</h2>
-        <nav className="rp-tabs" role="tablist" aria-label="Inventory">
-          {VIEWS.map(([k, n]) => <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}>{n}</button>)}
-        </nav>
       </div>
 
-      {view === 'purchases' && <MoveLog kind="receive" key={`p${logKey}`} toast={toast} onAdd={() => setModal({ kind: 'recv' })} />}
-      {view === 'waste' && <MoveLog kind="waste" key={`w${logKey}`} toast={toast} onAdd={() => setModal({ kind: 'waste' })} />}
-      {view === 'suppliers' && <Suppliers list={suppliers} isAdmin={isAdmin} toast={toast} reload={loadSuppliers} />}
-
-      {view === 'stock' && <StockBoard data={data} isAdmin={isAdmin} toast={toast} refresh={refresh} suppliers={suppliers} reloadKey={logKey}
+      <StockBoard data={data} isAdmin={isAdmin} toast={toast} refresh={refresh}
         openList={openRestock} onListShown={onRestockShown}
-        onAct={(kind, ing) => setModal({ kind, ing })} />}
+        onAct={(kind, ing) => setModal({ kind, ing })} />
 
-      {modal?.kind === 'recv' && <ReceiveModal ing={modal.ing} list={list} suppliers={suppliers} isAdmin={isAdmin} onClose={() => setModal(null)} done={changed} toast={toast} />}
+      {modal?.kind === 'recv' && <ReceiveModal ing={modal.ing} list={list} onClose={() => setModal(null)} done={changed} toast={toast} />}
       {modal?.kind === 'count' && <QtyModal {...modal} onClose={() => setModal(null)} done={changed} toast={toast} />}
       {modal?.kind === 'countall' && <CountAllModal list={list} onClose={() => setModal(null)} done={changed} toast={toast} />}
-      {modal?.kind === 'waste' && <WasteModal ing={modal.ing} list={list} products={data.products} settings={data.settings} onClose={() => setModal(null)} done={changed} toast={toast} />}
       {modal && (modal.kind === 'edit' || modal.kind === 'new') && <IngredientModal ing={modal.ing} packFirst={!!modal.pack} onClose={() => setModal(null)} done={changed} toast={toast} />}
       {modal?.kind === 'history' && <HistoryModal ing={modal.ing} onClose={() => setModal(null)} />}
     </>
@@ -194,10 +178,9 @@ function HistoryModal({ ing, onClose }) {
 }
 
 const money = (v) => (v === '' ? null : +v);
-const when = (d) => new Date(d).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 // Delivery arrived: how much, from whom, and what you paid (updates the cost per unit)
-function ReceiveModal({ ing: first, list, suppliers, isAdmin, onClose, done, toast }) {
+function ReceiveModal({ ing: first, list, onClose, done, toast }) {
   const [ingId, setIngId] = useState(first?._id || list[0]?._id || '');
   const ing = list.find((i) => i._id === ingId);
   const [rawQty, setQty] = useState('');
@@ -211,7 +194,6 @@ function ReceiveModal({ ing: first, list, suppliers, isAdmin, onClose, done, toa
   const usePk = pk && byPack;
   const qty = usePk ? (packs === '' ? '' : String(Math.round(+packs * pk.size * 1000) / 1000)) : rawQty;
   const paid = usePk ? (each === '' || packs === '' ? '' : String(Math.round(+each * +packs * 100) / 100)) : rawPaid;
-  const [sup, setSup] = useState(() => { try { return localStorage.getItem('matchaPos.lastSupplier') || ''; } catch { return ''; } });
   const [note, setNote] = useState('');
   const [confirmBig, setConfirmBig] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -220,7 +202,6 @@ function ReceiveModal({ ing: first, list, suppliers, isAdmin, onClose, done, toa
   const unit = !isNaN(n) && n > 0 && paid !== '' && +paid >= 0 ? +paid / n : null;
   const bigReceive = ing && !isNaN(n) && ing.reorder > 0 && n > ing.reorder * 20;
   const priceJump = ing && unit != null && ing.cost > 0 && (unit > ing.cost * 2 || unit < ing.cost / 2);
-  const supplierOk = !sup || suppliers.some((x) => x._id === sup);
   const save = async () => {
     if (!ing) return;
     const e = { ...checkStockQty(qty, 'receive') };
@@ -230,14 +211,13 @@ function ReceiveModal({ ing: first, list, suppliers, isAdmin, onClose, done, toa
     if ((bigReceive || priceJump) && !confirmBig) { setConfirmBig(true); return; }
     setBusy(true);
     try {
-      const r = await api.post(`/ingredients/${ing._id}/receive`, { qty: n, paid: money(paid), supplier: supplierOk ? sup || null : null, note });
-      try { localStorage.setItem('matchaPos.lastSupplier', sup); } catch {}
+      const r = await api.post(`/ingredients/${ing._id}/receive`, { qty: n, paid: money(paid), note });
       done(`${ing.name}: ${qfmt(r.stock)} ${ing.unit}${unit != null ? ` · now ${r.pack?.size ? `${peso(r.pack.cost)} per ${r.pack.name}` : `${peso(r.cost)} per ${ing.unit}`}` : ''}`);
     } catch (x) { fromServer(x, toast); }
     finally { setBusy(false); }
   };
   return (
-    <Modal title="Receive a delivery" aside={ing && <span className="muted num">On hand {qfmt(ing.stock)} {ing.unit}</span>} onClose={onClose}
+    <Modal title={`Add stock${ing ? ` · ${ing.name}` : ''}`} aside={ing && <span className="muted num">On hand {qfmt(ing.stock)} {ing.unit}</span>} onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : confirmBig ? 'Yes, save it' : 'Save'}</button></>}>
       <form onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
         {!first && <Field id="rvIng" label="Ingredient"><select id="rvIng" value={ingId} onChange={(e) => { setIngId(e.target.value); setConfirmBig(false); }}>{list.map((i) => <option key={i._id} value={i._id}>{i.name} ({i.unit})</option>)}</select></Field>}
@@ -268,12 +248,6 @@ function ReceiveModal({ ing: first, list, suppliers, isAdmin, onClose, done, toa
           </Field>
         </div>
         )}
-        <Field id="rvSup" label="Supplier" error={errs.supplier} hint={suppliers.length ? '' : isAdmin ? 'Add suppliers in the Suppliers tab.' : ''}>
-          <select id="rvSup" value={supplierOk ? sup : ''} onChange={(e) => setSup(e.target.value)}>
-            <option value="">— None —</option>
-            {suppliers.map((x) => <option key={x._id} value={x._id}>{x.name}</option>)}
-          </select>
-        </Field>
         <Field id="rvNote" label="Note" error={errs.note} hint="Optional · e.g. invoice number">
           <input id="rvNote" maxLength={120} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Invoice #1234" />
         </Field>
@@ -343,170 +317,6 @@ function CountAllModal({ list, onClose, done, toast }) {
           })}
         </table>
       </div>
-    </Modal>
-  );
-}
-
-// Waste: a whole drink (uses its recipe) or a single ingredient
-function WasteModal({ ing: first, list, products, settings, onClose, done, toast }) {
-  const drinks = products.filter((p) => p.active !== false);
-  const [mode, setMode] = useState(first ? 'ing' : 'drink');
-  const [ingId, setIngId] = useState(first?._id || list[0]?._id || '');
-  const [prodId, setProdId] = useState(drinks[0]?._id || '');
-  const [sizeId, setSizeId] = useState(settings?.sizes?.[0]?._id || '');
-  const [qty, setQty] = useState(mode === 'drink' ? '1' : '');
-  const [why, setWhy] = useState('spilled');
-  const [note, setNote] = useState('');
-  const [busy, setBusy] = useState(false);
-  const { errs, check, clear, fromServer } = useErrors();
-  const ing = list.find((i) => i._id === ingId);
-  const prod = drinks.find((p) => p._id === prodId);
-  const save = async () => {
-    setBusy(true);
-    try {
-      if (mode === 'drink') {
-        const n = +qty;
-        if (!check(Number.isInteger(n) && n >= 1 && n <= 50 ? {} : { qty: 'Enter how many cups, from 1 to 50.' })) return;
-        const r = await api.post('/ingredients/waste-drink', { productId: prodId, sizeId: prod?.hasSizes !== false ? sizeId : undefined, qty: n, why, note });
-        done(`Waste logged: ${r.label} (${peso(r.value)})`);
-      } else {
-        if (!check(checkStockQty(qty, 'receive'))) return;
-        const r = await api.post(`/ingredients/${ingId}/waste`, { qty: +qty, why, note });
-        done(`Waste logged: ${qfmt(+qty)} ${ing.unit} ${ing.name} · ${qfmt(r.stock)} ${ing.unit} left`);
-      }
-    } catch (x) { fromServer(x, toast); }
-    finally { setBusy(false); }
-  };
-  return (
-    <Modal title="Log waste" onClose={onClose}
-      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Take off stock'}</button></>}>
-      <div className="seg" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 12 }}>
-        <button aria-pressed={mode === 'drink'} onClick={() => { setMode('drink'); setQty('1'); clear('qty'); }}>A whole drink</button>
-        <button aria-pressed={mode === 'ing'} onClick={() => { setMode('ing'); setQty(''); clear('qty'); }}>An ingredient</button>
-      </div>
-      <form onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
-        {mode === 'drink' ? (
-          <div className="row">
-            <Field id="wsProd" label="Drink" style={{ flex: '2 1 200px' }}><select id="wsProd" value={prodId} onChange={(e) => setProdId(e.target.value)}>{drinks.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}</select></Field>
-            {prod?.hasSizes !== false && settings?.sizes?.length > 1 && <Field id="wsSize" label="Size"><select id="wsSize" value={sizeId} onChange={(e) => setSizeId(e.target.value)}>{settings.sizes.map((z) => <option key={z._id} value={z._id}>{z.label}</option>)}</select></Field>}
-            <Field id="wsQty" label="Cups" error={errs.qty} style={{ flex: '0 1 90px' }}><input id="wsQty" type="number" inputMode="numeric" min="1" max="50" value={qty} onChange={(e) => { setQty(e.target.value); clear('qty'); }} /></Field>
-          </div>
-        ) : (
-          <div className="row">
-            <Field id="wsIng" label="Ingredient" style={{ flex: '2 1 200px' }}><select id="wsIng" value={ingId} onChange={(e) => setIngId(e.target.value)}>{list.map((i) => <option key={i._id} value={i._id}>{i.name} ({qfmt(i.stock)} {i.unit} on hand)</option>)}</select></Field>
-            <Field id="wsQty" label={`Amount (${ing?.unit || ''})`} error={errs.qty} style={{ flex: '0 1 130px' }}><input id="wsQty" type="number" inputMode="decimal" min="0" step="any" autoFocus value={qty} onChange={(e) => { setQty(e.target.value); clear('qty'); }} /></Field>
-          </div>
-        )}
-        <Field id="wsWhy" label="What happened" error={errs.why}>
-          <div className="checks">{Object.entries(WASTE_WHY).map(([k, v]) => <label key={k} className={`check ${why === k ? 'on' : ''}`}><input type="radio" name="why" checked={why === k} onChange={() => setWhy(k)} />{v}</label>)}</div>
-        </Field>
-        <Field id="wsNote" label="Note" error={errs.note} hint="Optional"><input id="wsNote" maxLength={120} value={note} onChange={(e) => setNote(e.target.value)} placeholder={mode === 'drink' ? 'e.g. customer changed their mind' : 'e.g. milk went sour'} /></Field>
-      </form>
-      {mode === 'drink' && <p className="muted" style={{ fontSize: 12, margin: 0 }}>Takes the drink's full recipe (matcha, milk, cup…) off the stock.</p>}
-    </Modal>
-  );
-}
-
-// Purchases or waste over a period
-function MoveLog({ kind, toast, onAdd }) {
-  const [range, setRange] = useState('30');
-  const [d, setD] = useState(null);
-  const recv = kind === 'receive';
-  useEffect(() => {
-    const n = { 7: 6, 30: 29, 90: 89 }[range];
-    const f = new Date(); f.setDate(f.getDate() - n);
-    let live = true; setD(null);
-    api.get(`/ingredients/log?kind=${kind}&from=${dayKey(f)}&to=${dayKey()}`).then((x) => live && setD(x)).catch((e) => toast(e.message));
-    return () => { live = false; };
-  }, [range, kind, toast]);
-  const csv = () => download(`${recv ? 'purchases' : 'waste'}-${d.from}-to-${d.to}.csv`,
-    [recv ? ['date', 'ingredient', 'qty', 'unit', 'paid', 'supplier', 'note', 'by'] : ['date', 'ingredient', 'qty', 'unit', 'value', 'reason', 'note', 'by'],
-      ...d.list.map((m) => [new Date(m.at).toLocaleString('en-PH'), m.ing, m.qty, m.unit, m.value ?? '', recv ? m.supplier : WASTE_WHY[m.why] || m.why, m.note, m.by])]
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv');
-  const byWhy = !recv && d ? Object.entries(d.list.reduce((a, m) => { a[m.why || 'other'] = (a[m.why || 'other'] || 0) + (m.value || 0); return a; }, {})) : [];
-  return (
-    <>
-      <div className="toolbar">
-        <div className="cats grow" style={{ margin: 0 }}>
-          {[['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 90 days']].map(([k, n]) => <button key={k} className="chip" aria-pressed={range === k} onClick={() => setRange(k)}>{n}</button>)}
-        </div>
-        {d?.list.length > 0 && <button className="btn" onClick={csv}>Download CSV</button>}
-        <button className="btn primary" onClick={onAdd}>{recv ? 'Receive a delivery' : 'Log waste'}</button>
-      </div>
-      <div className="stat-row">
-        <div className="panel stat"><div className="k">{recv ? 'Spent on stock' : 'Value wasted'}</div><div className="v num" style={{ color: !recv && d?.total ? 'var(--bad)' : undefined }}>{d ? peso(d.total) : '…'}</div></div>
-        <div className="panel stat"><div className="k">{recv ? 'Deliveries' : 'Times logged'}</div><div className="v num">{d ? d.list.length : '…'}</div></div>
-        {byWhy.map(([k, v]) => <div className="panel stat" key={k}><div className="k">{WASTE_WHY[k] || k}</div><div className="v num">{peso(v)}</div></div>)}
-      </div>
-      <div className="panel tbl-wrap">
-        {!d ? <div className="empty">Loading…</div> : !d.list.length ? <div className="empty">{recv ? 'No deliveries in this period. Use “Receive” when stock arrives.' : 'No waste logged in this period. 🎉'}</div> : (
-          <table>
-            <thead><tr><th>When</th><th>Ingredient</th><th className="r">Amount</th><th className="r">{recv ? 'Paid' : 'Value'}</th><th>{recv ? 'Supplier' : 'Reason'}</th><th>Note</th><th>By</th></tr></thead>
-            <tbody>{d.list.map((m) => (
-              <tr key={m._id}>
-                <td className="num" style={{ whiteSpace: 'nowrap' }}>{when(m.at)}</td>
-                <td><b>{m.ing}</b></td>
-                <td className="r num">{qfmt(m.qty)} <span className="muted">{m.unit}</span></td>
-                <td className="r num">{m.value != null ? peso(m.value) : <span className="muted">—</span>}</td>
-                <td>{recv ? m.supplier || <span className="muted">—</span> : <span className="pill mute">{WASTE_WHY[m.why] || 'Other'}</span>}</td>
-                <td className="muted" style={{ fontSize: 12 }}>{m.note}</td>
-                <td>{m.by}</td>
-              </tr>))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </>
-  );
-}
-
-function Suppliers({ list, isAdmin, toast, reload }) {
-  const [edit, setEdit] = useState(null); // supplier or {} for new
-  return (
-    <>
-      <div className="toolbar">
-        <p className="muted grow" style={{ margin: 0 }}>Choose a supplier when you receive a delivery to see how much you spend with each.</p>
-        <AdminBtn allowed={isAdmin} className="btn primary" onClick={() => setEdit({})}>Add supplier</AdminBtn>
-      </div>
-      <div className="panel tbl-wrap">
-        {!list.length ? <div className="empty">No suppliers yet.{isAdmin ? ' Add the people or shops you buy matcha, milk and cups from.' : ''}</div> : (
-          <table>
-            <thead><tr><th>Supplier</th><th>Contact</th><th className="r">Deliveries</th><th className="r">Total spent</th><th>Last delivery</th><th /></tr></thead>
-            <tbody>{list.map((x) => (
-              <tr key={x._id}>
-                <td><b>{x.name}</b>{x.notes && <div className="muted" style={{ fontSize: 12 }}>{x.notes}</div>}</td>
-                <td>{x.phone ? <a href={`tel:${x.phone.replace(/\s/g, '')}`}>{x.phone}</a> : <span className="muted">—</span>}</td>
-                <td className="r num">{x.deliveries}</td>
-                <td className="r num">{peso(x.total)}</td>
-                <td className="num">{x.last ? new Date(x.last).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : <span className="muted">—</span>}</td>
-                <td className="r"><AdminBtn allowed={isAdmin} className="btn sm ghost" onClick={() => setEdit(x)}>Edit</AdminBtn></td>
-              </tr>))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      {edit && <SupplierModal s={edit._id ? edit : null} onClose={() => setEdit(null)} done={(m) => { setEdit(null); toast(m); reload(); }} toast={toast} />}
-    </>
-  );
-}
-
-function SupplierModal({ s, onClose, done, toast }) {
-  const [f, setF] = useState(s ? { name: s.name, phone: s.phone || '', notes: s.notes || '' } : { name: '', phone: '', notes: '' });
-  const { errs, check, clear, fromServer } = useErrors();
-  const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); clear(k); };
-  const save = async () => {
-    if (!check(checkSupplier(f))) return;
-    try { if (s) await api.put(`/suppliers/${s._id}`, f); else await api.post('/suppliers', f); done('Supplier saved'); } catch (e) { fromServer(e, toast); }
-  };
-  const del = async () => { try { await api.del(`/suppliers/${s._id}`); done('Moved to the Recycle bin (Reports → Recycle bin) for 30 days'); } catch (e) { toast(e.message); } };
-  return (
-    <Modal title={s ? 'Edit supplier' : 'New supplier'} onClose={onClose}
-      footer={<>{s && <ConfirmButton style={{ marginRight: 'auto' }} onConfirm={del} confirmText="Tap again to delete">Delete</ConfirmButton>}<button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={save}>Save</button></>}>
-      <form onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
-        <Field id="spName" label="Name" error={errs.name}><input id="spName" autoFocus maxLength={60} value={f.name} onChange={set('name')} placeholder="Matcha supplier, S&R, Puregold…" /></Field>
-        <Field id="spPhone" label="Phone" error={errs.phone} hint="Optional"><input id="spPhone" maxLength={40} value={f.phone} onChange={set('phone')} placeholder="0917 123 4567" /></Field>
-        <Field id="spNotes" label="Notes" error={errs.notes} hint="Optional · what you buy, delivery days, account number"><input id="spNotes" maxLength={200} value={f.notes} onChange={set('notes')} /></Field>
-      </form>
     </Modal>
   );
 }

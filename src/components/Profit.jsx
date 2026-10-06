@@ -27,8 +27,6 @@ export default function Profit({ from, to, toast, onData, goInventory, goExpense
         <i>−</i>
         <div><span>Ingredients</span><b className="num">{peso(d.ingCost)}</b><small>matcha, milk, cups…</small></div>
         <i>−</i>
-        <div><span>Waste</span><b className="num">{peso(d.waste)}</b><small>spilled, expired</small></div>
-        <i>−</i>
         <div><span>Staff drinks</span><b className="num">{peso(d.staff?.cost || 0)}</b><small>{d.staff?.drinks ? `${d.staff.drinks} drinks · ingredient cost` : 'none'}</small></div>
         <i>=</i>
         <div className="pf-gross"><span>Gross profit</span><b className="num">{peso(d.profit)}</b><small>{margin}% of sales</small></div>

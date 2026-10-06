@@ -4,15 +4,13 @@ import Product from '../models/Product.js';
 import Settings from '../models/Settings.js';
 import Sale from '../models/Sale.js';
 import StockMove from '../models/StockMove.js';
-import Supplier from '../models/Supplier.js';
-import { priceLine } from '../../../src/shared/pricing.mjs';
 import { requireAdmin } from '../middleware/auth.js';
-import { ah, HttpError, shopTime, applyUsage, assertValid, nameRegex, dayRange } from '../lib/util.js';
+import { ah, HttpError, shopTime, applyUsage, assertValid, nameRegex } from '../lib/util.js';
 import { checkId } from '../lib/ids.js';
 import { toTrash } from '../lib/trash.js';
-import { checkIngredient, checkStockQty, isObjectId, LIMITS, WASTE_WHY, unitCostOf } from '../../../src/shared/rules.mjs';
+import { checkIngredient, checkStockQty, isObjectId, unitCostOf } from '../../../src/shared/rules.mjs';
 
-export { noteOf, moneyOf, supplierOf };
+export { noteOf, moneyOf };
 const r = Router();
 r.param('id', checkId);
 const fields = (b) => {
@@ -82,20 +80,13 @@ const moneyOf = (v, field) => {
   return Math.round(n * 100) / 100;
 };
 
-// Delivery arrived: add to stock. Optional: supplier and amount paid (updates the cost per unit).
-async function supplierOf(id) {
-  if (!id) return null;
-  if (!isObjectId(String(id))) throw new HttpError(400, 'Choose a supplier from the list.', { supplier: 'Choose a supplier from the list.' });
-  const sup = await Supplier.findById(id, 'name');
-  if (!sup) throw new HttpError(409, 'That supplier was deleted. Choose another.', { supplier: 'That supplier was deleted.' });
-  return sup;
-}
+// Stock came in: add it. Optional: amount paid (updates the cost per unit, so drink costs and profit stay right).
 /** Add qty to an ingredient's stock and log it as a purchase. Used by Receive and by receiving a restock order. */
-export async function receiveOne(ing, { qty, paid = null, sup = null, note = '', by, updateCost = true }) {
+export async function receiveOne(ing, { qty, paid = null, note = '', by, updateCost = true }) {
   await applyUsage({ [String(ing._id)]: qty }, 1, { reason: 'receive', by, note });
   // add the purchase details to the move just logged
   const move = await StockMove.findOne({ ing: ing._id, reason: 'receive' }).sort({ createdAt: -1, _id: -1 });
-  if (move) await StockMove.updateOne({ _id: move._id }, { value: paid, supplier: sup?._id, supplierName: sup?.name || '' });
+  if (move && paid != null) await StockMove.updateOne({ _id: move._id }, { value: paid });
   if (paid != null && paid > 0 && updateCost) {
     const unit = unitCostOf(paid, qty);
     await Ingredient.updateOne({ _id: ing._id }, ing.pack?.size ? { cost: unit, 'pack.cost': Math.round(unit * ing.pack.size * 100) / 100 } : { cost: unit });
@@ -108,32 +99,12 @@ r.post('/:id/receive', ah(async (req, res) => {
   assertValid(checkStockQty(b.qty, 'receive'));
   const qty = +b.qty;
   const paid = moneyOf(b.paid, 'paid');
-  const sup = await supplierOf(b.supplier);
   const ing = await Ingredient.findById(req.params.id);
   if (!ing) throw new HttpError(404, 'Ingredient not found.');
-  await receiveOne(ing, { qty, paid, sup, note, by: req.user.name, updateCost: b.updateCost !== false });
+  await receiveOne(ing, { qty, paid, note, by: req.user.name, updateCost: b.updateCost !== false });
   res.json(await Ingredient.findById(req.params.id));
 }));
 
-// Waste: spilled, expired, remade… (any staff)
-const whyOf = (v) => {
-  if (!WASTE_WHY[v]) throw new HttpError(400, 'Choose what happened.', { why: 'Choose what happened.' });
-  return v;
-};
-r.post('/:id/waste', ah(async (req, res) => {
-  const b = req.body || {};
-  const why = whyOf(b.why);
-  const note = noteOf(b.note);
-  assertValid(checkStockQty(b.qty, 'receive'));
-  const ing = await Ingredient.findById(req.params.id);
-  if (!ing) throw new HttpError(404, 'Ingredient not found.');
-  const qty = +b.qty;
-  await applyUsage({ [ing._id]: qty }, -1, { reason: 'waste', by: req.user.name, note });
-  await StockMove.updateOne({ _id: (await StockMove.findOne({ ing: ing._id, reason: 'waste' }).sort({ createdAt: -1, _id: -1 }))._id }, { why, value: Math.round(qty * (+ing.cost || 0) * 100) / 100 });
-  res.json(await Ingredient.findById(ing._id));
-}));
-
-// Physical count: set stock to what's on the shelf (any staff)
 r.post('/:id/count', ah(async (req, res) => {
   assertValid(checkStockQty(req.body?.qty, 'count'));
   const qty = +req.body.qty;
@@ -142,28 +113,6 @@ r.post('/:id/count', ah(async (req, res) => {
   const ing = await Ingredient.findByIdAndUpdate(req.params.id, { stock: qty }, { new: true });
   await StockMove.create({ ing: ing._id, delta: qty - before.stock, after: qty, reason: 'count', by: req.user.name });
   res.json(ing);
-}));
-
-// A whole drink went to waste (spilled, made wrong): takes its full recipe off the stock
-r.post('/waste-drink', ah(async (req, res) => {
-  const b = req.body || {};
-  const why = whyOf(b.why);
-  const note = noteOf(b.note);
-  if (!isObjectId(String(b.productId || ''))) throw new HttpError(400, 'Choose the drink.', { productId: 'Choose the drink.' });
-  const qty = Number(b.qty ?? 1);
-  if (!Number.isInteger(qty) || qty < 1 || qty > 50) throw new HttpError(400, 'Enter how many cups, from 1 to 50.', { qty: 'From 1 to 50 cups.' });
-  const p = await Product.findById(b.productId);
-  if (!p) throw new HttpError(404, 'That drink is no longer on the menu.', { productId: 'That drink is no longer on the menu.' });
-  const s = await Settings.get();
-  const x = priceLine({ sizeId: b.sizeId, milkId: b.milkId, qty }, p, s);
-  const ings = await Ingredient.find({ _id: { $in: Object.keys(x.usage) } }, 'cost');
-  const costOf = Object.fromEntries(ings.map((i) => [String(i._id), +i.cost || 0]));
-  const label = `${qty}× ${p.name}${x.mods ? ` (${x.mods.split(' · ').filter((m) => !m.startsWith('Sweet')).join(', ')})` : ''}`.replace(/ \(\)$/, '');
-  const at = new Date();
-  await applyUsage(x.usage, -1, { reason: 'waste', by: req.user.name, note: note ? `${label}: ${note}` : label });
-  const moves = await StockMove.find({ reason: 'waste', ing: { $in: Object.keys(x.usage) }, createdAt: { $gte: new Date(at - 1000) } });
-  await StockMove.bulkWrite(moves.map((m) => ({ updateOne: { filter: { _id: m._id }, update: { why, value: Math.round(Math.abs(m.delta) * (costOf[String(m.ing)] || 0) * 100) / 100 } } })));
-  res.json({ ok: true, label, value: Math.round(Object.entries(x.usage).reduce((a, [k, q]) => a + q * (costOf[k] || 0), 0) * 100) / 100 });
 }));
 
 // Stock count for everything at once: { counts: { <id>: qty, … } }. Only changed items are saved.
@@ -185,17 +134,6 @@ r.post('/count-all', ah(async (req, res) => {
   }
   const diff = changed.reduce((a, i) => a + (+counts[i._id] - i.stock) * (+i.cost || 0), 0);
   res.json({ counted: ids.length, changed: changed.length, value: Math.round(diff * 100) / 100 });
-}));
-
-// Purchases or waste over a period: ?kind=receive|waste&from&to
-r.get('/log', ah(async (req, res) => {
-  const kind = req.query.kind === 'waste' ? 'waste' : 'receive';
-  const { from, to } = dayRange(req.query, shopTime().date, LIMITS.reportDays);
-  const lo = new Date(Date.parse(from) - 864e5), hi = new Date(Date.parse(to) + 2 * 864e5);
-  const list = (await StockMove.find({ reason: kind, createdAt: { $gte: lo, $lt: hi } }).populate('ing', 'name unit cost').sort({ createdAt: -1 }).limit(2000).lean())
-    .filter((m) => { const d = shopTime(m.createdAt).date; return d >= from && d <= to; })
-    .map((m) => ({ _id: m._id, at: m.createdAt, ing: m.ing?.name || '(deleted)', unit: m.ing?.unit || '', qty: Math.abs(m.delta), value: m.value != null ? Math.abs(m.value) : kind === 'waste' ? Math.round(Math.abs(m.delta) * (+m.ing?.cost || 0) * 100) / 100 : null, supplier: m.supplierName || '', why: m.why || '', note: m.note || '', by: m.by || '' }));
-  res.json({ from, to, kind, list, total: Math.round(list.reduce((a, m) => a + (m.value || 0), 0) * 100) / 100 });
 }));
 
 r.get('/:id/moves', ah(async (req, res) => {

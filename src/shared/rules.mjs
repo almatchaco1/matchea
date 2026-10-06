@@ -37,7 +37,6 @@ export const unitCostOf = (packCost, packSize) => Math.round(((+packCost || 0) /
 export const DISCOUNTS = ['none', 'pct', 'scpwd'];
 export const METHODS = ['cash', 'gcash', 'maya'];
 export const ROLES = ['admin', 'cashier'];
-export const WASTE_WHY = { spilled: 'Spilled / dropped', remade: 'Made wrong / remade', expired: 'Expired / spoiled', other: 'Other' };
 
 const str = (v) => (v == null ? '' : String(v)).trim();
 const isNum = (v) => v !== '' && v != null && !Number.isNaN(Number(v)) && Number.isFinite(Number(v));
@@ -101,15 +100,6 @@ export function checkExpense(b = {}) {
   text(e, 'cat', b.cat, { label: 'what it was for', required: true, max: 30 });
   number(e, 'amount', b.amount, { label: 'the amount', gt: 0, max: 10000000 });
   text(e, 'note', b.note, { label: 'the note', max: 120 });
-  return e;
-}
-
-// ---------- suppliers ----------
-export function checkSupplier(b = {}) {
-  const e = {};
-  text(e, 'name', b.name, { label: 'a name', required: true, max: 60, min: 2 });
-  text(e, 'phone', b.phone, { label: 'phone', max: 40 });
-  text(e, 'notes', b.notes, { label: 'notes', max: 200 });
   return e;
 }
 

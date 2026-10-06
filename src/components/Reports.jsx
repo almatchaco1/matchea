@@ -77,7 +77,7 @@ export default function Reports({ data, toast, isAdmin, refresh, goInventory }) 
       const sheets = [
         { name: 'Summary', title, columns: [{ header: 'What', width: 30 }, { header: 'Amount', type: 'peso', width: 16 }], rows: [
           ['Net sales', s.net], ['Orders', { v: s.orders }], ['Average order', s.orders ? s.net / s.orders : 0], ['Discounts given', s.disc],
-          ...(p ? [['Ingredient cost', p.ingCost], ['Waste', p.waste], ['Gross profit (before rent, salaries, bills)', p.profit]] : []),
+          ...(p ? [['Ingredient cost', p.ingCost], ['Gross profit (before rent, salaries, bills)', p.profit]] : []),
         ].map(([a, v]) => [a, typeof v === 'object' ? String(v.v) : v]) },
         { name: 'Orders', title, columns: [{ header: 'Order', type: 'int', width: 8 }, { header: 'Date', type: 'date', width: 12 }, { header: 'Time', width: 10 }, { header: 'Status', width: 8 }, { header: 'From', width: 9 }, { header: 'Cashier', width: 14 }, { header: 'Customer', width: 16 }, { header: 'Items', width: 50 }, { header: 'Subtotal', type: 'peso', width: 12 }, { header: 'Discount', type: 'peso', width: 11 }, { header: 'Total', type: 'peso', width: 12 }, { header: 'Paid by', width: 10 }, { header: 'Reference', width: 16 }],
           rows: list.map((x) => [x.no, x.date, timeOf(x.createdAt), x.status === 'void' ? 'Void' : x.status === 'staff' ? 'Staff drink' : 'Paid', x.source === 'online' ? 'Online' : 'Counter', x.cashierName || '', x.customer || '', x.lines.map((l) => `${l.qty}× ${l.name}${l.mods ? ` (${l.mods})` : ''}`).join('; '), x.subtotal, x.discount?.amount || 0, x.total, PAY_METHODS[x.pay.method] || x.pay.method, x.pay.ref || '']),

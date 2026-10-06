@@ -18,7 +18,6 @@ import onlineRoutes from './routes/online.js';
 import customerRoutes from './routes/customer.js';
 import backupRoutes from './routes/backups.js';
 import baristaRoutes from './routes/barista.js';
-import supplierRoutes from './routes/suppliers.js';
 import customerAdminRoutes from './routes/customers.js';
 import expenseRoutes from './routes/expenses.js';
 import trashRoutes from './routes/trash.js';
@@ -52,11 +51,10 @@ app.use('/api/reports', requireAuth, reportRoutes);
 app.use('/api/online', requireAuth, onlineRoutes);
 app.use('/api/backups', requireAuth, backupRoutes);
 app.use('/api/barista', requireAuth, baristaRoutes);
-app.use('/api/suppliers', requireAuth, supplierRoutes);
 app.use('/api/expenses', requireAuth, expenseRoutes);
 app.use('/api/customers', requireAuth, customerAdminRoutes);
 app.use('/api/trash', requireAuth, trashRoutes);
-app.use('/api/restock', requireAuth, restockRoutes); // shopping list → ordered → received
+app.use('/api/restock', requireAuth, restockRoutes); // add several items to stock at once
 app.use('/api/help', helpRoutes); // customer service chat (customer side)
 app.use('/api/support', requireAuth, supportRoutes); // customer service chat (staff inbox)
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
