@@ -269,7 +269,7 @@ function PayModal({ order, settings, onClose, onDone, toast }) {
 
 function CancelModal({ order, onClose, onDone }) {
   const qr = order.qrPay?.method ? QR_LABEL[order.qrPay.method] : '';
-  const notFound = qr ? `We couldn't find your ${qr} payment${order.qrPay.ref ? ` (ref ${order.qrPay.ref})` : ''}. Please message us.` : '';
+  const notFound = qr ? `We couldn't find your ${qr} payment${order.qrPay.ref ? ` (ref ${order.qrPay.ref})` : ''}. If you paid, contact us below.` : '';
   const presets = order.notFound ? [notFound] : ['Sold out of an ingredient', 'Shop is closing', 'Customer asked to cancel', 'Did not pick up'];
   const [reason, setReason] = useState(order.notFound ? notFound : '');
   const [err, setErr] = useState('');

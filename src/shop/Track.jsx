@@ -123,12 +123,13 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
             {o.fulfil !== 'delivery' && <button className="sh-btn ghost" disabled={!!busy} onClick={() => post('pay-later')}>{busy === 'pay-later' ? 'Switching…' : 'Pay at pickup instead'}</button>}
           </div>
         )
-      ) : cancelled ? (
+      ) : cancelled ? (<>
         <div className="shop-alert">
           This order was cancelled{o.cancelReason ? `: ${o.cancelReason}` : '.'}{' '}
           {o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total + (o.onlineFee || 0))} will be refunded. The shop may contact you.` : o.qrPay ? '' : 'You were not charged.'}
         </div>
-      ) : (<>
+        <ContactShop shop={menu?.shop} no={o.no} qr={o.qrPay ? qr : ''} />
+      </>) : (<>
         {o.pickupCode && (
           <div className={`pk-code ${o.status === 'ready' ? 'ready' : ''} ${reveal && o.status === 'ready' ? 'reveal' : ''}`}>
             {reveal && o.status === 'ready' && <span className="pk-cover" aria-hidden="true"><b>Your order is ready!</b><small>Here’s your code</small></span>}
@@ -247,6 +248,56 @@ function DeliveryBox({ o, busy, onReceived }) {
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="10" r="2.6" /></svg>
         <div><b>{d.detail}</b><small>{[d.area || d.label, d.landmark && `Landmark: ${d.landmark}`].filter(Boolean).join(' · ')}</small>{d.note && <small>Note: {d.note}</small>}</div>
       </div>
+    </div>
+  );
+}
+
+/** Facebook page link → its Messenger chat link (m.me/<page>), when the page name can be read */
+function messenger(fb) {
+  try {
+    const u = new URL(/^https?:/i.test(fb) ? fb : `https://${fb}`);
+    if (/(^|\.)m\.me$/i.test(u.hostname)) return u.href;
+    const slug = u.pathname.split('/').filter(Boolean)[0] || '';
+    if (/facebook\.com$/i.test(u.hostname) && /^[\w.-]+$/.test(slug) && !/^(profile\.php|pages|groups|people)$/i.test(slug)) return `https://m.me/${slug}`;
+    return u.href;
+  } catch { return ''; }
+}
+
+/** Shown on a cancelled order: how to reach the shop (from Menu → Shop & options) */
+function ContactShop({ shop, no, qr }) {
+  const s = shop || {};
+  const tel = (s.phone || '').replace(/[^\d+]/g, '');
+  const msg = `Hi! About my order #${pad(no)}${qr ? ` (paid by ${qr})` : ''}.`;
+  const links = [
+    s.facebook && messenger(s.facebook) && { k: 'fb', label: 'Message us on Facebook', sub: 'Messenger', href: messenger(s.facebook) },
+    tel && { k: 'sms', label: 'Text us', sub: s.phone, href: `sms:${tel}?&body=${encodeURIComponent(msg)}` },
+    tel && { k: 'tel', label: 'Call us', sub: s.phone, href: `tel:${tel}` },
+    s.email && { k: 'mail', label: 'Email us', sub: s.email, href: `mailto:${s.email}?subject=${encodeURIComponent(`Order #${pad(no)}`)}&body=${encodeURIComponent(msg)}` },
+    s.instagram && { k: 'ig', label: 'Message us on Instagram', sub: 'Instagram', href: s.instagram },
+  ].filter(Boolean);
+  const ico = {
+    fb: <path d="M12 3C7 3 3 6.7 3 11.3c0 2.6 1.3 4.9 3.3 6.4V21l3-1.7c.8.2 1.7.3 2.7.3 5 0 9-3.7 9-8.3S17 3 12 3Zm1 10.8-2.3-2.4-4.4 2.4 4.9-5.2 2.3 2.4 4.4-2.4-4.9 5.2Z" />,
+    sms: <path d="M4 5h16v11H8l-4 3V5Zm4 5h.01M12 10h.01M16 10h.01" />,
+    tel: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />,
+    mail: <path d="M3 6h18v12H3V6Zm0 0 9 7 9-7" />,
+    ig: <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm5 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm5.5-1.5h.01" />,
+  };
+  return (
+    <div className="ct-shop">
+      <b className="ct-h">Need help with this order?</b>
+      <p className="ct-p">{qr ? `If you already paid by ${qr}, send us your receipt screenshot and order number #${pad(no)}. We’ll sort it out with you.` : `Mention your order number #${pad(no)} so we can help faster.`}</p>
+      {links.length > 0 ? (
+        <div className="ct-links">
+          {links.map((l) => (
+            <a key={l.k} className={`ct-a ct-${l.k}`} href={l.href} target={/^https?:/.test(l.href) ? '_blank' : undefined} rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill={l.k === 'fb' ? 'currentColor' : 'none'} stroke={l.k === 'fb' ? 'none' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{ico[l.k]}</svg>
+              <span><b>{l.label}</b><small>{l.sub}</small></span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p className="ct-p">{s.address ? `Visit us at ${s.address} and show this page at the counter.` : 'Show this page at the counter and we’ll help you.'}</p>
+      )}
     </div>
   );
 }
