@@ -354,8 +354,28 @@ export function checkPhone(v, key = 'phone') {
   else if (isFakePhone(v)) e[key] = 'That number doesn’t look real. Please check it.';
   return e;
 }
-export const checkSignup = (b = {}) => ({ ...checkCustomerName(b.name), ...checkPhone(b.phone), ...checkPassword(b.password),
-  ...(b.agree === true ? {} : { agree: 'Please agree to the Terms and Privacy Policy.' }) });
+/** True when the password contains the person's name or mobile number (easy to guess). */
+export function passwordHasPersonal(pw, name, phone) {
+  const low = String(pw || '').toLowerCase();
+  const digits = String(phone || '').replace(/\D/g, '');
+  const bits = [digits, digits.slice(1), digits.slice(-7), digits.startsWith('63') ? '0' + digits.slice(2) : '',
+    String(name || '').toLowerCase().replace(/\s+/g, ''), ...String(name || '').toLowerCase().split(/\s+/)].filter((x) => x && x.length >= 4);
+  return bits.some((x) => low.includes(x));
+}
+// Passwords everyone tries first
+const COMMON_PW = ['password1', 'password123', 'qwerty123', 'abc12345', 'abcd1234', '12345678a', 'a12345678', 'iloveyou1', 'matcha123', 'matchea123', 'letmein1', 'welcome1', 'admin123', 'pass1234'];
+export const commonPassword = (pw) => COMMON_PW.includes(String(pw || '').toLowerCase()) || /^(.)\1+$/.test(String(pw || ''));
+
+/** Sign-up: name, number, password typed twice, and the Terms box. */
+export const checkSignup = (b = {}) => {
+  const e = { ...checkCustomerName(b.name), ...checkPhone(b.phone), ...checkPassword(b.password) };
+  if (!e.password && commonPassword(b.password)) e.password = 'That password is too easy to guess. Try another one.';
+  if (!e.password && passwordHasPersonal(b.password, b.name, b.phone)) e.password = 'Don’t use your name or mobile number in your password.';
+  if (!b.confirmPassword) e.confirmPassword = 'Type your password again.';
+  else if (String(b.confirmPassword) !== String(b.password)) e.confirmPassword = 'The passwords don’t match.';
+  if (b.agree !== true) e.agree = 'Please agree to the Terms and Privacy Policy.';
+  return e;
+};
 
 // ---------- store info (footer) ----------
 const SOCIAL = {

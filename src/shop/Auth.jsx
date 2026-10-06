@@ -1,14 +1,14 @@
 // Sign up / sign in: mobile number + password, Google, Facebook. Plus the "add your number" step.
 import { useEffect, useRef, useState } from 'react';
 import { call, loadScript } from './api';
-import { checkSignup, checkPhone, checkCustomerName, checkPassword, normPhone, fmtPhoneInput, cleanName } from '../shared/rules.mjs';
+import { checkSignup, checkPhone, checkCustomerName, checkPassword, normPhone, fmtPhoneInput, cleanName, passwordHasPersonal, commonPassword } from '../shared/rules.mjs';
 
 let config = null;
 const getConfig = () => { if (!config) config = call('GET', '/customer/config').catch(() => ({})); return config; };
 
 export function AuthPage({ mode, go, onSignedIn, shop }) {
   const signup = mode === 'signup';
-  const [f, setF] = useState({ name: '', phone: '', password: '', agree: false, website: '' });
+  const [f, setF] = useState({ name: '', phone: '', password: '', confirmPassword: '', agree: false, website: '' });
   const [errs, setErrs] = useState({});
   const shownAt = useRef(Date.now()); // bot guard: how long the form took
   const [msg, setMsg] = useState('');
@@ -34,7 +34,7 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
     const raw = e.target.value;
     // sign-in accepts an email too: only format it as a phone number when it looks like one
     const v = k === 'agree' ? e.target.checked : k === 'phone' && (signup || /^[\d\s+()-]*$/.test(raw)) ? fmtPhoneInput(raw) : raw;
-    setF({ ...f, [k]: v }); setErrs((p) => { const n = { ...p }; delete n[k]; return n; });
+    setF({ ...f, [k]: v }); setErrs((p) => { const n = { ...p }; delete n[k]; if (k === 'password') delete n.confirmPassword; return n; });
   };
   const next = window.location.search;
 
@@ -96,9 +96,11 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
               <input value={f.phone} onChange={set('phone')} autoComplete="username" autoCapitalize="none" placeholder="0917 123 4567 or name@gmail.com" maxLength={80} />
             </Field>
           )}
-          <Field label="Password" error={errs.password} hint={signup ? 'At least 8 characters, with letters and numbers.' : ''}>
+          <Field label={signup ? 'Create a password' : 'Password'} error={errs.password}>
             <PasswordBox value={f.password} onChange={set('password')} show={show} setShow={setShow} autoComplete={signup ? 'new-password' : 'current-password'} />
           </Field>
+          {signup && <NewPasswordChecks pw={f.password} confirm={f.confirmPassword} name={f.name} phone={f.phone} confirmError={errs.confirmPassword}
+            confirmBox={<PasswordBox value={f.confirmPassword} onChange={set('confirmPassword')} show={show} setShow={setShow} autoComplete="new-password" />} />}
           {/* bot guard: people never see or fill this box */}
           <input className="au-hp" tabIndex={-1} autoComplete="off" aria-hidden="true" name="website" value={f.website} onChange={set('website')} />
           {signup && (
@@ -268,6 +270,29 @@ export function CodeStep({ verify: first, endpoint, onDone, onBack }) {
   );
 }
 
+/** Strength meter, the rules ticking off as you type, then "type it again" with a live match check. */
+export function NewPasswordChecks({ pw, confirm, name, phone, confirmBox, confirmError, label = 'Confirm password' }) {
+  const rules = [
+    ['At least 8 characters', pw.length >= 8],
+    ['Letters and numbers', /[A-Za-z]/.test(pw) && /\d/.test(pw)],
+    ...(name !== undefined ? [['Not your name or number', !!pw && !passwordHasPersonal(pw, name, phone)]] : []),
+    ['Not too easy to guess', !!pw && !commonPassword(pw) && pw.length >= 8],
+  ];
+  const strength = !pw ? 0 : Math.min(4, (pw.length >= 8) + (pw.length >= 12) + (/[A-Za-z]/.test(pw) && /\d/.test(pw)) + (/[^A-Za-z0-9]/.test(pw) || (/[a-z]/.test(pw) && /[A-Z]/.test(pw))));
+  const match = confirm ? confirm === pw : null;
+  return (<>
+    <div className="pw-meter" aria-hidden={!pw}>
+      <div className={`pw-bar s${strength}`}>{[1, 2, 3, 4].map((i) => <i key={i} className={i <= strength ? 'on' : ''} />)}</div>
+      <span>{['Type a password', 'Weak', 'Okay', 'Good', 'Strong'][strength]}</span>
+    </div>
+    <ul className="pw-rules" aria-label="Password rules">
+      {rules.map(([t, ok]) => <li key={t} className={ok ? 'ok' : ''}><i aria-hidden="true">{ok ? '✓' : ''}</i>{t}</li>)}
+    </ul>
+    <Field label={label} error={confirmError}>{confirmBox}</Field>
+    {match != null && !confirmError && <p className={`pw-match ${match ? 'ok' : 'bad'}`} role="status">{match ? '✓ Passwords match' : 'The passwords don’t match yet'}</p>}
+  </>);
+}
+
 /** Password box with Show/Hide and a Caps Lock warning. */
 export function PasswordBox({ value, onChange, show, setShow, autoComplete, id, placeholder }) {
   const [caps, setCaps] = useState(false);
@@ -291,6 +316,7 @@ export function ForgotPage({ go, onSignedIn }) {
   const [verify, setVerify] = useState(null);
   const [code, setCode] = useState('');
   const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState(''); // new password typed again
   const [errs, setErrs] = useState({});
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -314,9 +340,12 @@ export function ForgotPage({ go, onSignedIn }) {
   const reset = async (e) => {
     e.preventDefault(); setMsg('');
     const v = { ...(code.length === 6 ? {} : { code: 'Enter the 6-digit code from the email.' }), ...checkPassword(pw) };
+    if (!v.password && commonPassword(pw)) v.password = 'That password is too easy to guess. Try another one.';
+    if (!pw2) v.confirmPassword = 'Type your new password again.';
+    else if (pw2 !== pw) v.confirmPassword = 'The passwords don’t match.';
     setErrs(v); if (Object.keys(v).length) return;
     setBusy(true);
-    try { onSignedIn(await call('POST', '/customer/reset', { id: verify.id, code, password: pw })); }
+    try { onSignedIn(await call('POST', '/customer/reset', { id: verify.id, code, password: pw, confirmPassword: pw2 })); }
     catch (err) { if (err.fields) setErrs(err.fields); else setMsg(err.message); }
     finally { setBusy(false); }
   };
@@ -341,9 +370,11 @@ export function ForgotPage({ go, onSignedIn }) {
             <Field label="6-digit code" error={errs.code}>
               <input value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setErrs((p) => ({ ...p, code: undefined })); }} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="123456" className="au-code-in" autoFocus />
             </Field>
-            <Field label="New password" error={errs.password} hint="At least 8 characters, with letters and numbers.">
-              <PasswordBox value={pw} onChange={(e) => { setPw(e.target.value); setErrs((p) => ({ ...p, password: undefined })); }} autoComplete="new-password" />
+            <Field label="New password" error={errs.password}>
+              <PasswordBox value={pw} onChange={(e) => { setPw(e.target.value); setErrs((p) => ({ ...p, password: undefined, confirmPassword: undefined })); }} autoComplete="new-password" />
             </Field>
+            <NewPasswordChecks pw={pw} confirm={pw2} confirmError={errs.confirmPassword} label="Confirm new password"
+              confirmBox={<PasswordBox value={pw2} onChange={(e) => { setPw2(e.target.value); setErrs((p) => ({ ...p, confirmPassword: undefined })); }} autoComplete="new-password" />} />
             {msg && <div className="shop-alert" role="alert">{msg}</div>}
             <button className="sh-btn big" disabled={busy}>{busy ? 'Saving…' : setting ? 'Set password and sign in' : 'Save new password and sign in'}</button>
             <button type="button" className="shop-link" disabled={wait > 0} onClick={resend}>{wait > 0 ? `Send a new code in ${wait}s` : 'Send a new code'}</button>

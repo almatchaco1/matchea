@@ -11,7 +11,7 @@ import { ah, HttpError, assertValid } from '../lib/util.js';
 import { signCustomer, requireCustomer } from '../middleware/customerAuth.js';
 import { priceOrder } from '../lib/orders.js';
 import { mustPayFirst } from '../lib/noshow.js';
-import { checkSignup, checkPhone, checkCustomerName, checkPassword, normPhone, cleanName } from '../../../src/shared/rules.mjs';
+import { checkSignup, checkPhone, checkCustomerName, checkPassword, normPhone, cleanName, commonPassword } from '../../../src/shared/rules.mjs';
 
 const r = Router();
 const MAX_TRIES = 5, LOCK_MIN = 10;
@@ -51,7 +51,7 @@ r.get('/config', (_req, res) => res.json({
 r.post('/signup', limit(10, 15 * 60000), ah(async (req, res) => {
   const b = req.body || {};
   botCheck(b, 2000);
-  assertValid(checkSignup(b));
+  assertValid(checkSignup({ ...b, confirmPassword: b.confirmPassword ?? b.password })); // the site sends both; a mismatch is refused
   const phone = normPhone(b.phone);
   if (await Customer.exists({ phone })) throw new HttpError(409, 'This number already has an account. Sign in instead.', { phone: 'This number already has an account. Sign in instead.' });
   const name = cleanName(b.name), passwordHash = await Customer.hash(b.password);
@@ -229,6 +229,7 @@ r.patch('/me', requireCustomer, limit(30, 15 * 60000), ah(async (req, res) => {
       const low = String(b.newPassword).toLowerCase();
       const bits = [c.phone, c.phone && c.phone.slice(1), String(c.name || '').toLowerCase().replace(/\s+/g, '')].filter((x) => x && x.length >= 4);
       if (bits.some((x) => low.includes(x))) errs.newPassword = 'Don’t use your name or mobile number in your password.';
+      else if (commonPassword(b.newPassword)) errs.newPassword = 'That password is too easy to guess. Try another one.';
     }
   }
   assertValid(errs);
@@ -271,6 +272,8 @@ r.post('/forgot', limit(5, 15 * 60000), ah(async (req, res) => {
 
 r.post('/reset', limit(20, 15 * 60000), ah(async (req, res) => {
   assertValid(checkPassword(req.body?.password));
+  if (commonPassword(req.body.password)) throw new HttpError(400, 'That password is too easy to guess. Try another one.', { password: 'That password is too easy to guess. Try another one.' });
+  if (req.body.confirmPassword != null && String(req.body.confirmPassword) !== String(req.body.password)) throw new HttpError(400, 'The passwords don’t match.', { confirmPassword: 'The passwords don’t match.' });
   const v = await checkVerify(req.body?.id, req.body?.code);
   const p = v.pending || {};
   if (p.type !== 'reset') throw new HttpError(400, 'This code is for something else. Please start again.');

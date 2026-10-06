@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePullRefresh } from './fx';
 import { call } from './api';
-import { checkCustomerName, checkPhone, checkPassword, normPhone, fmtPhoneInput, cleanName } from '../shared/rules.mjs';
+import { checkCustomerName, checkPhone, checkPassword, normPhone, fmtPhoneInput, cleanName, commonPassword } from '../shared/rules.mjs';
 import { peso, pad } from '../lib/format';
 import StampCard from './StampCard';
 import ReadyAlerts from './ReadyAlerts';
@@ -89,6 +89,7 @@ export function AccountPage({ me, setMe, go, signOut, helpUnread = 0 }) {
     if (me.hasPassword && !pw.currentPassword) v.currentPassword = 'Enter your current password.';
     if (!v.newPassword && me.hasPassword && pw.newPassword === pw.currentPassword) v.newPassword = 'Choose a new password that’s different from your current one.';
     if (!v.newPassword && pwHasMe(pw.newPassword)) v.newPassword = 'Don’t use your name or mobile number in your password.';
+    if (!v.newPassword && commonPassword(pw.newPassword)) v.newPassword = 'That password is too easy to guess. Try another one.';
     if (!pw.confirmPassword) v.confirmPassword = 'Type your new password again.';
     else if (pw.confirmPassword !== pw.newPassword) v.confirmPassword = 'The passwords don’t match.';
     setErrs(v); if (Object.keys(v).length) return;
