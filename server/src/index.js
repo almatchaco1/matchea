@@ -22,6 +22,7 @@ import supplierRoutes from './routes/suppliers.js';
 import customerAdminRoutes from './routes/customers.js';
 import expenseRoutes from './routes/expenses.js';
 import trashRoutes from './routes/trash.js';
+import restockRoutes from './routes/restock.js';
 import { help as helpRoutes, support as supportRoutes } from './routes/support.js';
 import { scheduleDailyBackups } from './lib/backup.js';
 import { requireAuth } from './middleware/auth.js';
@@ -55,6 +56,7 @@ app.use('/api/suppliers', requireAuth, supplierRoutes);
 app.use('/api/expenses', requireAuth, expenseRoutes);
 app.use('/api/customers', requireAuth, customerAdminRoutes);
 app.use('/api/trash', requireAuth, trashRoutes);
+app.use('/api/restock', requireAuth, restockRoutes); // shopping list → ordered → received
 app.use('/api/help', helpRoutes); // customer service chat (customer side)
 app.use('/api/support', requireAuth, supportRoutes); // customer service chat (staff inbox)
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));

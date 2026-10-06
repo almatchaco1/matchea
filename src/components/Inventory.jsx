@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { peso, qfmt, ingStatus, daysLeft, needsRestock, restockQty, download } from '../lib/format';
+import { peso, qfmt, download } from '../lib/format';
 import Modal, { ConfirmButton } from './Modal';
 import { Field, useErrors } from './Field';
 import { checkIngredient, checkStockQty, checkSupplier, LIMITS, UNITS, WASTE_WHY, PACK_NAMES, unitCostOf } from '../shared/rules.mjs';
 import { AdminBtn } from './Locked';
+import StockBoard from './StockBoard';
 import { dayKey } from '../lib/format';
 
-const LABEL = { ok: 'In stock', warn: 'Low', bad: 'Out' };
 const REASON = { sale: 'Sale', void: 'Void', receive: 'Received', count: 'Count', create: 'Opening stock', waste: 'Waste', staff: 'Staff drink' };
 const VIEWS = [['stock', 'Stock'], ['purchases', 'Purchases'], ['waste', 'Waste'], ['suppliers', 'Suppliers']];
 
 export default function Inventory({ data, refresh, toast, isAdmin, openRestock, onRestockShown }) {
-  const [filter, setFilter] = useState('all');
   const [modal, setModal] = useState(null); // { kind: 'recv'|'count'|'edit'|'new'|'history'|'countall'|'waste', ing }
   const [view, setView] = useState('stock');
   const [suppliers, setSuppliers] = useState([]);
@@ -21,12 +20,6 @@ export default function Inventory({ data, refresh, toast, isAdmin, openRestock, 
   useEffect(() => { loadSuppliers(); }, []);
   const changed = (m) => { setModal(null); toast(m); refresh(); loadSuppliers(); setLogKey((k) => k + 1); };
   const list = data.ingredients;
-  const warn = list.filter((i) => ingStatus(i) === 'warn').length;
-  const out = list.filter((i) => ingStatus(i) === 'bad').length;
-  const value = list.reduce((a, i) => a + Math.max(0, i.stock) * (+i.cost || 0), 0);
-  const toBuy = list.filter(needsRestock);
-  useEffect(() => { if (openRestock) { setModal({ kind: 'restock' }); onRestockShown?.(); } }, [openRestock]); // eslint-disable-line react-hooks/exhaustive-deps
-  const shown = list.filter((i) => filter === 'all' || (filter === 'low' ? ingStatus(i) !== 'ok' : ingStatus(i) === 'bad'));
 
   return (
     <>
@@ -41,60 +34,9 @@ export default function Inventory({ data, refresh, toast, isAdmin, openRestock, 
       {view === 'waste' && <MoveLog kind="waste" key={`w${logKey}`} toast={toast} onAdd={() => setModal({ kind: 'waste' })} />}
       {view === 'suppliers' && <Suppliers list={suppliers} isAdmin={isAdmin} toast={toast} reload={loadSuppliers} />}
 
-      {view === 'stock' && <>
-      <div className="toolbar">
-        <div className="cats grow" style={{ margin: 0 }}>
-          {[['all', 'All', list.length], ['low', 'Needs reorder', warn + out], ['out', 'Out', out]].map(([k, n, c]) => (
-            <button key={k} className="chip" aria-pressed={filter === k} onClick={() => setFilter(k)}>{n} <span className="muted num">{c}</span></button>
-          ))}
-        </div>
-        <button className="btn" onClick={() => setModal({ kind: 'countall' })}>Count all</button>
-        <button className="btn" onClick={() => setModal({ kind: 'waste' })}>Log waste</button>
-        <button className="btn" onClick={() => setModal({ kind: 'restock' })}>Restock list{toBuy.length > 0 && <span className="dot">{toBuy.length}</span>}</button>
-        <AdminBtn allowed={isAdmin} className="btn primary" onClick={() => setModal({ kind: 'new' })}>Add ingredient</AdminBtn>
-      </div>
-
-      <div className="stat-row">
-        <div className="panel stat"><div className="k">Items tracked</div><div className="v num">{list.length}</div></div>
-        <div className="panel stat"><div className="k">Needs reorder</div><div className="v num" style={{ color: warn ? 'var(--warn)' : undefined }}>{warn}</div></div>
-        <div className="panel stat"><div className="k">Out of stock</div><div className="v num" style={{ color: out ? 'var(--bad)' : undefined }}>{out}</div></div>
-        <div className="panel stat"><div className="k">Stock value</div><div className="v num">{peso(value)}</div></div>
-      </div>
-
-      <div className="panel tbl-wrap">
-        {!shown.length ? <div className="empty">{!data.loaded ? 'Loading…' : list.length ? 'Nothing in this filter.' : 'No ingredients yet. Add your matcha, milk, cups and syrups.'}</div> : (
-          <table>
-            <thead><tr><th>Ingredient</th><th>Status</th><th className="r">On hand</th><th></th><th className="r">Reorder at</th><th className="r">Used today</th><th className="r">Days left</th><th className="r">Cost</th><th></th></tr></thead>
-            <tbody>
-              {shown.map((i) => {
-                const s = ingStatus(i);
-                const pct = Math.max(0, Math.min(100, (i.stock / Math.max(1, (i.reorder || 1) * 3)) * 100));
-                return (
-                  <tr key={i._id}>
-                    <td><b>{i.name}</b><div className="muted" style={{ fontSize: 12 }}>{i.cat}</div></td>
-                    <td><span className={`pill ${s}`}>{LABEL[s]}</span></td>
-                    <td className="r num"><b>{qfmt(i.stock)}</b> <span className="muted">{i.unit}</span>{i.pack?.size > 0 && i.stock > 0 && <div className="muted" style={{ fontSize: 11 }}>≈ {qfmt(Math.round((i.stock / i.pack.size) * 10) / 10)} {i.pack.name}{Math.abs(i.stock / i.pack.size - 1) < 0.05 ? '' : 's'}</div>}</td>
-                    <td><div className="bar"><i className={s === 'ok' ? '' : s} style={{ width: pct + '%' }} /></div></td>
-                    <td className="r num">{qfmt(i.reorder)} <span className="muted">{i.unit}</span></td>
-                    <td className="r num">{i.usedToday ? qfmt(i.usedToday) : '—'}</td>
-                    <td className="r num">{(() => { const d = daysLeft(i); return d == null ? <span className="muted">—</span> : <span style={{ color: d < 1 ? 'var(--bad)' : d < 3 ? 'var(--warn)' : undefined, fontWeight: d < 3 ? 700 : undefined }}>{d < 1 ? '< 1' : Math.floor(d)}</span>; })()}</td>
-                    <td className="r num">{isAdmin ? <CostCell ing={i} toast={toast} refresh={refresh} onSetup={() => setModal({ kind: 'edit', ing: i, pack: true })} /> : i.pack?.size && i.pack.cost ? `${peso(i.pack.cost)} / ${i.pack.name}` : i.cost ? peso(i.cost) : '—'}</td>
-                    <td className="r" style={{ whiteSpace: 'nowrap' }}>
-                      <button className="btn sm" onClick={() => setModal({ kind: 'recv', ing: i })}>Receive</button>{' '}
-                      <button className="btn sm" onClick={() => setModal({ kind: 'count', ing: i })}>Count</button>{' '}
-                      <button className="btn sm ghost" onClick={() => setModal({ kind: 'waste', ing: i })}>Waste</button>{' '}
-                      <button className="btn sm ghost" onClick={() => setModal({ kind: 'history', ing: i })}>History</button>{' '}
-                      <AdminBtn allowed={isAdmin} className="btn sm" onClick={() => setModal({ kind: 'edit', ing: i })}>Edit</AdminBtn>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      </>}
+      {view === 'stock' && <StockBoard data={data} isAdmin={isAdmin} toast={toast} refresh={refresh} suppliers={suppliers} reloadKey={logKey}
+        openList={openRestock} onListShown={onRestockShown}
+        onAct={(kind, ing) => setModal({ kind, ing })} />}
 
       {modal?.kind === 'recv' && <ReceiveModal ing={modal.ing} list={list} suppliers={suppliers} isAdmin={isAdmin} onClose={() => setModal(null)} done={changed} toast={toast} />}
       {modal?.kind === 'count' && <QtyModal {...modal} onClose={() => setModal(null)} done={changed} toast={toast} />}
@@ -102,7 +44,6 @@ export default function Inventory({ data, refresh, toast, isAdmin, openRestock, 
       {modal?.kind === 'waste' && <WasteModal ing={modal.ing} list={list} products={data.products} settings={data.settings} onClose={() => setModal(null)} done={changed} toast={toast} />}
       {modal && (modal.kind === 'edit' || modal.kind === 'new') && <IngredientModal ing={modal.ing} packFirst={!!modal.pack} onClose={() => setModal(null)} done={changed} toast={toast} />}
       {modal?.kind === 'history' && <HistoryModal ing={modal.ing} onClose={() => setModal(null)} />}
-      {modal?.kind === 'restock' && <RestockModal list={list} shop={data.settings?.name} toast={toast} onClose={() => setModal(null)} />}
     </>
   );
 }
@@ -247,53 +188,6 @@ function HistoryModal({ ing, onClose }) {
             </tr>))}
           </tbody>
         </table></div>
-      )}
-    </Modal>
-  );
-}
-
-// Shopping list for the supplier: everything low or running out within 3 days
-function RestockModal({ list, shop, toast, onClose }) {
-  const items = list.filter(needsRestock).sort((a, b) => (daysLeft(a) ?? 99) - (daysLeft(b) ?? 99));
-  const [qty, setQty] = useState(() => Object.fromEntries(items.map((i) => [i._id, String(restockQty(i))])));
-  const rows = items.map((i) => ({ i, q: Math.max(0, +qty[i._id] || 0) })).filter((r) => r.q > 0);
-  const cost = rows.reduce((a, r) => a + r.q * (+r.i.cost || 0), 0);
-  const today = new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-  const text = [`${shop || 'Matchéa'} restock list · ${today}`, ...rows.map((r) => `• ${r.i.name}: ${qfmt(r.q)} ${r.i.unit}`)].join('\n');
-  const copy = async () => { try { await navigator.clipboard.writeText(text); toast('List copied. Paste it in a message to your supplier.'); } catch { toast('Could not copy. Select the list and copy it by hand.'); } };
-  const csv = () => download(`restock-${new Date().toISOString().slice(0, 10)}.csv`,
-    [['ingredient', 'unit', 'on_hand', 'reorder_at', 'per_day', 'order_qty', 'est_cost'], ...rows.map((r) => [r.i.name, r.i.unit, r.i.stock, r.i.reorder, r.i.perDay, r.q, (r.q * (+r.i.cost || 0)).toFixed(2)])]
-      .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv');
-  return (
-    <Modal title="Restock list" wide onClose={onClose}
-      aside={<span className="muted" style={{ fontSize: 13 }}>{items.length ? `${items.length} to buy` : 'All good'}</span>}
-      footer={<><button className="btn ghost" onClick={onClose}>Close</button>{rows.length > 0 && <><button className="btn" onClick={csv}>Download CSV</button><button className="btn primary" onClick={copy}>Copy list</button></>}</>}>
-      {!items.length ? <p className="muted" style={{ margin: 0 }}>Nothing is low. Items appear here when they reach their reorder level or will run out within 3 days.</p> : (
-        <>
-          <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>Suggested amounts cover about a week at your recent pace. Change any amount before copying.</p>
-          <div className="tbl-wrap">
-            <table>
-              <thead><tr><th>Ingredient</th><th className="r">On hand</th><th className="r">Days left</th><th className="r">Order</th><th className="r">Est. cost</th></tr></thead>
-              <tbody>
-                {items.map((i) => {
-                  const d = daysLeft(i); const s = ingStatus(i);
-                  return (
-                    <tr key={i._id}>
-                      <td><b>{i.name}</b> {s !== 'ok' && <span className={`pill ${s}`}>{s === 'bad' ? 'Out' : 'Low'}</span>}</td>
-                      <td className="r num">{qfmt(i.stock)} <span className="muted">{i.unit}</span></td>
-                      <td className="r num">{d == null ? '—' : d < 1 ? '< 1' : Math.floor(d)}</td>
-                      <td className="r"><span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                        <input className="search num" style={{ width: 90, borderRadius: 8, textAlign: 'right' }} inputMode="decimal" value={qty[i._id]} aria-label={`Order amount for ${i.name}`}
-                          onChange={(e) => setQty({ ...qty, [i._id]: e.target.value.replace(/[^\d.]/g, '') })} /> <span className="muted">{i.unit}</span></span></td>
-                      <td className="r num">{i.cost ? peso((+qty[i._id] || 0) * i.cost) : '—'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot><tr><td colSpan={4} className="r"><b>Estimated total</b></td><td className="r num"><b>{peso(cost)}</b></td></tr></tfoot>
-            </table>
-          </div>
-        </>
       )}
     </Modal>
   );
@@ -614,44 +508,5 @@ function SupplierModal({ s, onClose, done, toast }) {
         <Field id="spNotes" label="Notes" error={errs.notes} hint="Optional · what you buy, delivery days, account number"><input id="spNotes" maxLength={200} value={f.notes} onChange={set('notes')} /></Field>
       </form>
     </Modal>
-  );
-}
-
-// Owner: tap the cost to change it right in the table
-function CostCell({ ing, toast, refresh, onSetup }) {
-  const pk = ing.pack?.size > 0 ? ing.pack : null;
-  const [v, setV] = useState(null); // null = not editing
-  const [busy, setBusy] = useState(false);
-  const save = async () => {
-    if (v == null) return;
-    const n = v.trim() === '' ? 0 : Number(v);
-    if (!Number.isFinite(n) || n < 0 || n > 1000000) { toast(`Enter the price of one ${pk.name}, like 150`); return; }
-    if (n === (+pk.cost || 0)) { setV(null); return; }
-    setBusy(true);
-    try {
-      await api.put(`/ingredients/${ing._id}`, { name: ing.name, cat: ing.cat || '', unit: ing.unit, reorder: ing.reorder ?? 0, packName: pk.name, packSize: pk.size, packCost: n });
-      toast(`${ing.name}: ${peso(n)} per ${pk.name}`); setV(null); refresh();
-    } catch (e) { toast(e.message); }
-    finally { setBusy(false); }
-  };
-  if (!pk) return (
-    <button className={`cost-btn ${ing.cost ? '' : 'none'}`} onClick={onSetup} title="Set the price of what you buy (a carton, a pack…)">
-      <span className="cost-main">{ing.cost ? <>{peso(ing.cost)}<small>/{ing.unit}</small></> : 'Add price'} <span className="pen" aria-hidden="true">✎</span></span>
-    </button>
-  );
-  if (v == null) return (
-    <button className={`cost-btn ${pk.cost ? '' : 'none'}`} onClick={() => setV(pk.cost ? String(pk.cost) : '')} title={`Change the price of one ${pk.name}`}>
-      <span className="cost-main">{pk.cost ? peso(pk.cost) : 'Add price'}<small> / {pk.name}</small></span>
-      <small className="cost-sub">{qfmt(pk.size)} {ing.unit}{pk.cost ? ` · ${peso(ing.cost)}/${ing.unit}` : ''} <span className="pen" aria-hidden="true">✎</span></small>
-    </button>
-  );
-  return (
-    <span className="cost-edit">
-      <span className="muted">₱</span>
-      <input type="number" inputMode="decimal" min="0" step="any" autoFocus value={v} disabled={busy} aria-label={`Price of one ${pk.name} of ${ing.name}`}
-        onChange={(e) => setV(e.target.value)} onBlur={save}
-        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') setV(null); }} />
-      <span className="muted">/{pk.name}</span>
-    </span>
   );
 }

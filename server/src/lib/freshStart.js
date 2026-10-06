@@ -17,7 +17,7 @@ const REQUEST = path.join(DIR, 'fresh-start.request');
 const DONE = path.join(DIR, 'fresh-start.done');
 // sales & online orders, day closings, order numbers, stock history (sales, deliveries, waste, counts),
 // expenses, recycle bin, customer accounts & stamp cards, sign-up codes, customer service chats
-const CLEAR = ['sales', 'daycloses', 'counters', 'stockmoves', 'expenses', 'trashes', 'customers', 'verifies', 'supportthreads', 'supportmsgs'];
+const CLEAR = ['sales', 'daycloses', 'counters', 'stockmoves', 'expenses', 'trashes', 'customers', 'verifies', 'supportthreads', 'supportmsgs', 'restockorders'];
 // Pictures that belong to orders: payment receipts customers sent, refund proofs
 const ORDER_PICS = /^(receipt|refund)-/;
 

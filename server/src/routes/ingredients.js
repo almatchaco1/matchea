@@ -12,6 +12,7 @@ import { checkId } from '../lib/ids.js';
 import { toTrash } from '../lib/trash.js';
 import { checkIngredient, checkStockQty, isObjectId, LIMITS, WASTE_WHY, unitCostOf } from '../../../src/shared/rules.mjs';
 
+export { noteOf, moneyOf, supplierOf };
 const r = Router();
 r.param('id', checkId);
 const fields = (b) => {
@@ -81,29 +82,36 @@ const moneyOf = (v, field) => {
   return Math.round(n * 100) / 100;
 };
 
-// Delivery arrived: add to stock (any staff). Optional: supplier and amount paid (updates the cost per unit).
+// Delivery arrived: add to stock. Optional: supplier and amount paid (updates the cost per unit).
+async function supplierOf(id) {
+  if (!id) return null;
+  if (!isObjectId(String(id))) throw new HttpError(400, 'Choose a supplier from the list.', { supplier: 'Choose a supplier from the list.' });
+  const sup = await Supplier.findById(id, 'name');
+  if (!sup) throw new HttpError(409, 'That supplier was deleted. Choose another.', { supplier: 'That supplier was deleted.' });
+  return sup;
+}
+/** Add qty to an ingredient's stock and log it as a purchase. Used by Receive and by receiving a restock order. */
+export async function receiveOne(ing, { qty, paid = null, sup = null, note = '', by, updateCost = true }) {
+  await applyUsage({ [String(ing._id)]: qty }, 1, { reason: 'receive', by, note });
+  // add the purchase details to the move just logged
+  const move = await StockMove.findOne({ ing: ing._id, reason: 'receive' }).sort({ createdAt: -1, _id: -1 });
+  if (move) await StockMove.updateOne({ _id: move._id }, { value: paid, supplier: sup?._id, supplierName: sup?.name || '' });
+  if (paid != null && paid > 0 && updateCost) {
+    const unit = unitCostOf(paid, qty);
+    await Ingredient.updateOne({ _id: ing._id }, ing.pack?.size ? { cost: unit, 'pack.cost': Math.round(unit * ing.pack.size * 100) / 100 } : { cost: unit });
+  }
+}
+
 r.post('/:id/receive', ah(async (req, res) => {
   const b = req.body || {};
   const note = noteOf(b.note);
   assertValid(checkStockQty(b.qty, 'receive'));
   const qty = +b.qty;
   const paid = moneyOf(b.paid, 'paid');
-  let sup = null;
-  if (b.supplier) {
-    if (!isObjectId(String(b.supplier))) throw new HttpError(400, 'Choose a supplier from the list.', { supplier: 'Choose a supplier from the list.' });
-    sup = await Supplier.findById(b.supplier, 'name');
-    if (!sup) throw new HttpError(409, 'That supplier was deleted. Choose another.', { supplier: 'That supplier was deleted.' });
-  }
+  const sup = await supplierOf(b.supplier);
   const ing = await Ingredient.findById(req.params.id);
   if (!ing) throw new HttpError(404, 'Ingredient not found.');
-  await applyUsage({ [req.params.id]: qty }, 1, { reason: 'receive', by: req.user.name, note });
-  // add the purchase details to the move just logged
-  const move = await StockMove.findOne({ ing: ing._id, reason: 'receive' }).sort({ createdAt: -1, _id: -1 });
-  if (move) await StockMove.updateOne({ _id: move._id }, { value: paid, supplier: sup?._id, supplierName: sup?.name || '' });
-  if (paid != null && paid > 0 && b.updateCost !== false) {
-    const unit = unitCostOf(paid, qty);
-    await Ingredient.updateOne({ _id: ing._id }, ing.pack?.size ? { cost: unit, 'pack.cost': Math.round(unit * ing.pack.size * 100) / 100 } : { cost: unit });
-  }
+  await receiveOne(ing, { qty, paid, sup, note, by: req.user.name, updateCost: b.updateCost !== false });
   res.json(await Ingredient.findById(req.params.id));
 }));
 
