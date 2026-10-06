@@ -101,3 +101,25 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ib-row.us .ib-bub{background:linear-gradient(150deg,#9CCB7A,#7CB257);color:#10200B}}
 :root[data-theme="dark"] .ib-row.us .ib-bub{background:linear-gradient(150deg,#9CCB7A,#7CB257);color:#10200B}
 @media (prefers-reduced-motion:reduce){.ib-row{animation:none}}
+
+/* Solve problem */
+.ib-o b{display:flex;align-items:center;gap:8px}
+.ib-o-fix{border:0;cursor:pointer;font:inherit;font-size:.7rem;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--matcha);color:var(--on-matcha)}
+.ib-o-fix:hover{filter:brightness(1.1)}
+.sv-opts{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.sv-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;cursor:pointer;background:var(--surface);box-shadow:0 0 0 1.5px var(--line);transition:box-shadow .15s,background .15s}
+.sv-opt:hover{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--matcha) 45%,transparent)}
+.sv-opt.on{background:color-mix(in srgb,var(--matcha) 9%,var(--surface));box-shadow:0 0 0 2px var(--matcha)}
+.sv-opt input{position:absolute;opacity:0;pointer-events:none}
+.sv-opt:has(input:focus-visible){outline:2.5px solid var(--matcha);outline-offset:2px}
+.sv-ico{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:var(--ok-bg);color:var(--ok)}
+.sv-ico.rs{background:linear-gradient(150deg,#5E7A44,#324623);color:#FFF8E8}
+.sv-ico svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.sv-t{display:flex;flex-direction:column;min-width:0;line-height:1.35}
+.sv-t small{color:var(--muted);font-size:.84rem}
+.sv-check{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:14px;background:var(--warn-bg);color:var(--ink);cursor:pointer;margin-bottom:10px;line-height:1.4}
+.sv-check.on{background:var(--ok-bg)}
+.sv-check.plain{background:none;padding:4px 2px;margin:8px 0 0}
+.sv-check input{width:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--matcha)}
+.sv-msg{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.9rem}
+.sv-msg textarea{font:inherit;font-weight:400;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}

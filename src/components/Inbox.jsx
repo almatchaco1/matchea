@@ -4,6 +4,7 @@ import { api, getToken } from '../lib/api';
 import { peso, pad } from '../lib/format';
 import { shrinkImage } from '../lib/shrinkImage';
 import { ago } from './Staff';
+import Modal from './Modal';
 import '../inbox.css';
 
 const QUICK = [
@@ -38,7 +39,7 @@ function Img({ id, local, onOpen }) {
   return url ? <button type="button" className="ib-img" onClick={() => onOpen(url)}><img src={url} alt="Sent by the customer" /></button> : <span className="ib-img loading" />;
 }
 
-export default function Inbox({ toast, onCount }) {
+export default function Inbox({ toast, onCount, onOrders }) {
   const [list, setList] = useState(null);
   const [filter, setFilter] = useState('open');
   const [q, setQ] = useState('');
@@ -56,7 +57,7 @@ export default function Inbox({ toast, onCount }) {
 
   const loadList = useCallback(() => api.get('/support').then((d) => { setList(d); setErr(''); }).catch((e) => setErr(e.message)), []);
   const loadConv = useCallback((id) => api.get(`/support/${id}`)
-    .then((d) => { setConv((prev) => (prev && prev.thread._id === d.thread._id && prev.messages.length === d.messages.length && prev.thread.status === d.thread.status ? prev : d)); onCount?.(); })
+    .then((d) => { setConv((prev) => (prev && prev.thread._id === d.thread._id && prev.messages.length === d.messages.length && prev.thread.status === d.thread.status && (prev.orders || []).map((o) => o.status).join() === (d.orders || []).map((o) => o.status).join() ? prev : d)); onCount?.(); })
     .catch((e) => { setErr(e.message); }), [onCount]);
 
   useEffect(() => { loadList(); const t = setInterval(loadList, 5000); return () => clearInterval(t); }, [loadList]);
@@ -91,10 +92,8 @@ export default function Inbox({ toast, onCount }) {
       setText(''); setPic(''); loadList();
     } catch (x) { setErr(x.message); } finally { setSending(false); box.current?.focus(); }
   };
-  const resolve = async () => {
-    try { const r = await api.post(`/support/${active._id}/resolve`); setConv((c) => ({ ...c, thread: r.thread })); loadConv(active._id); loadList(); toast?.('Marked as solved'); }
-    catch (x) { setErr(x.message); }
-  };
+  const [solving, setSolving] = useState(false);
+  const solved = (msg) => { setSolving(false); loadConv(active._id); loadList(); onOrders?.(); toast?.(msg); };
   const attach = async (e) => {
     const f = e.target.files?.[0]; e.target.value = '';
     if (!f) return;
@@ -184,15 +183,16 @@ export default function Inbox({ toast, onCount }) {
               <b>{active.name}</b>
               <small>{active.phone ? <a href={`tel:${active.phone}`}>{active.phone}</a> : 'No mobile number'}{active.topic && <> · {active.topic}</>}</small>
             </div>
-            {active.status === 'open'
-              ? <button className="btn sm ib-solve" onClick={resolve}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 10 17 19 7" /></svg>Mark as solved</button>
-              : <span className="tag ok">Solved</span>}
+            {active.status === 'resolved' && <span className="tag ok">Solved</span>}
+            {(active.status === 'open' || conv.orders?.some((o) => o.restorable)) && (
+              <button className="btn sm primary ib-solve" onClick={() => setSolving(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 10 17 19 7" /></svg>Solve problem</button>
+            )}
           </header>
           {conv.orders?.length > 0 && (
             <div className="ib-orders" aria-label="Recent online orders">
               {conv.orders.map((o) => (
                 <span key={o.code || o.no + o.at} className={`ib-o s-${o.status} ${active.orderCode && o.code === active.orderCode ? 'about' : ''}`} title={o.cancelReason || undefined}>
-                  <b>#{pad(o.no)}</b>
+                  <b>#{pad(o.no)}{o.restorable && <button type="button" className="ib-o-fix" onClick={() => setSolving(o._id)}>Restore</button>}</b>
                   <small>{STATUS[o.status] || o.status} · {peso(o.total)}{o.method ? ` · ${METHOD[o.method] || o.method}` : ''}</small>
                   <small className="ib-o-d">{dayOf(o.at)} {timeOf(o.at)}</small>
                 </span>
@@ -222,11 +222,90 @@ export default function Inbox({ toast, onCount }) {
         </>)}
       </section>
 
+      {solving && active && <SolveModal thread={active} orders={conv.orders || []} pick={typeof solving === 'string' ? solving : null} onClose={() => setSolving(false)} onDone={solved} />}
       {view && (
         <div className="ib-view" role="dialog" aria-label="Picture" onClick={() => setView('')}>
           <img src={view} alt="Sent by the customer" />
         </div>
       )}
     </div>
+  );
+}
+
+/** "Solve problem": put a cancelled order back on (payment found) or just close the conversation. */
+function SolveModal({ thread, orders, pick, onClose, onDone }) {
+  const restorable = orders.filter((o) => o.restorable);
+  const first = pick || restorable.find((o) => o.code && o.code === thread.orderCode)?._id || restorable[0]?._id || 'solve';
+  const [choice, setChoice] = useState(first);
+  const order = restorable.find((o) => o._id === choice);
+  const name = thread.name.split(' ')[0];
+  const method = order ? METHOD[order.method] || '' : '';
+  const restoreMsg = (o) => `Good news! ${o.qrUnchecked && METHOD[o.method] ? `We found your ${METHOD[o.method]} payment. ` : ''}Order #${pad(o.no)} is back on and we’re making it now. Sorry for the trouble!`;
+  const [msg, setMsg] = useState(order ? restoreMsg(order) : `Glad we could help, ${name}! Message us anytime.`);
+  const [found, setFound] = useState(false);
+  const [close, setClose] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const pickChoice = (c) => {
+    setChoice(c); setErr(''); setFound(false);
+    const o = restorable.find((x) => x._id === c);
+    setMsg(o ? restoreMsg(o) : `Glad we could help, ${name}! Message us anytime.`);
+  };
+  const go = async () => {
+    setErr('');
+    if (order?.qrUnchecked && !found) { setErr(`Tick the box after you find the payment in your ${method || 'GCash / Maya'} app.`); return; }
+    setBusy(true);
+    try {
+      if (order) {
+        await api.post(`/online/${order._id}/restore`, { paymentOk: found || undefined, message: msg.trim(), solve: close });
+        onDone(`Order #${pad(order.no)} is back on. It’s in Online → Preparing.`);
+      } else {
+        if (msg.trim()) await api.post(`/support/${thread._id}/reply`, { text: msg.trim() });
+        if (thread.status === 'open') await api.post(`/support/${thread._id}/resolve`);
+        onDone('Marked as solved');
+      }
+    } catch (x) { setErr(x.message); setBusy(false); }
+  };
+  return (
+    <Modal title="Solve problem" onClose={onClose}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={busy} onClick={go}>{busy ? 'Saving…' : order ? `Restore order #${pad(order.no)}` : 'Mark as solved'}</button></>}>
+      <p className="muted" style={{ margin: 0 }}>How was {name}’s problem fixed?</p>
+      <div className="sv-opts" role="radiogroup">
+        {restorable.map((o) => (
+          <label key={o._id} className={`sv-opt ${choice === o._id ? 'on' : ''}`}>
+            <input type="radio" name="sv" checked={choice === o._id} onChange={() => pickChoice(o._id)} />
+            <span className="sv-ico rs" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" /></svg></span>
+            <span className="sv-t">
+              <b>Restore cancelled order #{pad(o.no)}</b>
+              <small>{o.qrUnchecked ? `Payment found. ` : ''}It goes back to Preparing so the barista makes it. {peso(o.total)}{METHOD[o.method] ? ` · ${METHOD[o.method]}` : ''}</small>
+            </span>
+          </label>
+        ))}
+        <label className={`sv-opt ${choice === 'solve' ? 'on' : ''}`}>
+          <input type="radio" name="sv" checked={choice === 'solve'} onChange={() => pickChoice('solve')} />
+          <span className="sv-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" /></svg></span>
+          <span className="sv-t"><b>Problem solved</b><small>No change to any order. Just close the conversation.</small></span>
+        </label>
+      </div>
+      {order?.qrUnchecked && (
+        <label className={`sv-check ${found ? 'on' : ''}`}>
+          <input type="checkbox" checked={found} onChange={(e) => { setFound(e.target.checked); setErr(''); }} />
+          <span>I checked our {method || 'GCash / Maya'} app and found <b>{peso(order.total)}</b>{order.qrRef && <> with reference <b>{order.qrRef}</b></>}.</span>
+        </label>
+      )}
+      {order?.paidOnline && <div className="warnbox">This order was paid online. Don’t refund it in PayMongo anymore: the customer is getting their drinks.</div>}
+      {order?.freeDrink && <p className="fhint" style={{ margin: 0 }}>This order used a free drink: 9 stamps are taken from the customer’s card again.</p>}
+      <label className="sv-msg">
+        <span>Message to {name}{order ? '' : ' (optional)'}</span>
+        <textarea rows={3} maxLength={500} value={msg} onChange={(e) => setMsg(e.target.value)} />
+      </label>
+      {order && (
+        <label className="sv-check plain">
+          <input type="checkbox" checked={close} onChange={(e) => setClose(e.target.checked)} />
+          <span>Also mark this conversation as solved</span>
+        </label>
+      )}
+      {err && <div className="banner">{err}</div>}
+    </Modal>
   );
 }

@@ -275,14 +275,12 @@ function ContactShop({ shop, no, qr, chat }) {
     tel && { k: 'sms', label: 'Text us', sub: s.phone, href: `sms:${tel}?&body=${encodeURIComponent(msg)}` },
     tel && { k: 'tel', label: 'Call us', sub: s.phone, href: `tel:${tel}` },
     s.email && { k: 'mail', label: 'Email us', sub: s.email, href: `mailto:${s.email}?subject=${encodeURIComponent(`Order #${pad(no)}`)}&body=${encodeURIComponent(msg)}` },
-    s.instagram && { k: 'ig', label: 'Message us on Instagram', sub: 'Instagram', href: s.instagram },
   ].filter(Boolean);
   const ico = {
     fb: <path d="M12 3C7 3 3 6.7 3 11.3c0 2.6 1.3 4.9 3.3 6.4V21l3-1.7c.8.2 1.7.3 2.7.3 5 0 9-3.7 9-8.3S17 3 12 3Zm1 10.8-2.3-2.4-4.4 2.4 4.9-5.2 2.3 2.4 4.4-2.4-4.9 5.2Z" />,
     sms: <path d="M4 5h16v11H8l-4 3V5Zm4 5h.01M12 10h.01M16 10h.01" />,
     tel: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />,
     mail: <path d="M3 6h18v12H3V6Zm0 0 9 7 9-7" />,
-    ig: <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm5 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm5.5-1.5h.01" />,
   };
   return (
     <div className="ct-shop">

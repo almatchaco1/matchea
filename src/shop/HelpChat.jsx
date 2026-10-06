@@ -122,6 +122,7 @@ export default function HelpChat({ me, go, orders, shop, onSeen }) {
           {m.orderNo != null && <span className="hc-ref">Order #{pad(m.orderNo)}</span>}
           {m.img && <ChatImg id={m._id} local={m.local} onOpen={setView} />}
           {m.text && <p>{m.text}</p>}
+          {!mine && m.orderCode && <button type="button" className="hc-track" onClick={() => go(`/order/${m.orderCode}`)}>Track order #{pad(m.orderNo)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>}
           <time>{m.pending ? 'Sending…' : timeOf(m.at)}</time>
         </div>
       </li>,

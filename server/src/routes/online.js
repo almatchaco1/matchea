@@ -9,7 +9,8 @@ import { checkCheckout } from '../../../src/shared/rules.mjs';
 import { r2, PAY_METHODS } from '../../../src/shared/pricing.mjs';
 import { settleOnlinePayment } from './public.js';
 import { paymongoMode } from '../lib/paymongo.js';
-import { awardStamps, returnReward } from '../lib/loyalty.js';
+import { awardStamps, returnReward, redeemReward } from '../lib/loyalty.js';
+import { postToCustomer } from './support.js';
 import { notifyReady } from '../lib/notify.js';
 import { checkOverride } from '../middleware/auth.js';
 import { finishDelivery } from '../lib/delivery.js';
@@ -190,6 +191,39 @@ r.post('/:id/cancel', ah(async (req, res) => {
   }
   await returnReward(sale);
   res.json(sale);
+}));
+
+// Undo a cancel (e.g. the GCash payment was found after all): the order goes back to "Preparing",
+// the stock is taken again, and the customer is told in their customer service chat.
+export const RESTORE_DAYS = 3;
+r.post('/:id/restore', ah(async (req, res) => {
+  const cur = await Sale.findOne({ _id: req.params.id, source: 'online' });
+  if (!cur) throw new HttpError(404, 'Order not found.');
+  if (cur.status !== 'cancelled') throw new HttpError(409, 'Only a cancelled order can be restored. The list will refresh.');
+  if (!cur.cancelledAt || Date.now() - cur.cancelledAt > RESTORE_DAYS * 864e5) throw new HttpError(409, `This order was cancelled more than ${RESTORE_DAYS} days ago. Ask the customer to order again instead.`);
+  const qrUnchecked = cur.qrPay?.method && !cur.qrPay.verified;
+  if (qrUnchecked && req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash / Maya for this payment first, then tick “I found the payment”.', { paymentOk: 'Tick this after checking.' });
+  // A free drink that was given back on cancel is used again
+  if (cur.stampsUsed > 0 && cur.stampsReturned) {
+    if (!cur.customerId) throw new HttpError(409, 'This order used a free drink that can’t be taken again.');
+    await redeemReward(cur.customerId).catch(() => { throw new HttpError(409, 'This order used a free drink, but the customer no longer has enough stamps. Ask them to order again instead.'); });
+  }
+  const set = {
+    status: 'preparing', acceptedAt: new Date(), cashier: req.user._id, cashierName: req.user.name, stockDeducted: true,
+    noShow: false, refundDue: false, hiddenByCustomer: false, stampsReturned: false, restoredAt: new Date(), restoredBy: req.user.name,
+    ...(qrUnchecked ? { 'qrPay.verified': true, 'qrPay.verifiedBy': req.user.name, paidAt: new Date(), pay: { method: cur.qrPay.method, tendered: cur.total, change: 0, ref: cur.qrPay.ref } } : {}),
+    ...(cur.fulfil === 'delivery' ? { 'delivery.state': 'waiting' } : {}),
+  };
+  const sale = await Sale.findOneAndUpdate({ _id: cur._id, status: 'cancelled' }, { $set: set, $unset: { cancelledAt: 1, cancelReason: 1 } }, { new: true });
+  if (!sale) throw new HttpError(409, 'This order just changed. The list will refresh.');
+  await applyUsage(usageMap(sale.usage), -1, { reason: 'sale', by: req.user.name, sale: sale._id, note: 'Online order restored' });
+  const no = String(sale.no).padStart(3, '0');
+  const paidBy = sale.qrPay?.method ? { gcash: 'GCash', maya: 'Maya' }[sale.qrPay.method] || 'online' : '';
+  const text = String(req.body?.message || '').trim().slice(0, 500)
+    || `Good news! ${paidBy && qrUnchecked ? `We found your ${paidBy} payment. ` : ''}Order #${no} is back on and we’re making it now. Sorry for the trouble!`;
+  await postToCustomer(sale.customerId, { text, staffName: req.user.name, orderNo: sale.no, orderCode: sale.trackCode || '', solve: req.body?.solve !== false })
+    .catch((e) => console.error('Chat message failed:', e.message));
+  res.json(forStaff(sale));
 }));
 
 export default r;

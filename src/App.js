@@ -254,7 +254,7 @@ export default function App() {
           {(shownTab === 'register' || ((shownTab === 'staff' || shownTab === 'customers') && !isAdmin)) && <Register {...shared} {...trainProps} cart={cart} setCart={setCart} />}
           {shownTab === 'barista' && <Barista {...shared} {...trainProps} key={training ? 'train' : 'real'} />}
           {!training && <>
-          {tab === 'messages' && <Inbox toast={toast} onCount={loadMsgs} />}
+          {tab === 'messages' && <Inbox toast={toast} onCount={loadMsgs} onOrders={loadOnline} />}
           {tab === 'online' && <Online {...shared} orders={online} meta={onlineMeta} reload={loadOnline} />}
           {tab === 'inventory' && <Inventory {...shared} openRestock={openRestock} onRestockShown={() => setOpenRestock(false)} />}
           {tab === 'menu' && <Menu {...shared} goInventory={() => go('inventory')} />}

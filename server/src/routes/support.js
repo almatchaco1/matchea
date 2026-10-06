@@ -4,9 +4,12 @@
 import { Router } from 'express';
 import { SupportThread, SupportMsg } from '../models/Support.js';
 import Sale from '../models/Sale.js';
+import Customer from '../models/Customer.js';
 import { requireCustomer } from '../middleware/customerAuth.js';
 import { ah, HttpError } from '../lib/util.js';
 import { checkId } from '../lib/ids.js';
+
+const RESTORE_DAYS = 3; // same as /online/:id/restore
 
 export const TEXT_MAX = 1000;
 const IMG_MAX = 700000; // data URL length (the browser makes pictures small first)
@@ -42,6 +45,26 @@ async function sendImg(res, msg) {
   if (!msg?.img || !msg.imgType) throw new HttpError(404, 'Picture not found.');
   res.set('Cache-Control', 'private, max-age=86400');
   res.type(msg.imgType).send(Buffer.from(msg.img.buffer || msg.img));
+}
+
+/** Post a message from the shop into a customer's chat (made if they never chatted). Used when an order is restored. */
+export async function postToCustomer(customerId, { text, staffName = '', from = 'staff', orderNo = null, orderCode = '', solve = false }) {
+  if (!customerId) return null;
+  let t = await SupportThread.findOne({ customerId });
+  if (!t) {
+    const c = await Customer.findById(customerId, 'name phone').lean();
+    if (!c) return null;
+    t = new SupportThread({ customerId, name: c.name, phone: c.phone || '' });
+  }
+  const m = await SupportMsg.create({ threadId: t._id, from, staffName, text, orderNo, orderCode });
+  t.lastAt = m.createdAt; t.lastText = text.slice(0, 140); t.lastFrom = from === 'system' ? t.lastFrom : 'staff';
+  t.unreadCustomer = (t.unreadCustomer || 0) + 1; t.unreadStaff = 0;
+  if (solve && t.status !== 'resolved') {
+    await SupportMsg.create({ threadId: t._id, from: 'system', text: 'This conversation was marked as solved. Send a message anytime if you need more help.' });
+    t.status = 'resolved';
+  }
+  await t.save();
+  return t;
 }
 
 // ---------------------------------------------------------------- customer
@@ -126,14 +149,16 @@ support.get('/:id', ah(async (req, res) => {
   if (!t) throw new HttpError(404, 'This conversation no longer exists.');
   const [msgs, orders] = await Promise.all([
     SupportMsg.find({ threadId: t._id }).sort({ createdAt: -1 }).limit(200).lean(),
-    Sale.find({ customerId: t.customerId, source: 'online' }, 'no status total createdAt trackCode fulfil qrPay.method pay.method cancelReason')
+    Sale.find({ customerId: t.customerId, source: 'online' }, 'no status total createdAt trackCode fulfil qrPay.method qrPay.ref qrPay.verified pay.method cancelReason cancelledAt paidOnline stampsUsed')
       .sort({ createdAt: -1 }).limit(5).lean(),
   ]);
   if (t.unreadStaff) await SupportThread.updateOne({ _id: t._id }, { unreadStaff: 0 });
   res.json({
     thread: threadOut(t), messages: msgs.reverse().map(msgOut),
-    orders: orders.map((o) => ({ no: o.no, status: o.status, total: o.total, at: o.createdAt, code: o.trackCode || '', delivery: o.fulfil === 'delivery',
-      method: o.qrPay?.method || o.pay?.method || '', cancelReason: o.cancelReason || '' })),
+    orders: orders.map((o) => ({ _id: o._id, no: o.no, status: o.status, total: o.total, at: o.createdAt, code: o.trackCode || '', delivery: o.fulfil === 'delivery',
+      method: o.qrPay?.method || o.pay?.method || '', cancelReason: o.cancelReason || '', paidOnline: !!o.paidOnline, freeDrink: o.stampsUsed > 0,
+      qrRef: o.qrPay?.ref || '', qrUnchecked: !!o.qrPay?.method && !o.qrPay.verified,
+      restorable: o.status === 'cancelled' && !!o.cancelledAt && Date.now() - o.cancelledAt <= RESTORE_DAYS * 864e5 })),
   });
 }));
 

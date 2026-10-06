@@ -78,6 +78,7 @@ const saleSchema = new mongoose.Schema(
     stampsBalance: Number,                          // customer's stamps right after this order
     stampsTakenBack: Boolean,
     readyNotified: Boolean,
+    restoredAt: Date, restoredBy: String, // a cancelled order put back on (e.g. the payment was found)
     hiddenByCustomer: Boolean, // customer closed this cancelled order: not shown in their order list
     pickupCode: String, // online orders: 4 digits the customer tells staff at pickup
     pickupApprovedBy: String, // admin who let the order go without the code
