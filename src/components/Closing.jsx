@@ -75,6 +75,14 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
             </div>
           )}
 
+          {c.refundsSent?.length > 0 && (
+            <div className="banner info-banner">
+              <b>Refunds sent today ({peso(c.refundsSent.reduce((a, r) => a + r.amount, 0))}):</b>{' '}
+              {c.refundsSent.map((r) => `#${pad(r.no)} ${peso(r.amount)} by ${r.method === 'paymongo' ? 'PayMongo' : PAY_LABELS[r.method] || r.method}${r.ref ? ` (ref ${r.ref})` : ''} · ${r.by} ${r.time}`).join(' · ')}.
+              {' '}This money left your {c.refundsSent.some((r) => r.method !== 'paymongo') ? 'GCash / Maya' : 'PayMongo'} balance, not the cash drawer.
+            </div>
+          )}
+
           <div className="stat-row">
             <div className="panel stat"><div className="k">Net sales</div><div className="v num">{peso(c.net)}</div></div>
             <div className="panel stat"><div className="k">Orders</div><div className="v num">{c.orders}</div></div>

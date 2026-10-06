@@ -90,10 +90,11 @@ function staffSummary(list, cost) {
 
 // ---------- End-of-day closing: ?date=YYYY-MM-DD ----------
 async function closing(date) {
-  const [sales, close, waste] = await Promise.all([
+  const [sales, close, waste, refundsSent] = await Promise.all([
     Sale.find({ date }, 'no source status createdAt cashierName customer lines subtotal discount total vat pay voidedBy voidReason voidedAt refundDue stampsUsed qrPay paidOnline staffForName cost usage fulfil deliveryFee delivery').sort({ createdAt: 1 }).lean(),
     DayClose.findOne({ date }).lean(),
     movesInDays('waste', date, date),
+    Sale.find({ 'refund.date': date }, 'no refund').lean(),
   ]);
   const paid = sales.filter((x) => x.status === 'paid');
   const checked = new Set(close?.checked || []);
@@ -120,6 +121,7 @@ async function closing(date) {
     voids: sales.filter((x) => x.status === 'void').map((x) => ({ no: x.no, time: hm(x.createdAt), total: x.total, by: x.voidedBy || '', reason: x.voidReason || '' })),
     cancelled: sales.filter((x) => x.status === 'cancelled').length,
     refundsDue: sales.filter((x) => x.refundDue).map((x) => ({ no: x.no, total: x.total, method: x.qrPay?.verified ? x.qrPay.method : 'paymongo', ref: x.qrPay?.ref || x.pay?.ref || '' })),
+    refundsSent: refundsSent.map((x) => ({ no: x.no, amount: x.refund.amount, method: x.refund.method, ref: x.refund.ref || '', by: x.refund.by || '', time: hm(x.refund.at) })),
     unfinished: sales.filter((x) => ['new', 'preparing', 'ready'].includes(x.status)).length,
     top: Object.values(items).sort((a, b) => b.qty - a.qty || b.sales - a.sales).slice(0, 5),
     cashiers: Object.values(cashiers).sort((a, b) => b.net - a.net),

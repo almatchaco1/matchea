@@ -279,6 +279,17 @@ r.get('/orders/:code', ah(async (req, res) => {
   res.json(publicView(await settle(sale))); // checks PayMongo if it's still waiting for payment
 }));
 
+// Proof of a refund the shop sent (the tracking code is the secret, like the order page itself)
+r.get('/orders/:code/refund-shot', ah(async (req, res) => {
+  const code = String(req.params.code || '');
+  if (!/^[A-Za-z0-9_-]{8,20}$/.test(code)) throw new HttpError(404, 'Not found.');
+  const sale = await Sale.findOne({ trackCode: code, source: 'online' }, '_id refund').lean();
+  const a = sale?.refund?.shot && await Asset.findOne({ key: `refund-${sale._id}` }).lean();
+  if (!a) throw new HttpError(404, 'Not found.');
+  res.set('Cache-Control', 'private, max-age=3600');
+  res.type(a.type).send(Buffer.from(a.data.buffer || a.data));
+}));
+
 // Customer changes their mind while payment is pending: switch to pay at pickup, or cancel
 r.post('/orders/:code/pay-later', ah(async (req, res) => {
   const sale = await Sale.findOne({ trackCode: String(req.params.code), source: 'online' });
@@ -351,6 +362,8 @@ const publicView = (s) => ({
   checkoutUrl: s.status === 'awaiting_payment' ? s.checkoutUrl || '' : '',
   payDeadline: s.status === 'awaiting_payment' ? new Date(new Date(s.createdAt).getTime() + PAY_WINDOW_MIN * 60000) : null,
   refundDue: !!s.refundDue,
+  refund: s.refund?.at ? { amount: s.refund.amount, method: s.refund.method, to: s.refund.to ? s.refund.to.replace(/^(\d{4})\d{3}(\d{4})$/, '$1 ••• $2') : '', ref: s.refund.ref || '', at: s.refund.at, shot: !!s.refund.shot } : null,
+  refundTo: s.refundDue && !s.paidOnline && s.phone ? String(s.phone).replace(/^(\d{4})\d{3}(\d{4})$/, '$1 ••• $2') : '',
   qrPay: s.qrPay?.method ? { method: s.qrPay.method, ref: s.qrPay.ref, verified: !!s.qrPay.verified, at: s.qrPay.at || s.createdAt, shot: !!s.qrPay.shot } : null,
   cancelReason: s.status === 'cancelled' ? s.cancelReason || '' : '',
   pickupCode: ['new', 'preparing', 'ready'].includes(s.status) ? s.pickupCode || '' : '',

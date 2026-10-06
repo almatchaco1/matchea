@@ -13,6 +13,7 @@ import { mapsLink, addressLine } from '../shared/delivery.mjs';
 import AdminPin from './AdminPin';
 import { QrHint, ShowQr, QR_LABEL } from './PayQr';
 import { useFlip, flyInto } from '../lib/motion';
+import Refunds from './Refunds';
 
 const COLS = [
   ['new', 'New', 'Accept to start making it. Stock is taken when you accept.'],
@@ -77,6 +78,8 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
         {meta.paymentMode === 'off' && <span className="pill mute" title="Add PayMongo keys to server/.env to turn on">Online payment off · pay at pickup only</span>}
         {meta.awaitingPayment > 0 && <span className="muted"> · {meta.awaitingPayment} waiting for the customer to pay</span>}
       </p>
+
+      <Refunds toast={toast} count={meta.refundsDue || 0} onChange={reload} />
 
       <div className={`kanban ${showOnway ? 'has-onway' : ''}`} ref={board}>
         {COLS.filter(([st]) => st !== 'onway' || showOnway).map(([st, title, hint]) => {
@@ -164,6 +167,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
                     ? <span className="pill ok">Paid · {PAY_LABELS[o.pay.method] || o.pay.method}{o.paidOnline ? ' (online)' : o.qrPay?.verified ? ' (QR)' : ''}</span>
                     : o.refundDue
                       ? <span className="pill bad" title={o.qrPay?.verified ? `Send ${peso(o.total)} back to the customer by ${QR_LABEL[o.qrPay.method]} ${o.qrPay.ref ? ` (ref ${o.qrPay.ref})` : ''}` : `Refund ${peso(o.total)} in the PayMongo dashboard (ref ${o.pay.ref})`}>Cancelled · refund due</span>
+                      : o.refund?.at ? <span className="pill ok" title={`${peso(o.refund.amount)} sent by ${o.refund.by}${o.refund.ref ? `, ref ${o.refund.ref}` : ''}`}>Cancelled · refunded</span>
                       : <span className="pill mute" title={o.cancelReason}>Cancelled</span>}</td>
                   <td className="r num">{peso(o.total)}</td>
                 </tr>))}
@@ -282,9 +286,9 @@ function CancelModal({ order, onClose, onDone }) {
     <Modal title={`Cancel order #${pad(order.no)}?`} onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Keep order</button><button className="btn danger" onClick={submit}>{order.notFound ? 'Cancel · payment not found' : 'Cancel order'}</button></>}>
       <p className="muted" style={{ margin: 0 }}>{order.customer} will see the reason on their order page.{order.stockDeducted ? ' Ingredients go back into stock.' : ''}</p>
-      {order.qrPay?.verified && <div className="warnbox">This order was paid by {qr} QR ({peso(order.total)}{order.qrPay.ref && <>, ref <b>{order.qrPay.ref}</b></>}). After cancelling, send the money back to the customer by {qr}.</div>}
+      {order.qrPay?.verified && <div className="warnbox">This order was paid by {qr} QR ({peso(order.total)}{order.qrPay.ref && <>, ref <b>{order.qrPay.ref}</b></>}). After cancelling, it goes to <b>Refunds to send</b> at the top of this tab: send the money back by {qr} and record it there.</div>}
       {order.notFound && <div className="warnbox">Only do this after checking your {qr} app for {peso(order.total)}{order.qrPay.ref && <> with reference <b>{order.qrPay.ref}</b></>}. The customer will see the reason below.</div>}
-      {order.paidOnline && <div className="warnbox">This order was paid online ({PAY_LABELS[order.pay.method] || 'Online'}, {peso(order.total)}). After cancelling, refund it in your PayMongo dashboard using reference <b>{order.pay.ref}</b>.</div>}
+      {order.paidOnline && <div className="warnbox">This order was paid online ({PAY_LABELS[order.pay.method] || 'Online'}, {peso(order.total)}). After cancelling, refund it in your PayMongo dashboard using reference <b>{order.pay.ref}</b>, then record it in <b>Refunds to send</b>.</div>}
       <div className="opts">{presets.map((p) => <button key={p} className="opt" aria-pressed={reason === p} onClick={() => { setReason(p); setErr(''); }}>{p}</button>)}</div>
       {reason === 'Did not pick up' && !order.paidOnline && !order.qrPay?.method && <p className="fhint" style={{ margin: 0 }}>This counts as a no-show. After 2 no-shows in 60 days, this customer has to pay first (GCash, Maya or online) for new orders.</p>}
       <Field id="cReason" label="Reason" error={err}>

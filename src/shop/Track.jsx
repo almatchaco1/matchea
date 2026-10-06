@@ -126,10 +126,11 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
         )
       ) : cancelled ? (<>
         <div className="shop-alert">
-          This order was cancelled{o.cancelReason ? `: ${o.cancelReason}` : '.'}{' '}
-          {o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total + (o.onlineFee || 0))} will be refunded. The shop may contact you.` : o.qrPay ? '' : 'You were not charged.'}
+          This order was cancelled{o.cancelReason ? `: ${o.cancelReason}${/[.!?]$/.test(o.cancelReason) ? '' : '.'}` : '.'}{' '}
+          {o.refund ? '' : o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total + (o.onlineFee || 0))} will be refunded.` : o.qrPay ? '' : 'You were not charged.'}
         </div>
-        <ContactShop shop={menu?.shop} no={o.no} qr={o.qrPay ? qr : ''} chat={signedIn ? <HelpButton go={go} order={code} /> : null} />
+        {(o.refundDue || o.refund) && <RefundBox o={o} code={code} label={o.refund ? { gcash: 'GCash', maya: 'Maya', paymongo: payLabel }[o.refund.method] || o.refund.method : qr || payLabel} />}
+        <ContactShop shop={menu?.shop} no={o.no} qr={o.qrPay ? qr : ''} refund={o.refundDue || !!o.refund} chat={signedIn ? <HelpButton go={go} order={code} /> : null} />
       </>) : (<>
         {o.pickupCode && (
           <div className={`pk-code ${o.status === 'ready' ? 'ready' : ''} ${reveal && o.status === 'ready' ? 'reveal' : ''}`}>
@@ -266,7 +267,7 @@ function messenger(fb) {
 }
 
 /** Shown on a cancelled order: how to reach the shop (from Menu → Shop & options) */
-function ContactShop({ shop, no, qr, chat }) {
+function ContactShop({ shop, no, qr, chat, refund }) {
   const s = shop || {};
   const tel = (s.phone || '').replace(/[^\d+]/g, '');
   const msg = `Hi! About my order #${pad(no)}${qr ? ` (paid by ${qr})` : ''}.`;
@@ -285,7 +286,7 @@ function ContactShop({ shop, no, qr, chat }) {
   return (
     <div className="ct-shop">
       <b className="ct-h">Need help with this order?</b>
-      <p className="ct-p">{chat
+      <p className="ct-p">{refund ? (chat ? 'Questions about your refund, or want it sent to a different number? Chat with us.' : `Questions about your refund? Mention order #${pad(no)}.`) : chat
         ? (qr ? `If you already paid by ${qr}, chat with us and send your receipt screenshot. We’ll sort it out with you.` : 'Chat with us and we’ll sort it out with you.')
         : (qr ? `If you already paid by ${qr}, send us your receipt screenshot and order number #${pad(no)}. We’ll sort it out with you.` : `Mention your order number #${pad(no)} so we can help faster.`)}</p>
       {chat}
@@ -301,6 +302,43 @@ function ContactShop({ shop, no, qr, chat }) {
         </div>
       ) : chat ? null : (
         <p className="ct-p">{s.address ? `Visit us at ${s.address} and show this page at the counter.` : 'Show this page at the counter and we’ll help you.'}</p>
+      )}
+    </div>
+  );
+}
+
+/** Cancelled after paying: where the refund is, and the shop's proof once it's sent */
+function RefundBox({ o, code, label }) {
+  const [view, setView] = useState(false);
+  const r = o.refund;
+  const amount = peso(r ? r.amount : o.total + (o.onlineFee || 0));
+  const when = r ? new Date(r.at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' }) : '';
+  return (
+    <div className={`rfb ${r ? 'rfb-done' : 'rfb-wait'}`}>
+      <div className="rfb-top">
+        <span className="rfb-ico" aria-hidden="true">
+          {r ? <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" /></svg> : <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" /></svg>}
+        </span>
+        <div>
+          <small>{r ? 'Refunded' : 'Refund on the way'}</small>
+          <b className="num">{amount}</b>
+        </div>
+      </div>
+      <ol className="rfb-steps">
+        <li className="on"><i /> <span>Order cancelled</span></li>
+        <li className={r ? 'on' : 'now'}><i /> <span>{r ? `Sent by ${label}${r.to ? ` to ${r.to}` : ''}` : `Sending back by ${label}${o.refundTo ? ` to ${o.refundTo}` : ''}`}</span></li>
+        <li className={r ? 'on' : ''}><i /> <span>{r ? `Refunded · ${when}` : 'Refunded'}</span></li>
+      </ol>
+      {r ? (<>
+        {r.ref && <p className="rfb-ref">Reference no. <b className="num">{r.ref}</b></p>}
+        {r.method === 'paymongo' && <p className="rfb-note">Card and bank refunds can take 5–10 banking days to show.</p>}
+        {r.shot && <button type="button" className="sh-btn ghost rfb-proof" onClick={() => setView(true)}>View refund receipt</button>}
+      </>) : <p className="rfb-note">The shop sends the full amount back. You’ll see the reference number and receipt here once it’s sent.</p>}
+      {view && createPortal(
+        <div className="rfb-view" role="dialog" aria-label="Refund receipt" onClick={() => setView(false)}>
+          <img src={`/api/public/orders/${code}/refund-shot`} alt="Refund receipt from the shop" />
+          <button type="button" aria-label="Close">×</button>
+        </div>, document.querySelector('.shop') || document.body,
       )}
     </div>
   );

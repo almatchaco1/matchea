@@ -36,7 +36,7 @@ app.set('trust proxy', 1); // real client IPs behind Render/Railway/Nginx (used 
 const smallJson = express.json({ limit: '200kb', verify: (req, _res, buf) => { req.rawBody = buf.toString('utf8'); } }); // raw body kept for PayMongo webhook signatures
 const bigJson = express.json({ limit: '4mb' }); // QR image uploads only
 const orderJson = express.json({ limit: '1mb' }); // online orders can carry a small receipt screenshot
-app.use((req, res, next) => (/^\/api\/settings\/qr\//.test(req.path) ? bigJson : req.method === 'POST' && (req.path === '/api/public/orders' || /^\/api\/(help\/messages|support\/[\w]+\/reply)$/.test(req.path)) ? orderJson : smallJson)(req, res, next));
+app.use((req, res, next) => (/^\/api\/settings\/qr\//.test(req.path) ? bigJson : req.method === 'POST' && (req.path === '/api/public/orders' || /^\/api\/(help\/messages|support\/[\w]+\/reply|online\/[\w]+\/refund)$/.test(req.path)) ? orderJson : smallJson)(req, res, next));
 if (process.env.CLIENT_ORIGIN) app.use(cors({ origin: process.env.CLIENT_ORIGIN.split(',') }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, db: mongoose.connection.readyState === 1 }));

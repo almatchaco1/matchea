@@ -149,7 +149,7 @@ support.get('/:id', ah(async (req, res) => {
   if (!t) throw new HttpError(404, 'This conversation no longer exists.');
   const [msgs, orders] = await Promise.all([
     SupportMsg.find({ threadId: t._id }).sort({ createdAt: -1 }).limit(200).lean(),
-    Sale.find({ customerId: t.customerId, source: 'online' }, 'no status total createdAt trackCode fulfil qrPay.method qrPay.ref qrPay.verified pay.method cancelReason cancelledAt paidOnline stampsUsed')
+    Sale.find({ customerId: t.customerId, source: 'online' }, 'no status total createdAt trackCode fulfil qrPay.method qrPay.ref qrPay.verified pay.method cancelReason cancelledAt paidOnline stampsUsed refund.at')
       .sort({ createdAt: -1 }).limit(5).lean(),
   ]);
   if (t.unreadStaff) await SupportThread.updateOne({ _id: t._id }, { unreadStaff: 0 });
@@ -158,7 +158,7 @@ support.get('/:id', ah(async (req, res) => {
     orders: orders.map((o) => ({ _id: o._id, no: o.no, status: o.status, total: o.total, at: o.createdAt, code: o.trackCode || '', delivery: o.fulfil === 'delivery',
       method: o.qrPay?.method || o.pay?.method || '', cancelReason: o.cancelReason || '', paidOnline: !!o.paidOnline, freeDrink: o.stampsUsed > 0,
       qrRef: o.qrPay?.ref || '', qrUnchecked: !!o.qrPay?.method && !o.qrPay.verified,
-      restorable: o.status === 'cancelled' && !!o.cancelledAt && Date.now() - o.cancelledAt <= RESTORE_DAYS * 864e5 })),
+      restorable: o.status === 'cancelled' && !o.refund?.at && !!o.cancelledAt && Date.now() - o.cancelledAt <= RESTORE_DAYS * 864e5 })),
   });
 }));
 

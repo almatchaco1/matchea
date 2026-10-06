@@ -54,7 +54,9 @@ const saleSchema = new mongoose.Schema(
       readAmount: Number, amountOff: Boolean, unread: Boolean }, // read from the screenshot in the customer's browser: amount on the receipt, differs from the order, ref couldn't be read // paidAt: time on the customer's receipt; timeOld: minutes it was before the order (set when that's suspiciously long)
     noShow: { type: Boolean, default: false }, // cancelled because the customer never picked it up
     onlineFee: { type: Number, default: 0 }, // PayMongo fee the customer paid on top of the total (the shop still receives the total)
-    refundDue: { type: Boolean, default: false }, // paid online, then cancelled: refund in the PayMongo dashboard
+    refundDue: { type: Boolean, default: false }, // paid, then cancelled: the money still has to go back to the customer
+    // The refund staff sent (GCash / Maya from the shop's app, or in the PayMongo dashboard), with proof for the customer
+    refund: { amount: Number, method: String, to: String, ref: String, note: String, by: String, at: Date, date: String, shot: Boolean },
     lines: [lineSchema],
     subtotal: Number,
     discount: { type: { type: String, default: 'none' }, pct: Number, amount: Number, idNo: String, idName: String, approvedBy: String }, // idNo/idName: Senior / PWD; approvedBy: admin who OK'd a big discount

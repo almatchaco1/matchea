@@ -121,3 +121,39 @@
   background:linear-gradient(150deg,var(--green-2),var(--green));color:#FFF8E8}
 .shop .hc-track svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 @media (prefers-color-scheme:dark){.shop .hc-track{background:linear-gradient(150deg,#9CCB7A,#7CB257);color:#10200B}}
+
+/* Refund status on a cancelled order */
+.shop .rfb{margin:0 0 14px;padding:16px;border-radius:20px;background:var(--card);box-shadow:0 0 0 1px rgba(50,70,35,.1),0 12px 26px -20px rgba(30,36,24,.5)}
+.shop .rfb.rfb-done{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--matcha) 60%,transparent),0 12px 26px -20px rgba(30,36,24,.5)}
+.shop .rfb-top{display:flex;align-items:center;gap:12px}
+.shop .rfb-top small{display:block;font-size:.8rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.shop .rfb-top b{font-size:1.6rem;letter-spacing:-.02em;color:var(--green)}
+.shop .rfb-ico{flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--amber-bg);color:var(--amber)}
+.shop .rfb.rfb-done .rfb-ico{background:linear-gradient(150deg,var(--green-2),var(--green));color:#FFF8E8}
+.shop .rfb-ico svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.shop .rfb.rfb-wait .rfb-ico svg{animation:rfbSpin 2.4s linear infinite}
+@keyframes rfbSpin{to{transform:rotate(-360deg)}}
+.shop .rfb-steps{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:0}
+.shop .rfb-steps li{position:relative;display:flex;align-items:flex-start;gap:12px;padding:0 0 14px;color:var(--ink-2);font-size:.92rem}
+.shop .rfb-steps li:last-child{padding-bottom:0}
+.shop .rfb-steps li i{flex:none;position:relative;width:14px;height:14px;margin-top:3px;border-radius:50%;background:var(--line);box-shadow:0 0 0 3px var(--card)}
+.shop .rfb-steps li:not(:last-child)::before{content:"";position:absolute;left:6px;top:16px;bottom:0;width:2px;background:var(--line)}
+.shop .rfb-steps li.on{color:var(--ink)}
+.shop .rfb-steps li.on i{background:var(--green)}
+.shop .rfb-steps li.on:not(:last-child)::before{background:var(--green)}
+.shop .rfb-steps li.now{color:var(--ink);font-weight:700}
+.shop .rfb-steps li.now i{background:var(--amber);box-shadow:0 0 0 3px var(--card),0 0 0 6px color-mix(in srgb,var(--amber) 25%,transparent)}
+.shop .rfb-ref{margin:12px 0 0;font-size:.92rem}
+.shop .rfb-note{margin:10px 0 0;font-size:.85rem;color:var(--ink-2)}
+.shop .rfb-proof{width:100%;margin-top:12px}
+.shop .rfb-view{position:fixed;inset:0;z-index:90;background:rgba(10,12,8,.9);display:grid;place-items:center;padding:20px}
+.shop .rfb-view img{max-width:100%;max-height:100%;border-radius:12px}
+.shop .rfb-view button{position:absolute;top:16px;right:16px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:24px}
+@media (prefers-color-scheme:dark){
+  .shop .rfb{background:rgba(255,255,255,.05);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+  .shop .rfb-top b{color:#A9D38A}
+  .shop .rfb.rfb-done .rfb-ico{background:linear-gradient(150deg,#9CCB7A,#7CB257);color:#10200B}
+  .shop .rfb-steps li i{box-shadow:0 0 0 3px #1b2016}
+  .shop .rfb-steps li.on i,.shop .rfb-steps li.on:not(:last-child)::before{background:#9CCB7A}
+}
+@media (prefers-reduced-motion:reduce){.shop .rfb.rfb-wait .rfb-ico svg{animation:none}}

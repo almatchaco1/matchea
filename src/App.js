@@ -73,13 +73,13 @@ export default function App() {
   const [hideStock, setHideStock] = useState('');
   // Online orders: polled on every tab so staff notice new ones
   const [online, setOnline] = useState([]);
-  const [onlineMeta, setOnlineMeta] = useState({ awaitingPayment: 0, paymentMode: 'off' });
+  const [onlineMeta, setOnlineMeta] = useState({ awaitingPayment: 0, refundsDue: 0, paymentMode: 'off' });
   const seenNew = useRef(null);
   const loadOnline = useCallback(async () => {
     try {
-      const { orders: list, awaitingPayment, paymentMode } = await api.get('/online');
+      const { orders: list, awaitingPayment, refundsDue = 0, paymentMode } = await api.get('/online');
       setOnline(list);
-      setOnlineMeta({ awaitingPayment, paymentMode });
+      setOnlineMeta({ awaitingPayment, refundsDue, paymentMode });
       const ids = list.filter((o) => o.status === 'new').map((o) => o._id);
       if (seenNew.current && ids.some((id) => !seenNew.current.has(id))) chime();
       seenNew.current = new Set(ids);
@@ -155,6 +155,7 @@ export default function App() {
   const isAdmin = user?.role === 'admin';
   const showStock = lowList.length > 0 && tab !== 'inventory' && hideStock !== lowKey;
   const showNew = newCount > 0 && tab !== 'online' && !training;
+  const showRefunds = onlineMeta.refundsDue > 0 && tab !== 'online' && !training;
   usePosRipples();
   // Auto sign-out after 30 minutes with no taps or typing (a warning shows 1 minute before).
   // The Barista screen in full screen (the kitchen display) stays signed in.
@@ -222,12 +223,18 @@ export default function App() {
             <button className="btn sm" onClick={() => setTraining(false)}>End training</button>
           </div>
         )}
-        {(showNew || showStock || weakPin) && (
+        {(showNew || showStock || weakPin || showRefunds) && (
           <div className="notes" role="status">
             {showNew && (
               <button className="note n-new" onClick={() => go('online')}>
                 <NoteIcon d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Zm4 4h4" />
                 <span><b>{newCount} new online {newCount === 1 ? 'order' : 'orders'}</b><small>Tap to open</small></span>
+              </button>
+            )}
+            {showRefunds && (
+              <button className="note n-refund" onClick={() => go('online')}>
+                <NoteIcon d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" />
+                <span><b>{onlineMeta.refundsDue} {onlineMeta.refundsDue === 1 ? 'refund' : 'refunds'} to send</b><small>Paid orders that were cancelled</small></span>
               </button>
             )}
             {showStock && (
