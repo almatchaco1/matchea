@@ -1,12 +1,13 @@
 // Sign up / sign in: mobile number + password, Google, Facebook. Plus the "add your number" step.
 import { useEffect, useRef, useState } from 'react';
 import { call, loadScript } from './api';
+import './auth9.css';
 import { checkSignup, checkPhone, checkCustomerName, checkPassword, normPhone, fmtPhoneInput, cleanName, passwordHasPersonal, commonPassword } from '../shared/rules.mjs';
 
 let config = null;
 const getConfig = () => { if (!config) config = call('GET', '/customer/config').catch(() => ({})); return config; };
 
-export function AuthPage({ mode, go, onSignedIn, shop }) {
+export function AuthPage({ mode, go, onSignedIn, shop, items = [] }) {
   const signup = mode === 'signup';
   const [f, setF] = useState({ name: '', phone: '', password: '', confirmPassword: '', agree: false, website: '' });
   const [errs, setErrs] = useState({});
@@ -57,13 +58,16 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
     finally { setBusy(false); }
   };
 
-  if (verify) return <div className="au"><div className="au-card"><CodeStep verify={verify} endpoint="/customer/verify" onDone={onSignedIn} onBack={() => setVerify(null)} /></div></div>;
+  const art = <AuthArt signup={signup} items={items} />;
+  if (verify) return <div className="au au9">{art}<div className="au-card au9-card"><CodeStep verify={verify} endpoint="/customer/verify" onDone={onSignedIn} onBack={() => setVerify(null)} /></div></div>;
 
   return (
-    <div className="au">
-      <div className="au-card">
+    <div className="au au9">
+      {art}
+      <div className="au-card au9-card">
         <img className="au-logo" src="/brand/matchea-word.webp" alt="Matchéa" width="900" height="274" />
-        <div className="au-tabs" role="tablist">
+        <div className={`au-tabs au9-tabs ${signup ? 'two' : 'one'}`} role="tablist">
+          <i className="au9-slide" aria-hidden="true" />
           <a role="tab" aria-selected={!signup} href={'/signin' + next} onClick={(e) => { e.preventDefault(); go('/signin' + next, { replace: true }); }}>Sign in</a>
           <a role="tab" aria-selected={signup} href={'/signup' + next} onClick={(e) => { e.preventDefault(); go('/signup' + next, { replace: true }); }}>Create account</a>
         </div>
@@ -83,7 +87,7 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
 
         <form onSubmit={submit} noValidate className="au-form">
           {signup && (
-            <Field label="Your name" error={errs.name}>
+            <Field label="Your name" error={errs.name} icon="user">
               <input value={f.name} onChange={set('name')} onBlur={() => setF((x) => ({ ...x, name: cleanName(x.name) }))} autoComplete="name" maxLength={40} placeholder="Ana Reyes" />
             </Field>
           )}
@@ -92,15 +96,15 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
               <div className="au-phone"><span>PH</span><input value={f.phone} onChange={set('phone')} inputMode="tel" autoComplete="tel" placeholder="0917 123 4567" maxLength={13} /></div>
             </Field>
           ) : (
-            <Field label="Mobile number or email" error={errs.phone}>
+            <Field label="Mobile number or email" error={errs.phone} icon="id">
               <input value={f.phone} onChange={set('phone')} autoComplete="username" autoCapitalize="none" placeholder="0917 123 4567 or name@gmail.com" maxLength={80} />
             </Field>
           )}
-          <Field label={signup ? 'Create a password' : 'Password'} error={errs.password}>
+          <Field label={signup ? 'Create a password' : 'Password'} error={errs.password} icon="lock">
             <PasswordBox value={f.password} onChange={set('password')} show={show} setShow={setShow} autoComplete={signup ? 'new-password' : 'current-password'} />
           </Field>
           {signup && <NewPasswordChecks pw={f.password} confirm={f.confirmPassword} name={f.name} phone={f.phone} confirmError={errs.confirmPassword}
-            confirmBox={<PasswordBox value={f.confirmPassword} onChange={set('confirmPassword')} show={show} setShow={setShow} autoComplete="new-password" />} />}
+            confirmBox={<span className="au-ic"><PasswordBox value={f.confirmPassword} onChange={set('confirmPassword')} show={show} setShow={setShow} autoComplete="new-password" /><svg className="au-ic-i" viewBox="0 0 24 24" aria-hidden="true"><path d={FIELD_ICON.lock} /></svg></span>} />}
           {/* bot guard: people never see or fill this box */}
           <input className="au-hp" tabIndex={-1} autoComplete="off" aria-hidden="true" name="website" value={f.website} onChange={set('website')} />
           {signup && (
@@ -111,7 +115,9 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
           )}
           {errs.agree && <small className="au-err" role="alert">{errs.agree}</small>}
           {msg && <div className="shop-alert" role="alert">{msg}</div>}
-          <button className="sh-btn big" disabled={busy}>{busy ? 'Please wait…' : signup ? 'Create account' : 'Sign in'}</button>
+          <button className="sh-btn big au9-go" disabled={busy}>
+            {busy ? <><span className="au9-spin" aria-hidden="true" />Please wait…</> : <>{signup ? 'Create account' : 'Sign in'}<span className="au9-go-i" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span></>}
+          </button>
         </form>
         <p className="au-foot">
           {signup ? 'Already have an account? ' : 'New here? '}
@@ -119,16 +125,41 @@ export function AuthPage({ mode, go, onSignedIn, shop }) {
         </p>
         {!signup && <p className="au-fine"><a href="/forgot" onClick={(e) => { e.preventDefault(); go('/forgot'); }}>Forgot your password?</a></p>}
         {signup && <p className="au-fine">We only use your number for your orders{shop?.name ? ` at ${shop.name}` : ''}.</p>}
+        <p className="au9-safe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3Zm-3 9 2 2 4-4" /></svg>Your password is stored securely.</p>
       </div>
     </div>
   );
 }
 
-export function Field({ label, error, hint, children }) {
+/** Left side of the sign-in page: brand panel with drinks and what you get. */
+function AuthArt({ signup, items }) {
+  const cups = [...items].filter((i) => i.image && !i.soldOut).sort((a, b) => (b.bestSeller ? 1 : 0) - (a.bestSeller ? 1 : 0)).slice(0, 3);
+  return (
+    <aside className="au9-art" aria-hidden="true">
+      <span className="au9-kanji" lang="ja">抹茶</span>
+      <span className="au9-rings"><i /><i /></span>
+      <img className="au9-logo" src="/brand/matchea-word.webp" alt="" width="900" height="274" />
+      <p className="au9-head">{signup ? <>Your matcha,<br /><em>ready when you are.</em></> : <>Your usual is<br /><em>one tap away.</em></>}</p>
+      {cups.length > 0 && <div className={`au9-cups n${cups.length}`}>{cups.map((c, i) => <img key={c._id} src={c.image} alt="" className={`c${i}`} />)}<span className="au9-floor" /></div>}
+      <ul className="au9-perks">
+        <li><i><svg viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" /></svg></i>Order ahead, skip the line</li>
+        <li><i><svg viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" /></svg></i>See when your drink is ready</li>
+        <li><i><svg viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" /></svg></i>10th drink free with your stamp card</li>
+      </ul>
+    </aside>
+  );
+}
+
+const FIELD_ICON = {
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0',
+  id: 'M4 6h16v12H4zM4 7l8 6 8-6',
+  lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 15v2',
+};
+export function Field({ label, error, hint, icon, children }) {
   return (
     <label className={`au-field ${error ? 'invalid' : ''}`}>
       <span>{label}</span>
-      {children}
+      {icon ? <span className="au-ic">{children}<svg className="au-ic-i" viewBox="0 0 24 24" aria-hidden="true"><path d={FIELD_ICON[icon]} /></svg></span> : children}
       {error ? <em role="alert">{error}</em> : hint ? <i>{hint}</i> : null}
     </label>
   );

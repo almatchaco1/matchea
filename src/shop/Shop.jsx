@@ -137,7 +137,7 @@ export default function Shop() {
   const track = pathname.match(/^\/order\/([\w-]{8,20})$/);
   let page;
   if (pathname === '/forgot') page = <ForgotPage go={go} onSignedIn={onSignedIn} />;
-  else if (pathname === '/signin' || pathname === '/signup') page = <AuthPage mode={pathname.slice(1)} go={go} onSignedIn={onSignedIn} shop={menu?.shop} />;
+  else if (pathname === '/signin' || pathname === '/signup') page = <AuthPage mode={pathname.slice(1)} go={go} onSignedIn={onSignedIn} shop={menu?.shop} items={menu?.items} />;
   else if (track) page = <Track code={track[1]} go={go} onChange={loadOrders} signedIn={!!me} menu={menu} who={me?.name} mine={orders.find((o) => o.code === track[1])}
     onReorder={menu ? reorder : null} />;
   else if (pathname === '/privacy') page = <Privacy shop={menu?.shop} />;
