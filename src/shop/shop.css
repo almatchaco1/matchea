@@ -468,7 +468,7 @@
 @media (max-width:860px){.sh-foot{grid-template-columns:1fr 1fr}.sf-brand{grid-column:1 / -1}}
 @media (max-width:480px){.sh-foot{grid-template-columns:1fr}}
 
-/* Pay by scanning the shop's GCash / GoTyme QR */
+/* Pay by scanning the shop's GCash QR */
 .qrpay{display:flex;flex-direction:column;align-items:center;gap:10px;border:1.5px solid var(--green);background:var(--cream);border-radius:18px;padding:16px;margin:4px 0 6px}
 .qrpay-h{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
 .qrpay-h b{font-family:var(--serif);color:var(--green);font-size:18px}

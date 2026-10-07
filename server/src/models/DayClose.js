@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-// End-of-day closing: who closed the day, the cash count and which GCash/GoTyme payments were checked.
+// End-of-day closing: who closed the day, the cash count and which GCash payments were checked.
 const dayCloseSchema = new mongoose.Schema(
   {
     date: { type: String, required: true, unique: true }, // YYYY-MM-DD

@@ -1,4 +1,4 @@
-// Online tab: paid orders that were cancelled. Staff send the money back from the shop's GCash / GoTyme
+// Online tab: paid orders that were cancelled. Staff send the money back from the shop's GCash
 // (or in PayMongo), then record the reference and a screenshot here so the customer sees proof.
 import { useCallback, useEffect, useState } from 'react';
 import { api, getToken } from '../lib/api';

@@ -1,4 +1,4 @@
-// The shop's own GCash / GoTyme QR codes: set them up (owner) and show them to customers at the counter.
+// The shop's own GCash QR codes: set them up (owner) and show them to customers at the counter.
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { peso } from '../lib/format';
@@ -6,7 +6,7 @@ import Modal from './Modal';
 import { isQrPh, qrPhInfo } from '../shared/qrph.mjs';
 import { AmountQr } from '../lib/payqr';
 
-export const QR_LABEL = { gcash: 'GCash', gotyme: 'GoTyme' };
+export const QR_LABEL = { gcash: 'GCash' };
 export const qrSrc = (kind, v) => `/api/public/qr/${kind}?v=${v}`;
 export const hasQr = (settings, kind) => !!settings?.qr?.[kind]?.v;
 const fmtNo = (n) => String(n || '').replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3');
@@ -31,9 +31,9 @@ async function fileToDataUrl(file) {
   } finally { URL.revokeObjectURL(url); }
 }
 
-/** Owner: upload the GCash and GoTyme QR, and choose how online customers may pay. */
+/** Owner: upload the GCash QR, and choose how online customers may pay. */
 export function QrSettingsModal({ settings, onClose, done, toast }) {
-  const [f, setF] = useState(() => Object.fromEntries(['gcash', 'gotyme'].map((k) => [k, { image: null, payload: undefined, read: null, name: settings?.qr?.[k]?.name || '', number: settings?.qr?.[k]?.number || '' }])));
+  const [f, setF] = useState(() => Object.fromEntries(['gcash'].map((k) => [k, { image: null, payload: undefined, read: null, name: settings?.qr?.[k]?.name || '', number: settings?.qr?.[k]?.number || '' }])));
   const [opts, setOpts] = useState({ qrOnline: settings?.qrOnline !== false, payAtPickup: settings?.payAtPickup !== false });
   const [errs, setErrs] = useState({});
   const [busy, setBusy] = useState(false);
@@ -53,15 +53,15 @@ export function QrSettingsModal({ settings, onClose, done, toast }) {
     if (!read) return null;
     return read === 'ok'
       ? <div className="qr-ok">✓ The amount fills in by itself for customers{(x.payload || settings?.qr?.[k]?.payload) ? ` · pays ${qrPhInfo(x.payload || settings.qr[k].payload).name}` : ''}</div>
-      : <div className="qr-warn">{read === 'other' ? 'This QR isn’t a GCash / GoTyme payment QR.' : 'Couldn’t read the QR in this picture.'} Customers would have to type the amount. Try a clear screenshot of the QR from “Receive”.</div>;
+      : <div className="qr-warn">{read === 'other' ? 'This QR isn’t a GCash payment QR.' : 'Couldn’t read the QR in this picture.'} Customers would have to type the amount. Try a clear screenshot of the QR from “Receive”.</div>;
   };
   const preview = (k) => (f[k].image === '' ? null : f[k].image || (settings?.qr?.[k]?.v ? qrSrc(k, settings.qr[k].v) : null));
-  const anyQr = ['gcash', 'gotyme'].some((k) => preview(k));
+  const anyQr = ['gcash'].some((k) => preview(k));
 
   const save = async () => {
     setBusy(true); setErrs({});
     const e = {};
-    for (const k of ['gcash', 'gotyme']) {
+    for (const k of ['gcash']) {
       const cur = settings?.qr?.[k] || {};
       if (f[k].image == null && f[k].name === (cur.name || '') && f[k].number === (cur.number || '')) continue;
       try { await api.put(`/settings/qr/${k}`, { image: f[k].image ?? undefined, payload: f[k].image ? f[k].payload || '' : undefined, name: f[k].name, number: f[k].number }); }
@@ -74,11 +74,11 @@ export function QrSettingsModal({ settings, onClose, done, toast }) {
   };
 
   return (
-    <Modal wide title="GCash & GoTyme QR" onClose={onClose}
+    <Modal wide title="GCash QR" onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button></>}>
-      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>Upload a screenshot of your receive-money QR from the GCash or GoTyme app (without an amount). Customers see it when they order online, with their order total already filled in.</p>
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>Upload a screenshot of your receive-money QR from the GCash app (without an amount). Customers see it when they order online, with their order total already filled in.</p>
       <div className="qr-set">
-        {['gcash', 'gotyme'].map((k) => (
+        {['gcash'].map((k) => (
           <div className="qr-card" key={k}>
             <h4>{QR_LABEL[k]}</h4>
             <div className="qr-prev">{preview(k) ? <img src={preview(k)} alt={`${QR_LABEL[k]} QR`} /> : <span>No QR yet</span>}</div>
@@ -96,7 +96,7 @@ export function QrSettingsModal({ settings, onClose, done, toast }) {
       <div className="opt-group" style={{ marginTop: 14 }}>
         <h4>Online orders</h4>
         <label className={`check ${opts.qrOnline ? 'on' : ''}`}><input type="checkbox" checked={opts.qrOnline} onChange={(e) => setOpts({ ...opts, qrOnline: e.target.checked })} disabled={!anyQr} />
-          Customers can pay by scanning the QR when they order. They type the reference number, and you accept the order after checking your GCash / GoTyme.</label>
+          Customers can pay by scanning the QR when they order. They type the reference number, and you accept the order after checking your GCash.</label>
         <label className={`check ${opts.payAtPickup ? 'on' : ''}`}><input type="checkbox" checked={opts.payAtPickup} onChange={(e) => setOpts({ ...opts, payAtPickup: e.target.checked })} />
           Customers can also choose “Pay at pickup”. Untick to accept only orders that are paid first.</label>
         {!opts.payAtPickup && !(opts.qrOnline && anyQr) && <div className="warnbox">With pay at pickup off and no QR, customers can only pay through PayMongo if it’s set up. If it isn’t, pay at pickup stays available.</div>}
@@ -124,10 +124,10 @@ export function ShowQr({ kind, settings, amount, onClose }) {
   );
 }
 
-/** Small "Show QR" row under the GCash / GoTyme choice. */
+/** Small "Show QR" row under the GCash choice. */
 export function QrHint({ kind, settings, amount, onShow }) {
-  if (!['gcash', 'gotyme'].includes(kind)) return null;
-  if (!hasQr(settings, kind)) return <p className="muted qr-hint">No {QR_LABEL[kind]} QR uploaded yet. The owner can add it in Menu → GCash & GoTyme QR.</p>;
+  if (!['gcash'].includes(kind)) return null;
+  if (!hasQr(settings, kind)) return <p className="muted qr-hint">No {QR_LABEL[kind]} QR uploaded yet. The owner can add it in Menu → GCash QR.</p>;
   return (
     <button type="button" className="qr-hint-btn" onClick={onShow}>
       <img src={qrSrc(kind, settings.qr[kind].v)} alt="" />

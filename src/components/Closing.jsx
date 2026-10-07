@@ -1,4 +1,4 @@
-// End-of-day closing: what came in today, by payment method, with every GCash / GoTyme
+// End-of-day closing: what came in today, by payment method, with every GCash
 // payment to tick off against the phone. "Close the day" saves the totals and makes a backup.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
@@ -79,7 +79,7 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
             <div className="banner info-banner">
               <b>Refunds sent today ({peso(c.refundsSent.reduce((a, r) => a + r.amount, 0))}):</b>{' '}
               {c.refundsSent.map((r) => `#${pad(r.no)} ${peso(r.amount)} by ${r.method === 'paymongo' ? 'PayMongo' : PAY_LABELS[r.method] || r.method}${r.ref ? ` (ref ${r.ref})` : ''} · ${r.by} ${r.time}`).join(' · ')}.
-              {' '}This money left your {c.refundsSent.some((r) => r.method !== 'paymongo') ? 'GCash / GoTyme' : 'PayMongo'} balance, not the cash drawer.
+              {' '}This money left your {c.refundsSent.some((r) => r.method !== 'paymongo') ? 'GCash' : 'PayMongo'} balance, not the cash drawer.
             </div>
           )}
 
@@ -105,11 +105,11 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
             </div>
 
             <div className="panel">
-              <div className="card-h"><h3>Check GCash & GoTyme</h3><span className={`pill ${c.refs.length && checkedN === c.refs.length ? 'ok' : 'mute'}`}>{checkedN} of {c.refs.length} checked</span></div>
+              <div className="card-h"><h3>Check GCash payments</h3><span className={`pill ${c.refs.length && checkedN === c.refs.length ? 'ok' : 'mute'}`}>{checkedN} of {c.refs.length} checked</span></div>
               <div className="card-b">
-                {!c.refs.length ? <div className="muted">No GCash or GoTyme payments on this day.</div> : (
+                {!c.refs.length ? <div className="muted">No GCash payments on this day.</div> : (
                   <>
-                    <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>Tick each one once you see it in your GCash / GoTyme app.</p>
+                    <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>Tick each one once you see it in your GCash app.</p>
                     <ul className="cl-refs">
                       {c.refs.map((r) => (
                         <li key={r.id}>

@@ -1,5 +1,5 @@
 // The shop's own GCash QR, bundled with the app, so customers can pay by QR right away.
-// Only used when no GCash QR has been set yet (Menu → GCash & GoTyme QR can change or remove it).
+// Only used when no GCash QR has been set yet (Menu → GCash QR can change or remove it).
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

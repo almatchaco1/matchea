@@ -116,7 +116,7 @@ h1,h2,h3,.sec{font-variation-settings:"SOFT" 100,"WONK" 0;font-weight:700;letter
 .dl-add{align-self:flex-start}
 @media (max-width:520px){.dl-area{flex-wrap:wrap}.dl-area .grow{flex-basis:100%}}
 
-/* ===== Register: payment box (cash / GCash / GoTyme) ===== */
+/* ===== Register: payment box (cash / GCash) ===== */
 .pay-box{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:18px;background:var(--surface);box-shadow:var(--card-sh);animation:pbIn .3s cubic-bezier(.22,1,.36,1)}
 @keyframes pbIn{from{opacity:0;transform:translateY(6px)}}
 .pb-due{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:2px 2px 8px;border-bottom:1px dashed var(--line)}
@@ -148,7 +148,7 @@ h1,h2,h3,.sec{font-variation-settings:"SOFT" 100,"WONK" 0;font-weight:700;letter
 .pb-change.short{background:var(--bad-bg);color:var(--bad)}
 .pb-change.warn{background:var(--warn-bg);color:var(--warn)}
 @keyframes pbPop{from{transform:scale(.85);opacity:.4}}
-/* GCash / GoTyme: confirm the money arrived */
+/* GCash: confirm the money arrived */
 .pb-got{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:var(--surface2);box-shadow:inset 0 0 0 1.5px var(--line);cursor:pointer;transition:box-shadow .2s,background .2s}
 .pb-got input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:#2F6A22}
 .pb-got span{display:flex;flex-direction:column;gap:2px}

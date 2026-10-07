@@ -16,7 +16,6 @@
 .shop .pay2-ico{flex:none;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--pink-2);color:var(--green);transition:transform .35s var(--spring),background .3s}
 .shop .pay2-ico svg{width:24px;height:24px}
 .shop .pay.pay2 .pk-gcash .pay2-ico,.shop .pay.pay2 .pk-pm-gcash .pay2-ico{background:#E3EEFF}
-.shop .pay.pay2 .pk-gotyme .pay2-ico{background:#DDF3F6}
 .shop .pay.pay2 .pk-pickup .pay2-ico{background:#E5EFD9}
 .shop .pay.pay2 label>span{display:flex;flex-direction:column;gap:2px;min-width:0}
 .shop .pay.pay2 label b{font-size:15px}
@@ -34,7 +33,6 @@
   .shop .pay.pay2{background:rgba(255,255,255,.03);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
   .shop .pay.pay2 label,.shop .pay.pay2 label:has(input:checked){background:rgba(255,255,255,.04);border:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.08)}
   .shop .pay.pay2 .pk-gcash .pay2-ico,.shop .pay.pay2 .pk-pm-gcash .pay2-ico{background:rgba(10,109,255,.16)}
-  .shop .pay.pay2 .pk-gotyme .pay2-ico{background:rgba(63,220,236,.14)}
   .shop .pay.pay2 .pk-pickup .pay2-ico{background:rgba(155,203,120,.14);color:#B4DA97}
   .shop .pay.pay2 label.on,.shop .pay.pay2 label.on:has(input:checked){color:#10200B;background:radial-gradient(120% 140% at 100% 0%,rgba(255,255,255,.35),transparent 55%),linear-gradient(150deg,#B4DA97,#86B862);box-shadow:0 0 0 1.5px #8CBF68,0 14px 26px -14px rgba(0,0,0,.9)}
   .shop .pay.pay2 label.on small{color:rgba(16,32,11,.7)}

@@ -35,7 +35,7 @@ export const PACK_NAMES = ['carton', 'pack', 'bottle', 'bag', 'box', 'can', 'tub
 /** ₱ per unit from a pack price: ₱150 for 1000 ml → 0.15 */
 export const unitCostOf = (packCost, packSize) => Math.round(((+packCost || 0) / (+packSize || 1)) * 10000) / 10000;
 export const DISCOUNTS = ['none', 'pct', 'scpwd'];
-export const METHODS = ['cash', 'gcash', 'gotyme'];
+export const METHODS = ['cash', 'gcash'];
 export const ROLES = ['admin', 'cashier'];
 
 const str = (v) => (v == null ? '' : String(v)).trim();
@@ -246,7 +246,6 @@ export function checkCheckout({ lineCount, total, discount = {}, pay = {}, custo
     const ref = String(pay.ref || '').replace(/[\s-]/g, '');
     if (ref.length > LIMITS.ref) e.ref = `At most ${LIMITS.ref} characters.`;
     else if (ref && pay.method === 'gcash' && !/^\d{13}$/.test(ref)) e.ref = /\D/.test(ref) ? 'A GCash reference no. has numbers only.' : `A GCash reference no. has 13 digits (this has ${ref.length}).`;
-    else if (ref && pay.method === 'gotyme' && !/^[A-Za-z0-9]{6,30}$/.test(ref)) e.ref = 'A GoTyme reference no. has 6 to 30 letters or numbers.';
   }
   return e;
 }
@@ -407,7 +406,7 @@ export function checkStoreInfo(b = {}) {
   return e;
 }
 
-/** Checks a GCash / GoTyme reference number. GCash: 13 digits. GoTyme: 6–30 letters or numbers. Returns an error or ''. */
+/** Checks a GCash reference number (13 digits; old Maya / GoTyme refs: 6–30 letters or numbers). Returns an error or ''. */
 export function checkQrRef(method, raw) {
   const ref = String(raw || '').replace(/[\s-]/g, '').toUpperCase();
   if (!ref) return 'Type the reference number from your payment receipt.';
@@ -421,7 +420,7 @@ export function checkQrRef(method, raw) {
   return '';
 }
 /**
- * The time on the customer's GCash / GoTyme receipt ("HH:MM", 24-hour, Philippine time).
+ * The time on the customer's GCash receipt ("HH:MM", 24-hour, Philippine time).
  * Returns { err } or { paidAt, mins } where mins = how long before `now` the payment was made.
  * A time a little later than now is allowed (phone clocks differ); just after midnight a late-evening time counts as yesterday.
  */

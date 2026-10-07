@@ -47,8 +47,8 @@ r.post('/:id/accept', ah(async (req, res) => {
   const cur = await Sale.findOne({ _id: req.params.id, source: 'online' }, 'qrPay total');
   const extra = {};
   if (cur?.qrPay?.method && !cur.qrPay.verified) {
-    // Paid by QR: staff confirms they saw the money in their GCash / GoTyme first
-    if (req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash / GoTyme for this payment first, then tap “Payment received”.');
+    // Paid by QR: staff confirms they saw the money in their GCash first
+    if (req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash for this payment first, then tap “Payment received”.');
     Object.assign(extra, { 'qrPay.verified': true, 'qrPay.verifiedBy': req.user.name, paidAt: new Date(), pay: { method: cur.qrPay.method, tendered: cur.total, change: 0, ref: cur.qrPay.ref } });
   }
   const sale = await move(req.params.id, ['new'], { status: 'preparing', acceptedAt: new Date(), cashier: req.user._id, cashierName: req.user.name, stockDeducted: true, ...extra });
@@ -184,7 +184,7 @@ r.post('/:id/cancel', ah(async (req, res) => {
   const paid = !!prev?.paidOnline || !!prev?.qrPay?.verified || !!prev?.qrPay?.method;
   // "Did not pick up" on an unpaid order counts as a no-show (2 in 60 days → that customer pays first next time)
   const noShow = !paid && (req.body?.noShow === true || /did not pick up|didn.t pick up|no.?show/i.test(reason));
-  // A GCash / GoTyme order not checked yet: staff say whether the money arrived (then it has to go back)
+  // A GCash order not checked yet: staff say whether the money arrived (then it has to go back)
   const qrReceived = !!prev?.qrPay?.method && !prev.qrPay.verified && req.body?.paymentReceived === true;
   const sale = await move(req.params.id, ['new', 'preparing', 'ready'], { status: 'cancelled', cancelledAt: new Date(), cancelReason: reason, noShow,
     refundDue: !!prev?.paidOnline || !!prev?.qrPay?.verified || qrReceived, ...(qrReceived ? { 'qrPay.verified': true, 'qrPay.verifiedBy': req.user.name } : {}) });
@@ -228,7 +228,7 @@ r.post('/:id/refund', ah(async (req, res) => {
   else if (ref && !/^[A-Z0-9_]{4,60}$/.test(ref)) errs.ref = 'Letters and numbers only.';
   const shot = typeof b.shot === 'string' ? b.shot : '';
   if (shot && (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(shot) || shot.length > 700000)) errs.shot = 'That picture couldn’t be used. Try another screenshot.';
-  if (['gcash', 'gotyme', 'maya'].includes(method) && !shot) errs.shot = 'Attach the screenshot of the refund from your GCash / GoTyme app. The customer sees it as proof.';
+  if (['gcash', 'gotyme', 'maya'].includes(method) && !shot) errs.shot = 'Attach the screenshot of the refund from your GCash app. The customer sees it as proof.';
   if (Object.keys(errs).length) throw new HttpError(400, Object.values(errs)[0], errs);
   const note = String(b.note || '').trim().slice(0, 200);
   const amount = refundAmount(cur);
@@ -265,7 +265,7 @@ r.post('/:id/restore', ah(async (req, res) => {
   if (!cur.cancelledAt || Date.now() - cur.cancelledAt > RESTORE_DAYS * 864e5) throw new HttpError(409, `This order was cancelled more than ${RESTORE_DAYS} days ago. Ask the customer to order again instead.`);
   if (cur.refund?.at) throw new HttpError(409, 'The money for this order was already refunded. Ask the customer to order again instead.');
   const qrUnchecked = cur.qrPay?.method && !cur.qrPay.verified;
-  if (qrUnchecked && req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash / GoTyme for this payment first, then tick “I found the payment”.', { paymentOk: 'Tick this after checking.' });
+  if (qrUnchecked && req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash for this payment first, then tick “I found the payment”.', { paymentOk: 'Tick this after checking.' });
   // A free drink that was given back on cancel is used again
   if (cur.stampsUsed > 0 && cur.stampsReturned) {
     if (!cur.customerId) throw new HttpError(409, 'This order used a free drink that can’t be taken again.');

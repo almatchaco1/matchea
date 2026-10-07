@@ -618,7 +618,6 @@ td.neg{color:var(--bad);font-weight:700} td.pos{color:var(--ok);font-weight:700}
 .qr-show{position:fixed;inset:0;z-index:90;background:rgba(12,15,9,.72);display:grid;place-items:center;padding:16px}
 .qr-show-card{background:#fff;color:#111;border-radius:22px;padding:22px;width:min(440px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 .qr-brand{font-weight:800;font-size:18px;padding:6px 16px;border-radius:999px;color:#fff;background:#0070E0}
-.qr-brand.gotyme{background:#0B3954;color:#3FDCEC}
 .qr-amt{display:flex;flex-direction:column;align-items:center}
 .qr-amt span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#666}
 .qr-amt b{font-family:var(--display);font-size:34px;color:#1E2418}
@@ -1040,11 +1039,8 @@ h2.sec::after{left:16px;right:-4px;bottom:3px;height:.32em;border-radius:4px}
 .pp-ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .pp-ico .fill{stroke:none}
 .pp-ico .fill.g{fill:#0A6DFF}
-.pp-ico .fill.t{fill:#0B3954}
-.pp-ico .gt{fill:#3FDCEC;stroke:none;font:800 8.6px Arial,Helvetica,sans-serif;letter-spacing:-.2px}
 .pp-ico .on{stroke:#fff;stroke-width:2.2}
 .seg.pay-pick button[aria-pressed="true"] .fill{fill:var(--on-matcha)}
-.seg.pay-pick button[aria-pressed="true"] .fill.t{fill:#0B3954}
 .seg.pay-pick button[aria-pressed="true"] .on{stroke:var(--matcha)}
 @media (max-width:380px){.seg.pay-pick button{gap:5px;font-size:13px}.pp-ico,.pp-ico svg{width:18px;height:18px}}
 

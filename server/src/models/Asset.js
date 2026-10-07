@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-// Small files stored in the database (e.g. the shop's GCash / GoTyme QR images)
+// Small files stored in the database (e.g. the shop's GCash QR images)
 const assetSchema = new mongoose.Schema(
   {
     key: { type: String, required: true, unique: true }, // e.g. 'qr-gcash'

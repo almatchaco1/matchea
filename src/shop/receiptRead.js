@@ -1,4 +1,4 @@
-// Reads a GCash / GoTyme receipt screenshot in the browser (Tesseract OCR, files served by this site from /vendor/tesseract).
+// Reads a GCash receipt screenshot in the browser (Tesseract OCR, files served by this site from /vendor/tesseract).
 // Returns what it found: { ref, amount, time ("HH:MM", 24 h), text }. Any of them can be missing if the picture is unclear.
 import { loadScript } from './api';
 
@@ -55,7 +55,7 @@ export function parseReceipt(raw, method) {
   const out = { ref: '', amount: null, time: '', date: '' };
 
   // Reference
-  if (method !== 'gcash') { // GoTyme: letters and numbers
+  if (method !== 'gcash') { // older Maya / GoTyme receipts: letters and numbers
     for (const l of text.split(/\n+/)) {
       const m = /(?:reference|ref\.?)\s*(?:id|no\.?|number)?\s*[:#]?\s*([A-Z0-9][A-Z0-9 ]{5,30})\s*$/i.exec(l.trim());
       if (m) { out.ref = m[1].replace(/\s+/g, '').toUpperCase().slice(0, 30); break; }

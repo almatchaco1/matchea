@@ -290,7 +290,7 @@ function CancelModal({ order, onClose, onDone }) {
       {order.notFound && <div className="warnbox">Only do this after checking your {qr} app for {peso(order.total)}{order.qrPay.ref && <> with reference <b>{order.qrPay.ref}</b></>}. The customer will see the reason below.</div>}
       {order.paidOnline && <div className="warnbox">This order was paid online ({PAY_LABELS[order.pay.method] || 'Online'}, {peso(order.total)}). After cancelling, refund it in your PayMongo dashboard using reference <b>{order.pay.ref}</b>, then record it in <b>Refunds to send</b>.</div>}
       <div className="opts">{presets.map((p) => <button key={p} className="opt" aria-pressed={reason === p} onClick={() => { setReason(p); setErr(''); }}>{p}</button>)}</div>
-      {reason === 'Did not pick up' && !order.paidOnline && !order.qrPay?.method && <p className="fhint" style={{ margin: 0 }}>This counts as a no-show. After 2 no-shows in 60 days, this customer has to pay first (GCash, GoTyme or online) for new orders.</p>}
+      {reason === 'Did not pick up' && !order.paidOnline && !order.qrPay?.method && <p className="fhint" style={{ margin: 0 }}>This counts as a no-show. After 2 no-shows in 60 days, this customer has to pay first (GCash or online) for new orders.</p>}
       <Field id="cReason" label="Reason" error={err}>
         <input id="cReason" maxLength={120} value={reason} onChange={(e) => { setReason(e.target.value); setErr(''); }} placeholder="Sorry, we ran out of matcha" />
       </Field>
@@ -303,7 +303,7 @@ const phTime = (d) => new Date(d).toLocaleTimeString('en-PH', { hour: 'numeric',
 /** 71 → "1 hr 11 min", 1500 → "25 hr" */
 const minsText = (m) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} hr${m % 60 && m < 600 ? ` ${m % 60} min` : ''}`);
 
-/** The GCash / GoTyme screenshot the customer attached (loaded with the staff sign-in). */
+/** The GCash screenshot the customer attached (loaded with the staff sign-in). */
 function ShotModal({ order, onClose }) {
   const [url, setUrl] = useState('');
   const [err, setErr] = useState('');

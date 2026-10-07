@@ -253,7 +253,7 @@ function SolveModal({ thread, orders, pick, onClose, onDone }) {
   };
   const go = async () => {
     setErr('');
-    if (order?.qrUnchecked && !found) { setErr(`Tick the box after you find the payment in your ${method || 'GCash / GoTyme'} app.`); return; }
+    if (order?.qrUnchecked && !found) { setErr(`Tick the box after you find the payment in your ${method || 'GCash'} app.`); return; }
     setBusy(true);
     try {
       if (order) {
@@ -290,7 +290,7 @@ function SolveModal({ thread, orders, pick, onClose, onDone }) {
       {order?.qrUnchecked && (
         <label className={`sv-check ${found ? 'on' : ''}`}>
           <input type="checkbox" checked={found} onChange={(e) => { setFound(e.target.checked); setErr(''); }} />
-          <span>I checked our {method || 'GCash / GoTyme'} app and found <b>{peso(order.total)}</b>{order.qrRef && <> with reference <b>{order.qrRef}</b></>}.</span>
+          <span>I checked our {method || 'GCash'} app and found <b>{peso(order.total)}</b>{order.qrRef && <> with reference <b>{order.qrRef}</b></>}.</span>
         </label>
       )}
       {order?.paidOnline && <div className="warnbox">This order was paid online. Don’t refund it in PayMongo anymore: the customer is getting their drinks.</div>}

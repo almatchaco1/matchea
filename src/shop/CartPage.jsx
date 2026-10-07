@@ -15,11 +15,13 @@ import { readReceipt, warmReader } from './receiptRead';
 import './pay2.css';
 import './qp2.css';
 import './pay3.css';
+import './pay4.css';
+
+const pm0 = (m) => String(m).startsWith('pm:');
 
 // Payment option icons (same look as the POS)
 const PAY_ICON = {
   gcash: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0A6DFF" /><path d="M15.6 9.2A4.4 4.4 0 1 0 16.4 12h-4" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></svg>,
-  gotyme: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0B3954" /><circle cx="12" cy="12" r="8.2" fill="none" stroke="#3FDCEC" strokeWidth="1.2" opacity=".55" /><text x="12" y="15.2" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontSize="8.6" fontWeight="800" letterSpacing="-.2" fill="#3FDCEC">GT</text></svg>,
   pickup: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5 5.6 4h12.8L20 9.5M5 9.5V20h14V9.5" /><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0M10 20v-5h4v5" /></svg>,
 };
 
@@ -43,7 +45,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const quote = area ? quoteFor(area, drinkCount, dcfg) : null;
   const deliveryCharge = quote ? quote.charge : 0;
   const pickupOk = menu?.shop?.payAtPickup !== false && !noShowRule && !bigOrder && !delivering;
-  // How to pay: 'gcash' | 'gotyme' (scan the shop's QR) | 'pm:gcash' (PayMongo, opens the app) | 'pickup'
+  // How to pay: 'gcash' (scan the shop's QR) | 'pm:gcash' (PayMongo, opens the app) | 'pickup'
   const pmTypes = payOnline ? (menu?.shop?.payTypes || []).filter((t) => ONLINE_FEE_PCT[t]) : [];
   const options = [...Object.keys(qrs), ...pmTypes.map((t) => 'pm:' + t), ...(pickupOk ? ['pickup'] : [])];
   const [chosen, setMethod] = useState(null); // null = the first option (the menu may still be loading)
@@ -69,7 +71,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const needQr = !!qrMethod && total > 0;
   const qrImg = useAmountQr(qrMethod ? qrs[qrMethod] : null, total, menu?.shop?.name);
   const phone = isPhone();
-  const appName = qrMethod === 'gotyme' ? 'GoTyme' : 'GCash';
+  const appName = 'GCash';
   useEffect(() => { if (needQr) warmReader(); }, [needQr]); // start loading the receipt reader early
   // What's wrong with the receipt, if anything (checked again whenever the total changes)
   const readRef = read?.ref && !checkQrRef(qrMethod, read.ref) ? read.ref : '';
@@ -228,28 +230,45 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
             <span><b>Use my free drink</b><small>{freeItem ? `${freeItem.name}, regular size: −${peso(freeValue)}` : ''}. Upsize and add-ons are still charged.</small></span>
           </label>
         )}
-        {bigOrder && !noShowRule && total > 0 && <div className="note-box">For big orders (over {peso(ONLINE.payFirstOver)} or more than {ONLINE.payFirstDrinks} drinks), please pay first with {Object.keys(qrs).map((k) => (k === 'gcash' ? 'GCash' : 'GoTyme')).join(' or ') || 'online payment'}. Thank you!</div>}
-        {noShowRule && total > 0 && <div className="note-box">Because 2 recent orders weren’t picked up, please pay first for this order (GCash, GoTyme or online). Pay at pickup will be back after a while.</div>}
+        {bigOrder && !noShowRule && total > 0 && <div className="note-box">For big orders (over {peso(ONLINE.payFirstOver)} or more than {ONLINE.payFirstDrinks} drinks), please pay first with {Object.keys(qrs).length ? 'GCash' : 'online payment'}. Thank you!</div>}
+        {noShowRule && total > 0 && <div className="note-box">Because 2 recent orders weren’t picked up, please pay first for this order (GCash or online). Pay at pickup will be back after a while.</div>}
         {total > 0 && options.length > 0 && (
-          <fieldset className={`pay pay2 pay3 n-${options.length}`}>
-            <legend><span>Payment</span><em>Total <b className="num">{peso(total)}</b></em></legend>
-            {options.map((k) => (
-              <label key={k} className={`${method === k ? 'on' : ''} pk-${k.replace(':', '-')}`}>
-                <input type="radio" name="pay" checked={method === k} onChange={() => { setMethod(k); clearShot(); }} />
-                <i className="pay2-ico" aria-hidden="true">{PAY_ICON[k.startsWith('pm:') ? 'gcash' : k] || PAY_ICON.pickup}</i>
-                <span>{k === 'gcash' ? <><b>Pay now with GCash</b><small>Scan our QR, then upload your receipt</small></>
-                  : k === 'gotyme' ? <><b>Pay now with GoTyme</b><small>Scan our QR, then upload your receipt</small></>
-                  : k.startsWith('pm:') ? <><b>Pay in the {PM_NAME[k.slice(3)]} app</b><small>Log in and pay, confirmed right away</small></>
-                  : <><b>Pay at pickup</b><small>Cash, GCash or GoTyme at the counter</small></>}</span>
-                <em className="pay3-badge">{k === 'pickup' ? 'Pay later' : k.startsWith('pm:') ? `+${peso(withOnlineFee(total, k.slice(3)).fee)} fee` : 'No fee'}</em>
-                <i className="pay2-tick" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg></i>
-              </label>
-            ))}
-            <p className="pay3-safe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5V11Zm7 4v2" /></svg>{method === 'pickup' ? 'You pay when you collect your order.' : 'You pay the shop directly. We never ask for your PIN or OTP.'}</p>
+          <fieldset className={`pay4 n-${options.length}`}>
+            <legend className="pay4-h"><span>Choose how to pay</span><em>Total <b className="num">{peso(total)}</b></em></legend>
+            <div className="pay4-list">
+              {options.map((k) => {
+                const pm = k.startsWith('pm:');
+                const withFee = pm ? withOnlineFee(total, k.slice(3)) : null;
+                const [title, sub, chips] = k === 'gcash' ? ['GCash QR', 'Scan our QR, then upload your receipt', [['No fee', 'ok']]]
+                  : pm ? [`${PM_NAME[k.slice(3)] || 'Online'} app`, 'Log in and pay, confirmed right away', [[`+${peso(withFee.fee)} fee`, 'fee'], ['Instant', '']]]
+                  : ['Pay at pickup', 'Cash or GCash at the counter', [['Pay later', '']]];
+                return (
+                  <label key={k} className={`pay4-opt pk-${k.replace(':', '-')} ${method === k ? 'on' : ''}`}>
+                    <input type="radio" name="pay" checked={method === k} onChange={() => { setMethod(k); clearShot(); }} />
+                    <span className="pay4-ico" aria-hidden="true">{PAY_ICON[pm ? 'gcash' : k] || PAY_ICON.pickup}</span>
+                    <span className="pay4-t">
+                      <b>{title}</b>
+                      <small>{sub}</small>
+                      <span className="pay4-chips">{chips.map(([c, tone]) => <i key={c} className={tone}>{c}</i>)}</span>
+                    </span>
+                    <span className="pay4-amt"><small>{k === 'pickup' ? 'At pickup' : 'You pay'}</small><b className="num">{peso(pm ? withFee.total : total)}</b></span>
+                    <span className="pay4-radio" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg></span>
+                  </label>
+                );
+              })}
+            </div>
+            <ul className="pay4-safe">
+              {method === 'pickup'
+                ? <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5 5.6 4h12.8L20 9.5M5 9.5V20h14V9.5M10 20v-5h4v5" /></svg>You pay when you collect your order.</li>
+                : <>
+                  <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5V11Zm7 4v2" /></svg>We never ask for your PIN or OTP</li>
+                  <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3Zm-3 9 2 2 4-4" /></svg>{pm0(method) ? 'Paid through PayMongo' : 'You pay the shop directly'}</li>
+                </>}
+            </ul>
           </fieldset>
         )}
         {needQr && (
-          <div className={`qrpay qp2 qp3 qp-${qrMethod} ${shot ? 'has-shot' : ''}`}>
+          <div className={`qrpay qp2 qp3 qp4 qp-${qrMethod} ${shot ? 'has-shot' : ''}`}>
             <div className="qp-head">
               <span className={`qp-app ${qrMethod}`}><i aria-hidden="true">{PAY_ICON[qrMethod]}</i>{appName}</span>
               <div className="qp-amt"><small>Amount to pay</small><b className="num">{peso(total)}</b></div>
@@ -274,7 +293,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
                 <ol className="qrpay-steps">
                   {phone ? <>
                     <li>Tap <b>Save QR</b>{saved === 'shared' ? '' : ' to keep it in your photos'}.</li>
-                    <li>{qrMethod === 'gcash' ? <>In GCash: <b>QR</b> → <b>Upload QR</b>, pick the picture.</> : <>In GoTyme: <b>Scan QR</b> → upload from your gallery, pick the picture.</>}</li>
+                    <li><>In GCash: <b>QR</b> → <b>Upload QR</b>, pick the picture.</></li>
                     <li>{qrImg ? <>Pay the <b>{peso(total)}</b> that fills in.</> : <>Type exactly <b>{peso(total)}</b> and pay.</>}</li>
                   </> : <>
                     <li>Scan this QR with {appName} on your phone.</li>
@@ -344,14 +363,14 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         <button className="sh-btn big" disabled={busy || !menu.shop.open} onClick={place}>
           {busy ? (payable ? 'Opening secure payment…' : 'Placing order…') : payable ? `Pay ${peso(fee.total)} with ${PM_NAME[payType]}` : needQr ? `I’ve paid · Place order` : `Place order · ${peso(total)}`}
         </button>
-        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your receipt screenshot.' : 'Pay at the counter by cash, GCash or GoTyme.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
+        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your receipt screenshot.' : 'Pay at the counter by cash, GCash.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
         </aside>
       </div>
     </div>
   );
 }
 
-/** GCash refs are digits shown as 1011 234 567890; GoTyme refs keep letters and numbers. */
+/** GCash refs are digits shown as 1011 234 567890. */
 function fmtDate(ymd) {
   const [Y, M, D] = String(ymd).split('-').map(Number);
   return new Date(Date.UTC(Y, M - 1, D)).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', timeZone: 'UTC' });

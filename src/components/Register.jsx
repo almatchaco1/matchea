@@ -27,7 +27,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const [discount, setDiscount] = useState({ type: 'none', pct: 10, idNo: '', idName: '' });
   const [asking, setAsking] = useState(false); // admin PIN pop-up for a big discount
   const override = useRef(null);
-  const [pay, setPay] = useState({ method: 'cash', tendered: '', ref: '', got: false }); // got: cashier saw the GCash / GoTyme payment
+  const [pay, setPay] = useState({ method: 'cash', tendered: '', ref: '', got: false }); // got: cashier saw the GCash payment
   const [refTaken, setRefTaken] = useState(null); // { ref, msg } from the server
   // Staff drink: free for a staff member, takes stock off, not counted as a sale
   const [staffMode, setStaffMode] = useState(false);
@@ -38,7 +38,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const [receipt, setReceipt] = useState(null);
   const [nextNo, setNextNo] = useState(null);
   const [armClear, setArmClear] = useState(false);
-  const [showQr, setShowQr] = useState(null); // 'gcash' | 'gotyme' while the QR is shown to the customer
+  const [showQr, setShowQr] = useState(null); // 'gcash' while the QR is shown to the customer
   const [sheet, setSheet] = useState(false); // tablet / phone: order panel slides up from the bottom
   // Stamp card: customer's mobile number, looked up on the server
   const [stampPhone, setStampPhone] = useState('');
@@ -118,7 +118,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const cErr = checkCheckout({ lineCount: cart.length, total: t.total, discount: rewardOn ? { type: 'none' } : discount, pay, customer, needName: true });
   const errFor = (k) => (touched[k] || touched.all ? cErr[k] : undefined);
   const qrPay = pay.method !== 'cash';
-  const needGot = qrPay && !pay.got; // GCash / GoTyme: tick that the money arrived before charging
+  const needGot = qrPay && !pay.got; // GCash: tick that the money arrived before charging
   const cashState = !tendered || !cart.length ? 'idle' : cErr.tendered ? (change < 0 ? 'short' : 'warn') : 'ok';
   const stampPending = stampPhone.trim() && !stampCust; // typed a number but it isn't linked yet
   const staffOn = staffMode && !training;
@@ -351,7 +351,7 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               <span><b>{cart.length ? `I received ${peso(t.total)} in our ${PAY_METHODS[pay.method]} app` : `Payment received in our ${PAY_METHODS[pay.method]} app`}</b>
                 <small>Check the amount and the sender’s name in the app before charging.</small></span>
             </label>
-            <Field id="payRef" label="Reference no. (optional)" error={pay.ref ? cErr.ref || (refTaken?.ref === pay.ref ? refTaken.msg : undefined) : errFor('ref')} hint={pay.method === 'gcash' ? '13 digits, from the GCash notification' : 'From the GoTyme receipt'}>
+            <Field id="payRef" label="Reference no. (optional)" error={pay.ref ? cErr.ref || (refTaken?.ref === pay.ref ? refTaken.msg : undefined) : errFor('ref')} hint={pay.method === 'gcash' ? '13 digits, from the GCash notification' : 'From the receipt'}>
               <input id="payRef" maxLength={LIMITS.ref + 6} inputMode={pay.method === 'gcash' ? 'numeric' : 'text'} placeholder={pay.method === 'gcash' ? '1011 234 567890' : 'Reference ID'} value={pay.ref}
                 onChange={(e) => { setPay({ ...pay, ref: e.target.value.replace(/[^0-9A-Za-z -]/g, '') }); touch('ref'); }} /></Field>
           </>)}

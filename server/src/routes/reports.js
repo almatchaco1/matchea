@@ -138,7 +138,7 @@ r.get('/closing', ah(async (req, res) => {
   res.json(await closing(date));
 }));
 
-// Tick a GCash / GoTyme payment as checked against the phone
+// Tick a GCash payment as checked against the phone
 r.post('/closing/check', ah(async (req, res) => {
   const { date, id, checked } = req.body || {};
   if (!isDay(date)) throw new HttpError(400, 'Dates must look like YYYY-MM-DD.');

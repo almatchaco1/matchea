@@ -69,8 +69,8 @@ r.put('/', requireAdmin, ah(async (req, res) => {
   res.json(s);
 }));
 
-// ---------- Payment QR codes (GCash / GoTyme) ----------
-const QR_KINDS = { gcash: 'GCash', gotyme: 'GoTyme' };
+// ---------- Payment QR codes (GCash) ----------
+const QR_KINDS = { gcash: 'GCash' };
 const MAX_QR_BYTES = 2.5 * 1024 * 1024;
 function decodeImage(dataUrl) {
   const m = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
@@ -97,7 +97,7 @@ r.put('/qr/:kind', requireAdmin, ah(async (req, res) => {
   let v = cur.v || 0;
   // The code inside the picture (read on the owner's device) lets the app fill in the amount by itself
   let payload = b.payload === undefined ? cur.payload || '' : String(b.payload || '');
-  if (payload && !isQrPh(payload)) throw new HttpError(400, 'That QR isn’t a GCash / GoTyme payment QR (QR Ph). Use your receive-money QR from the app.', { image: 'Not a payment QR.' });
+  if (payload && !isQrPh(payload)) throw new HttpError(400, 'That QR isn’t a GCash payment QR (QR Ph). Use your receive-money QR from the app.', { image: 'Not a payment QR.' });
   if (b.image === '') { await Asset.deleteOne({ key: `qr-${kind}` }); v = 0; payload = ''; }
   else if (b.image != null) {
     const img = decodeImage(b.image);

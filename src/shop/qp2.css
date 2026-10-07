@@ -1,8 +1,7 @@
-/* ===== GCash / GoTyme pay panel v2 ===== */
+/* ===== GCash pay panel v2 ===== */
 .shop .qrpay.qp2{--app:#0A6DFF;--app-2:#0047B3;--app-soft:#E3EEFF;
   position:relative;border:0;border-radius:26px;background:var(--cream);overflow:hidden;
   box-shadow:0 0 0 1px var(--line),0 22px 40px -30px rgba(30,36,24,.6)}
-.shop .qrpay.qp2.qp-gotyme{--app:#14A6BE;--app-2:#0B3954;--app-soft:#DDF3F6}
 /* header: the app's colour */
 .shop .qrpay.qp2 .qp-head{position:relative;isolation:isolate;gap:12px;padding:18px 18px 20px;border:0;color:#fff;
   background:radial-gradient(120% 140% at 100% 0%,rgba(255,255,255,.22),transparent 55%),linear-gradient(135deg,var(--app),var(--app-2))}
@@ -48,7 +47,6 @@
 .shop .qrpay.qp2 .qp-note svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--ok);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media (prefers-color-scheme:dark){
   .shop .qrpay.qp2{--app-soft:rgba(10,109,255,.18);background:#141A10;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 22px 40px -30px rgba(0,0,0,.9)}
-  .shop .qrpay.qp2.qp-gotyme{--app-soft:rgba(63,220,236,.16)}
   .shop .qrpay.qp2 .qrpay-steps li{background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
   .shop .qrpay.qp2 .qrpay-steps li::before{background:rgba(255,255,255,.06);color:#fff}
   .shop .qrpay.qp2 .qp-form{background:linear-gradient(180deg,rgba(255,255,255,.03),transparent)}

@@ -23,10 +23,9 @@ const settingsSchema = new mongoose.Schema(
     tiktok: { type: String, default: '' },
     onlineOpen: { type: Boolean, default: true }, // customers can place online orders
     onlineMessage: { type: String, default: '', maxlength: 160 }, // shown on the order page (e.g. 'Closed for the day')
-    // Pay by scanning the shop's own GCash / GoTyme QR (v = image version, 0 = no image)
+    // Pay by scanning the shop's own GCash QR (v = image version, 0 = no image)
     qr: {
       gcash: { v: { type: Number, default: 0 }, name: { type: String, default: '' }, number: { type: String, default: '' }, payload: { type: String, default: '' } },
-      gotyme: { v: { type: Number, default: 0 }, name: { type: String, default: '' }, number: { type: String, default: '' }, payload: { type: String, default: '' } },
       maya: { v: { type: Number, default: 0 }, name: { type: String, default: '' }, number: { type: String, default: '' }, payload: { type: String, default: '' } }, // old, no longer offered
     },
     qrOnline: { type: Boolean, default: true }, // customers can pay by QR when ordering online
