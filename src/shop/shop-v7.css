@@ -109,7 +109,8 @@
   .shop .sheet7 .sheet-hero img{object-fit:contain;padding:40px 18px 30px}
   .shop .sheet7 .sheet-b{grid-column:2;overflow-y:auto;padding:30px 30px 14px}
   .shop .sheet7 .sheet-f{grid-column:2;padding:16px 30px 20px}
-  .shop .sheet7 .sheet-x{right:16px;top:16px}
+  .shop .sheet7 .sheet-x{right:18px;top:31px}
+  .shop .sheet7 .s7-icons{margin-right:50px} /* room for the close button, so it never touches Share */
 }
 
 /* ---------- CHECKOUT ---------- */

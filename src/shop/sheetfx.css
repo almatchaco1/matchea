@@ -50,6 +50,15 @@
 .shop .hfx-tint.honey-level i::before{content:"";position:absolute;left:-20%;right:-20%;top:-7px;height:9px;
   background:radial-gradient(12px 7px at 12px 8px,rgba(240,186,80,.5) 98%,transparent 100%) 0 0/24px 9px repeat-x;animation:honeyWave 3.2s linear infinite}
 @keyframes honeyWave{to{transform:translateX(24px)}}
+/* extra matcha stays in the cup: a deeper green settles from the top and remains while the add-on is on */
+.shop .hfx-tint.matcha-level{z-index:1}
+.shop .hfx-tint.matcha-level i{top:calc(var(--top0) + (var(--base0) - var(--top0)) * .1);height:calc((var(--base0) - var(--top0)) * .6);opacity:0;transform:scaleY(0);transform-origin:50% 0;
+  background:linear-gradient(180deg,rgba(62,112,34,0),rgba(62,112,34,.48) 22%,rgba(96,150,58,.32) 60%,rgba(110,160,70,0));
+  transition:transform 1.4s cubic-bezier(.22,1,.36,1) .5s,opacity .6s ease .45s}
+.shop .hfx-tint.matcha-level.on i{opacity:1;transform:scaleY(1)}
+/* while it is on, the add animation fades its own green into the green that stays */
+.shop .hfx-tint.t-matcha i{animation-name:hfxSinkStay}
+@keyframes hfxSinkStay{0%{transform:scaleY(0);opacity:1}45%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
 .shop .hfx-tint.t-matcha i,.shop .hfx-tint.t-gold i{top:var(--top0);height:calc((var(--base0) - var(--top0)) * .55);transform-origin:50% 0;animation:hfxSink 2.3s var(--ease) .55s both}
 .shop .hfx-tint.t-matcha i{background:linear-gradient(180deg,rgba(70,120,40,.55),rgba(110,160,70,.35) 65%,rgba(110,160,70,0))}
 .shop .hfx-tint.t-gold i{background:linear-gradient(180deg,rgba(214,150,40,.45),rgba(214,150,40,0))}
@@ -126,6 +135,7 @@
   .shop .hfx-tint{mix-blend-mode:normal}
   .shop .hfx-tint.honey-level i{background:linear-gradient(0deg,rgba(214,150,40,.42),rgba(240,190,90,.28) 75%,rgba(240,190,90,.12))}
   .shop .hfx-tint.t-matcha i{background:linear-gradient(180deg,rgba(60,105,35,.5),rgba(60,105,35,0))}
+  .shop .hfx-tint.matcha-level i{background:linear-gradient(180deg,rgba(60,105,35,0),rgba(60,105,35,.45) 22%,rgba(60,105,35,.25) 60%,rgba(60,105,35,0))}
   .shop .hfx-tint.t-fade i{background:rgba(10,14,8,.35)}
   .shop .hfx-label{background:rgba(24,30,20,.92);color:#E8F1E0;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 14px 28px -14px rgba(0,0,0,.8)}
   .shop .hfx-label.k-size{background:#C9E3B0;color:#10200B}
@@ -140,7 +150,7 @@
 }
 @media (prefers-reduced-motion:reduce){
   .shop .hfx-tint.honey-level i::before{animation:none}
-  .shop .hfx-tint.honey-level i{transition:none}
+  .shop .hfx-tint.honey-level i,.shop .hfx-tint.matcha-level i{transition:none}
   .shop .lc-wave,.shop .lc-bubbles b,.shop .s7-size.on svg,.shop .s7-sw.on .s7-sw-cup,.shop .s7-sw.on .s7-sw-cup i,.shop .s7-addon.on .s7-check{animation:none}
 }
 

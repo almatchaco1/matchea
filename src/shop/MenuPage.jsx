@@ -11,6 +11,8 @@ import { ShareDrink } from './share';
 import './sheetfx.css';
 import './sheet8.css';
 
+const MATCHA_ADD = /matcha|shot/i; // add-ons that make the drink more matcha
+
 // Keep the picked category chip in view (centered) on phones
 const slideInto = (b) => { const nav = b.parentElement; nav.scrollTo?.({ left: b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); };
 
@@ -205,7 +207,7 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
     } else if (p.addonIds) {
       const added = p.addonIds.find((id) => !L.addonIds.includes(id)), gone = L.addonIds.find((id) => !p.addonIds.includes(id));
       const a = addons.find((o) => o._id === (added || gone));
-      if (a) f = { kind: added ? 'add' : 'remove', matcha: /matcha|shot/i.test(a.label), label: `${added ? '+' : '−'} ${a.label}` };
+      if (a) f = { kind: added ? 'add' : 'remove', matcha: MATCHA_ADD.test(a.label), label: `${added ? '+' : '−'} ${a.label}` };
     }
     if (f) setFx((old) => ({ ...f, n: (old?.n || 0) + 1, spot: cupSpot(p.sizeId !== undefined ? menu.sizes.findIndex((s) => s._id === p.sizeId) : sizeAt) }));
   };
@@ -272,6 +274,7 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
           <span className="s8-floor" aria-hidden="true" />
           {item.image && <img ref={hero} src={item.image} alt="" />}
           {item.sweet && <HoneyLevel img={hero} level={sweetPct(L.sweet)} spot={spot0} />}
+          <HoneyLevel kind="matcha" img={hero} level={picked.some((a) => MATCHA_ADD.test(a.label)) ? 100 : 0} spot={spot0} />
           {fx && <CupTint key={`t${fx.n}`} fx={fx} img={hero} />}
           {fx && <HeroFx key={fx.n} {...fx} />}
           <div className="s8-recipe" aria-label="Your drink">

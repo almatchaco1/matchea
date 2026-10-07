@@ -199,8 +199,9 @@ export function CupTint({ fx, img }) {
 }
 
 /** The sweetness you chose, shown as honey sitting in the bottom of the cup photo.
- *  It stays there and glides up or down to the new level (it never starts again from empty). */
-export function HoneyLevel({ img, level, spot }) {
+ *  It stays there and glides up or down to the new level (it never starts again from empty).
+ *  kind="matcha": the extra matcha you added stays as a deeper green in the top of the cup. */
+export function HoneyLevel({ img, level, spot, kind = 'honey' }) {
   const box = useRef(null);
   useLayoutEffect(() => {
     const fit = () => {
@@ -218,7 +219,7 @@ export function HoneyLevel({ img, level, spot }) {
     return () => { el?.removeEventListener('load', fit); window.removeEventListener('resize', fit); };
   }, [img, spot]);
   if (level == null || !spot) return null;
-  return <span ref={box} className={`hfx-tint honey-level ${level > 0 ? 'on' : ''}`} style={{ ...spot, '--lv': level / 100 }} aria-hidden="true"><i /></span>;
+  return <span ref={box} className={`hfx-tint ${kind}-level ${level > 0 ? 'on' : ''}`} style={{ ...spot, '--lv': level / 100 }} aria-hidden="true"><i /></span>;
 }
 
 /** Profile picture with the first letter underneath, so it never shows as an empty circle if the photo can't load. */
