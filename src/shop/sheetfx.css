@@ -1,0 +1,123 @@
+/* ===== Drink customizer: animations on the photo when the customer changes something ===== */
+.shop .sheet-hero .hfx{position:absolute;inset:0;z-index:3;pointer-events:none;--top:30%;--base:90%;--cupw:140px;--gold1:#FBE3A2;--gold2:#D9962E;--m1:#B7D88B;--m2:#5E8C3A}
+.shop .sheet-hero img{will-change:transform}
+
+/* floating label: what just changed */
+.shop .hfx-label{position:absolute;left:50%;top:calc(var(--top) - 72px);z-index:5;padding:8px 16px;border-radius:999px;white-space:nowrap;font-style:normal;font-weight:800;font-size:.95rem;letter-spacing:.01em;
+  color:#22340F;background:rgba(255,251,240,.94);box-shadow:0 0 0 1.5px rgba(46,66,32,.14),0 14px 28px -14px rgba(30,40,20,.6);backdrop-filter:blur(8px);
+  animation:hfxLabel 1.9s cubic-bezier(.2,.9,.3,1) both}
+.shop .hfx-label.k-sweet{background:linear-gradient(135deg,#FFF6DD,#FBE3A2);color:#6B4310}
+.shop .hfx-label.k-add{background:linear-gradient(135deg,#F1F8E6,#D7EBBE);color:#22340F}
+.shop .hfx-label.k-remove{background:rgba(255,251,240,.9);color:#6E6E5E}
+.shop .hfx-label.k-size{background:#22340F;color:#FFF8E8}
+@keyframes hfxLabel{0%{opacity:0;transform:translate(-50%,40px) scale(.7)}18%{opacity:1;transform:translate(-50%,-6px) scale(1.06)}28%{transform:translate(-50%,0) scale(1)}78%{opacity:1;transform:translate(-50%,-14px)}100%{opacity:0;transform:translate(-50%,-34px) scale(.96)}}
+.shop .hfx.calm .hfx-label{animation:hfxFade 1.6s ease both;transform:translateX(-50%)}
+@keyframes hfxFade{0%,100%{opacity:0}15%,80%{opacity:1}}
+
+/* sweetness: syrup drops fall into the cup, ripples where they land, a warm glow */
+.shop .hfx-drop{position:absolute;left:calc(50% + var(--x));top:-6%;width:22px;height:30px;margin-left:-11px;border-radius:50% 50% 50% 50%/62% 62% 38% 38%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.9) 0 2px,transparent 3px),linear-gradient(180deg,var(--gold1),var(--gold2));
+  box-shadow:0 4px 8px -3px rgba(150,90,10,.5);opacity:0;animation:hfxDropTo .62s cubic-bezier(.55,0,.9,.55) calc(var(--i) * .09s) both}
+.shop .hfx-drop:nth-child(even){width:15px;height:21px;margin-left:-7.5px}
+@keyframes hfxDropTo{0%{opacity:0;top:-6%;transform:scale(.6,1.3)}12%{opacity:1}85%{opacity:1;top:var(--top);transform:scale(.9,1.2)}100%{opacity:0;top:var(--top);transform:scale(1.8,.35)}}
+.shop .hfx-ring{position:absolute;left:50%;top:var(--top);width:var(--cupw);height:calc(var(--cupw) * .26);margin:calc(var(--cupw) * -.13) 0 0 calc(var(--cupw) * -.5);border-radius:50%;border:3px solid rgba(217,150,46,.85);opacity:0;
+  animation:hfxRing .9s cubic-bezier(.2,.8,.3,1) var(--d,.4s) both}
+.shop .hfx-ring.r2{border-color:rgba(251,227,162,.9);animation-duration:1.1s}
+@keyframes hfxRing{0%{opacity:.9;transform:scale(.2)}100%{opacity:0;transform:scale(1.5)}}
+.shop .hfx-glow{position:absolute;left:50%;top:var(--top);width:calc(var(--cupw) * 1.8);aspect-ratio:1;margin-left:calc(var(--cupw) * -.9);border-radius:50%;
+  background:radial-gradient(circle,rgba(251,214,120,calc(.15 + var(--g) * .35)),transparent 65%);animation:hfxGlow 1.6s ease .3s both;mix-blend-mode:soft-light}
+@keyframes hfxGlow{0%{opacity:0;transform:scale(.6)}40%{opacity:1}100%{opacity:0;transform:scale(1.15)}}
+/* 0%: little leaves float up instead (no sugar, just matcha) */
+.shop .hfx-leaf{position:absolute;left:50%;top:var(--top);width:22px;height:13px;margin-left:-11px;border-radius:0 80% 0 80%;background:linear-gradient(135deg,#9CCB7A,#4E7A33);opacity:0;
+  animation:hfxLeaf 1.3s cubic-bezier(.2,.8,.3,1) calc(var(--i) * .05s) both}
+@keyframes hfxLeaf{0%{opacity:0;transform:rotate(var(--a)) translateY(0) rotate(0)}20%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-90px) rotate(160deg)}}
+
+/* size: the cup bounces (on the photo), ripples on the floor, arrows on both sides */
+.shop .hfx-floor{position:absolute;left:50%;top:var(--base);width:calc(var(--cupw) * 1.5);height:calc(var(--cupw) * .3);margin:calc(var(--cupw) * -.15) 0 0 calc(var(--cupw) * -.75);border-radius:50%;border:3px solid rgba(46,66,32,.4);opacity:0;animation:hfxFloor 1s cubic-bezier(.2,.8,.3,1) .12s both}
+.shop .hfx-floor.r2{animation-delay:.3s;border-color:rgba(46,66,32,.22)}
+@keyframes hfxFloor{0%{opacity:.9;transform:scale(.55)}100%{opacity:0;transform:scale(1.35)}}
+.shop .hfx-arrows{position:absolute;left:calc(50% - var(--cupw) * .75 - 34px);top:calc((var(--top) + var(--base)) / 2 - 50px);display:flex;flex-direction:column;gap:6px}
+.shop .hfx-arrows.r{left:calc(50% + var(--cupw) * .75 + 4px)}
+.shop .hfx-arrows b{width:30px;height:16px;background:#22340F;clip-path:polygon(50% 0,100% 70%,82% 100%,50% 45%,18% 100%,0 70%);opacity:0;animation:hfxArrow .9s ease calc(var(--k,0) * .1s) both}
+.shop .hfx-arrows.down b{transform:rotate(180deg)}
+.shop .hfx-arrows b:nth-child(1){--k:2}.shop .hfx-arrows b:nth-child(2){--k:1}.shop .hfx-arrows b:nth-child(3){--k:0}
+.shop .hfx-arrows.down b:nth-child(1){--k:0}.shop .hfx-arrows.down b:nth-child(3){--k:2}
+@keyframes hfxArrow{0%{opacity:0;translate:0 10px}35%{opacity:.85;translate:0 0}100%{opacity:0;translate:0 -12px}}
+.shop .hfx-arrows.down b{animation-name:hfxArrowDown}
+@keyframes hfxArrowDown{0%{opacity:0;translate:0 -10px}35%{opacity:.85;translate:0 0}100%{opacity:0;translate:0 12px}}
+
+/* add-on: a whisk dips in and spins, powder bursts out, a swirl ring */
+.shop .hfx-whisk{position:absolute;left:50%;top:calc(var(--top) - var(--cupw) * .9);width:calc(var(--cupw) * .42);height:calc(var(--cupw) * .84);margin-left:calc(var(--cupw) * -.21);fill:none;stroke:#7A5A2E;stroke-width:3;stroke-linecap:round;
+  filter:drop-shadow(0 6px 6px rgba(0,0,0,.2));animation:hfxWhisk 1.15s cubic-bezier(.3,1.2,.5,1) both;transform-origin:50% 80%}
+@keyframes hfxWhisk{0%{opacity:0;transform:translateY(-40px) rotate(-20deg)}25%{opacity:1;transform:translateY(14px) rotate(14deg)}45%{transform:translateY(10px) rotate(-14deg)}65%{transform:translateY(12px) rotate(12deg)}85%{opacity:1;transform:translateY(4px) rotate(-6deg)}100%{opacity:0;transform:translateY(-30px) rotate(0)}}
+.shop .hfx-dust{position:absolute;left:50%;top:var(--top);width:max(13px,calc(var(--cupw) * .085));height:max(13px,calc(var(--cupw) * .085));margin:min(-6.5px,calc(var(--cupw) * -.0425)) 0 0 min(-6.5px,calc(var(--cupw) * -.0425));border-radius:50%;opacity:0;
+  animation:hfxBurst .95s cubic-bezier(.15,.8,.3,1) calc(.32s + var(--i) * .012s) both}
+.shop .hfx-dust.m{background:radial-gradient(circle at 35% 35%,#8DBA5E,#3E6B26);box-shadow:0 0 0 2px rgba(255,251,240,.75)}
+.shop .hfx-dust.g{background:radial-gradient(circle at 35% 35%,#FFF1C4,#E1A93A);box-shadow:0 0 0 2px rgba(255,251,240,.75)}
+.shop .hfx-remove .hfx-dust{background:rgba(110,110,95,.55);box-shadow:none;animation-delay:calc(var(--i) * .015s)}
+@keyframes hfxBurst{0%{opacity:0;transform:rotate(var(--a)) translateY(0) scale(.4)}15%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--d) * -1)) scale(var(--z))}}
+.shop .hfx-swirl{position:absolute;left:50%;top:var(--top);width:calc(var(--cupw) * 1.3);height:calc(var(--cupw) * 1.3);margin:calc(var(--cupw) * -.65) 0 0 calc(var(--cupw) * -.65);border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(94,140,58,0),rgba(94,140,58,.55),rgba(183,216,139,0) 40%,rgba(94,140,58,.4) 70%,rgba(94,140,58,0));
+  -webkit-mask:radial-gradient(circle,transparent 52%,#000 54% 62%,transparent 64%);mask:radial-gradient(circle,transparent 52%,#000 54% 62%,transparent 64%);
+  opacity:0;animation:hfxSwirl 1.1s ease .3s both}
+@keyframes hfxSwirl{0%{opacity:0;transform:rotate(0) scale(.4)}30%{opacity:1}100%{opacity:0;transform:rotate(300deg) scale(1.25)}}
+
+/* ===== the "Your cup" card ===== */
+.shop .sheet7 .lc{width:118px;padding:10px 8px 10px;border-radius:24px;gap:6px;background:rgba(255,251,242,.82);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  box-shadow:0 0 0 1px rgba(46,66,32,.1),0 18px 34px -18px rgba(30,40,20,.6)}
+.shop .lc-title{font-size:.62rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.shop .lc-stage{transform-origin:50% 100%}
+.shop .lc-wave{position:absolute;left:-30%;width:160%;height:10px;z-index:1;
+  background:radial-gradient(10px 7px at 10px 9px,#93B369 98%,transparent 100%) 0 0/20px 10px repeat-x;animation:lcWave 2.4s linear infinite;transition:bottom .55s var(--spring)}
+@keyframes lcWave{to{transform:translateX(20px)}}
+.shop .lc-bubbles{position:absolute;inset:0;z-index:2}
+.shop .lc-bubbles b{position:absolute;bottom:6%;width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px rgba(255,255,255,.9);opacity:0;animation:lcBubble 1.2s ease-out both}
+.shop .lc-bubbles b:nth-child(1){left:28%}.shop .lc-bubbles b:nth-child(2){left:52%;animation-delay:.15s;width:4px;height:4px}
+.shop .lc-bubbles b:nth-child(3){left:66%;animation-delay:.3s}.shop .lc-bubbles b:nth-child(4){left:40%;animation-delay:.45s;width:3px;height:3px}
+@keyframes lcBubble{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-58px)}}
+.shop .lc-meter{display:flex;gap:4px}
+.shop .lc-meter i{width:14px;height:5px;border-radius:3px;background:rgba(46,66,32,.14);transition:background .3s ease calc(var(--k) * .06s),transform .4s var(--spring) calc(var(--k) * .06s)}
+.shop .lc-meter i.on{background:linear-gradient(90deg,#F1C35A,#D9962E);transform:scaleY(1.3)}
+.shop .sheet7 .lc-cap{font-size:.7rem;text-align:center;white-space:normal;line-height:1.2}
+
+/* ===== the choice buttons react too ===== */
+.shop .s7-size.on svg{animation:s7Grow .55s var(--spring)}
+@keyframes s7Grow{0%{transform:scale(.8)}50%{transform:translateY(-4px) scale(1.18)}100%{transform:translateY(-2px) scale(1.08)}}
+.shop .s7-sw.on .s7-sw-cup i{animation:s7Fill .7s var(--spring)}
+@keyframes s7Fill{0%{height:0}}
+.shop .s7-sw.on .s7-sw-cup{animation:s7Tip .6s ease}
+@keyframes s7Tip{30%{transform:rotate(-10deg)}60%{transform:rotate(6deg)}}
+.shop .s7-addon.on .s7-check{animation:s7Pop .45s var(--spring)}
+@keyframes s7Pop{0%{transform:scale(.6)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.shop .s7-size,.shop .s7-sw,.shop .s7-addon{transition:transform .25s var(--spring),box-shadow .2s,background .2s}
+.shop .s7-size:active,.shop .s7-sw:active,.shop .s7-addon:active{transform:scale(.96)}
+
+@media (prefers-color-scheme:dark){
+  .shop .sheet7 .lc{background:rgba(19,24,18,.72)}
+  .shop .lc-meter i{background:rgba(255,255,255,.12)}
+  .shop .hfx-arrows b{background:#C9E3B0}
+  .shop .hfx-floor{border-color:rgba(201,227,176,.4)}
+  .shop .hfx-label{background:rgba(24,30,20,.92);color:#E8F1E0;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 14px 28px -14px rgba(0,0,0,.8)}
+  .shop .hfx-label.k-size{background:#C9E3B0;color:#10200B}
+}
+@media (max-width:560px){
+  .shop .sheet7 .lc{width:82px;padding:6px 4px;gap:4px}
+  .shop .sheet7 .lc-title{display:none}
+  .shop .sheet7 .lc-meter i{width:10px}
+  .shop .hfx-arrows.r{display:none}
+  .shop .hfx-label{font-size:.85rem;padding:7px 13px}
+  .shop .hfx-arrows b{width:22px;height:12px}
+  .shop .hfx-label{top:calc(var(--top) - 56px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .shop .lc-wave,.shop .lc-bubbles b,.shop .s7-size.on svg,.shop .s7-sw.on .s7-sw-cup,.shop .s7-sw.on .s7-sw-cup i,.shop .s7-addon.on .s7-check{animation:none}
+}
+
+/* a soft cloud of powder over the cup (add) or a grey puff (remove) */
+.shop .hfx-puff{position:absolute;left:50%;top:var(--top);width:calc(var(--cupw) * 1.4);height:calc(var(--cupw) * .8);margin:calc(var(--cupw) * -.5) 0 0 calc(var(--cupw) * -.7);border-radius:50%;
+  background:radial-gradient(closest-side,rgba(110,160,70,.55),rgba(110,160,70,.25) 55%,transparent);filter:blur(4px);opacity:0;animation:hfxPuff 1.1s ease .35s both}
+.shop .hfx-remove .hfx-puff{background:radial-gradient(closest-side,rgba(140,140,125,.45),transparent);animation-delay:0s}
+@keyframes hfxPuff{0%{opacity:0;transform:scale(.3)}30%{opacity:1}100%{opacity:0;transform:scale(1.4) translateY(-20px)}}
+/* 100% sweet: a few sparkles */
+.shop .hfx-twinkle{position:absolute;width:16px;height:16px;background:#F3C94A;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:0;animation:hfxTwinkle 1s ease calc(.6s + var(--i) * .12s) both}
+@keyframes hfxTwinkle{0%{opacity:0;transform:scale(.2) rotate(0)}40%{opacity:1;transform:scale(1.1) rotate(60deg)}100%{opacity:0;transform:scale(.4) rotate(140deg)}}

@@ -3,11 +3,12 @@ import { priceLine } from '../shared/pricing.mjs';
 import { ONLINE } from '../shared/rules.mjs';
 import { peso, pad, toneFor } from '../lib/format';
 import StampCard from './StampCard';
-import { CountUp, photoFrom, morphIn, morphOut, useScrollIn } from './fx';
+import { CountUp, photoFrom, morphIn, morphOut, useScrollIn, calm } from './fx';
 import { TabInk } from '../lib/motion';
 import { sceneVar, sceneBg } from '../lib/drinkImages';
-import { Doodle, LiveCup } from './art';
+import { Doodle, LiveCup, HeroFx } from './art';
 import { ShareDrink } from './share';
+import './sheetfx.css';
 
 // Keep the picked category chip in view (centered) on phones
 const slideInto = (b) => { const nav = b.parentElement; nav.scrollTo?.({ left: b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); };
@@ -185,10 +186,50 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
     sweet: item.sweet ? menu.sweetness[Math.min(2, menu.sweetness.length - 1)] || '' : '', addonIds: [], qty: 1, note: '',
   });
   const x = priceLine(L, { ...item, milkQty: 0 }, { sizes: menu.sizes, milks: [], addons: menu.addons });
-  const set = (p) => setL({ ...L, ...p });
+  const sweetPct = (v) => { const n = parseInt(String(v), 10); return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 50; };
+  const sweetWord = (v) => { const n = sweetPct(v); return n === 0 ? 'No sugar' : n <= 25 ? 'Barely sweet' : n <= 50 ? 'Just right' : n <= 75 ? 'Sweet' : 'Extra sweet'; };
   const sizeAt = Math.max(0, menu.sizes.findIndex((s) => s._id === x.sizeId));
   const picked = addons.filter((a) => L.addonIds.includes(a._id));
   const hero = useRef(null);
+  // What just changed, for the animation on the drink photo
+  const [fx, setFx] = useState(null);
+  const set = (p) => {
+    setL({ ...L, ...p });
+    let f = null;
+    if (p.sizeId !== undefined && p.sizeId !== L.sizeId) {
+      const to = menu.sizes.findIndex((s) => s._id === p.sizeId), sz = menu.sizes[to];
+      f = { kind: 'size', up: to > sizeAt, label: `${sz?.label || 'Size'}${+sz?.price ? ` · +${peso(sz.price)}` : ''}` };
+    } else if (p.sweet !== undefined && p.sweet !== L.sweet) {
+      f = { kind: 'sweet', level: sweetPct(p.sweet), label: `${p.sweet} · ${sweetWord(p.sweet)}` };
+    } else if (p.addonIds) {
+      const added = p.addonIds.find((id) => !L.addonIds.includes(id)), gone = L.addonIds.find((id) => !p.addonIds.includes(id));
+      const a = addons.find((o) => o._id === (added || gone));
+      if (a) f = { kind: added ? 'add' : 'remove', matcha: /matcha|shot/i.test(a.label), label: `${added ? '+' : '−'} ${a.label}` };
+    }
+    if (f) setFx((old) => ({ ...f, n: (old?.n || 0) + 1, spot: cupSpot(p.sizeId !== undefined ? menu.sizes.findIndex((s) => s._id === p.sizeId) : sizeAt) }));
+  };
+  // Where the cup's top and bottom are on the photo (so drops land in the cup and the whisk dips into it)
+  const cupSpot = (at) => {
+    const img = hero.current;
+    if (!img) return null;
+    const cs = getComputedStyle(img), pt = parseFloat(cs.paddingTop) || 0, pb = parseFloat(cs.paddingBottom) || 0, pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+    const w = img.offsetWidth - pl - pr, h = img.offsetHeight - pt - pb, side = Math.min(w, h), y0 = img.offsetTop + pt + (h - side) / 2;
+    const S = [0.86, 1.02, 1.1][at] || 1, origin = img.offsetTop + img.offsetHeight * 0.96; // the photo is scaled per size from near its bottom
+    const y = (v) => origin + (v - origin) * S;
+    return { '--top': `${Math.round(y(y0 + side * 0.24))}px`, '--base': `${Math.round(y(y0 + side * 0.945))}px`, '--cupw': `${Math.round(side * S * 0.42)}px` };
+  };
+  // The photo reacts too: bounces bigger/smaller, dips as syrup lands, hops when an add-on goes in
+  useEffect(() => {
+    const el = hero.current;
+    if (!fx || !el?.animate || calm()) return;
+    const K = {
+      size: [{ scale: '1 1' }, { scale: fx.up ? '1.07 .9' : '.93 1.06' }, { scale: fx.up ? '.96 1.07' : '1.04 .95' }, { scale: '1.01 .99' }, { scale: '1 1' }],
+      sweet: [{ translate: '0 0' }, { translate: '0 0', offset: 0.35 }, { translate: '0 7px' }, { translate: '0 -3px' }, { translate: '0 0' }],
+      add: [{ translate: '0 0', rotate: '0deg' }, { translate: '0 -16px', rotate: '-4deg' }, { translate: '0 2px', rotate: '3deg' }, { translate: '0 0', rotate: '0deg' }],
+      remove: [{ rotate: '0deg' }, { rotate: '-3deg' }, { rotate: '3deg' }, { rotate: '0deg' }],
+    }[fx.kind];
+    if (K) el.animate(K, { duration: fx.kind === 'sweet' ? 1100 : 700, easing: 'cubic-bezier(.3,1.3,.5,1)' });
+  }, [fx]);
   useLayoutEffect(() => { morphIn(hero.current); }, []); // the menu photo grows into this sheet
   const close = () => { morphOut(hero.current); onClose(); }; // …and shrinks back when it closes
   useEffect(() => { if (sharing) return undefined; const k = (e) => e.key === 'Escape' && close(); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, [onClose, sharing]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -196,8 +237,6 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
   const shareCard = () => setSharing({ item, who: firstName(who), shop: menu.shop,
     size: item.hasSizes && menu.sizes.length > 1 ? { label: menu.sizes[sizeAt]?.label, big: sizeAt > 0 } : null,
     sweet: item.sweet && L.sweet ? `${L.sweet} sweet` : '', addons: picked.map((a) => a.label) });
-  const sweetPct = (v) => { const n = parseInt(String(v), 10); return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 50; };
-  const sweetWord = (v) => { const n = sweetPct(v); return n === 0 ? 'No sugar' : n <= 25 ? 'Barely sweet' : n <= 50 ? 'Just right' : n <= 75 ? 'Sweet' : 'Extra sweet'; };
   return (<>
     <div className="shop-scrim" onMouseDown={(e) => !sharing && e.target === e.currentTarget && close()}>
       <div className="sheet sheet7" role="dialog" aria-modal="true" aria-label={item.name}>
@@ -206,7 +245,8 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
           {item.image && <img ref={hero} src={item.image} alt="" />}
           {item.hasSizes && menu.sizes.length > 1 && <span className="sh-size" key={x.sizeId}>{menu.sizes[sizeAt]?.label}</span>}
           <span className="sh-tags">{picked.map((a) => <i key={a._id}>+ {a.label}</i>)}</span>
-          <LiveCup name={item.name} sweet={item.sweet ? L.sweet : null} sizeAt={item.hasSizes ? sizeAt : 0} sizes={item.hasSizes ? menu.sizes.length : 1} addons={picked} />
+          {fx && <HeroFx key={fx.n} {...fx} />}
+          <LiveCup name={item.name} sweet={item.sweet ? L.sweet : null} sizeAt={item.hasSizes ? sizeAt : 0} sizes={item.hasSizes ? menu.sizes.length : 1} sizeLabel={menu.sizes[sizeAt]?.label || ''} addons={picked} pulse={fx?.n || 0} />
         </div>
         <div className="sheet-b">
           <div className="s7-title">

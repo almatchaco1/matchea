@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { calm } from './fx';
 // Hand-drawn style pictures for the customer site: empty states, the loading whisk, and the order cup.
 
 /** A matcha bowl with a bamboo whisk. kind: 'cart' | 'orders' | 'closed' | 'lost' */
@@ -102,8 +103,8 @@ const FLAVOURS = [
 const TOPPING = (label) => (/pearl|boba|tapioca|sago/i.test(label) ? 'pearls' : /cream|foam|cheese|cloud/i.test(label) ? 'cream'
   : /jelly/i.test(label) ? 'jelly' : /matcha|shot/i.test(label) ? 'matcha' : 'sprinkles');
 
-/** Illustrated cup that changes as the customer picks: size, sweetness (syrup level) and add-ons. */
-export function LiveCup({ name, sweet, sizeAt = 0, sizes = 1, addons = [] }) {
+/** Illustrated cup that changes as the customer picks: size, sweetness (syrup level) and add-ons. Sloshes on every change. */
+export function LiveCup({ name, sweet, sizeAt = 0, sizes = 1, sizeLabel = '', addons = [], pulse = 0 }) {
   const flavour = (FLAVOURS.find(([re]) => re.test(name || '')) || [])[1];
   const pct = sweet === '' || sweet == null ? null : Math.max(0, Math.min(100, parseInt(sweet, 10) || 0));
   const tops = new Set(addons.map((a) => TOPPING(a.label)));
@@ -116,16 +117,25 @@ export function LiveCup({ name, sweet, sizeAt = 0, sizes = 1, addons = [] }) {
   let at = 0;
   const scale = sizes > 1 ? 0.9 + (sizeAt / (sizes - 1)) * 0.16 : 1;
   const sweetWord = pct == null ? '' : pct === 0 ? 'No sugar' : `${pct}% sweet`;
+  const stage = useRef(null);
+  useEffect(() => { // a little slosh when something changes
+    if (!pulse || calm() || !stage.current?.animate) return;
+    stage.current.animate([{ rotate: '0deg' }, { rotate: '-7deg' }, { rotate: '5deg' }, { rotate: '-2deg' }, { rotate: '0deg' }], { duration: 700, easing: 'ease-out' });
+  }, [pulse]);
+  const dots = pct == null ? 0 : Math.round(pct / 25);
   return (
-    <div className="lc" aria-label={`Your cup: ${[sweetWord, ...addons.map((a) => a.label)].filter(Boolean).join(', ') || 'as it comes'}`} role="img">
-      <div className="lc-stage" style={{ '--s': scale }}>
+    <div className="lc" aria-label={`Your cup: ${[sizeLabel, sweetWord, ...addons.map((a) => a.label)].filter(Boolean).join(', ') || 'as it comes'}`} role="img">
+      <span className="lc-title">Your cup</span>
+      <div className="lc-stage" ref={stage} style={{ '--s': scale }}>
         <span className="lc-straw" />
         <span className="lc-lid" />
         <div className="lc-cup">
           {layers.map(([k, h, c]) => { const st = { bottom: `${at}%`, height: `${h}%`, ...(c ? { '--fc': c } : {}) }; at += h; return <i key={k} className={`lc-l lc-${k}`} style={st} />; })}
+          <i className="lc-wave" style={{ bottom: 'calc(86% - 5px)' }} />
           {tops.has('pearls') && <span className="lc-pearls">{Array.from({ length: 9 }, (_, i) => <b key={i} style={{ '--i': i }} />)}</span>}
           {tops.has('jelly') && <span className="lc-jelly">{Array.from({ length: 5 }, (_, i) => <b key={i} style={{ '--i': i }} />)}</span>}
           <span className="lc-ice"><b /><b /><b /></span>
+          <span className="lc-bubbles" key={`b${pulse}`}><b /><b /><b /><b /></span>
           <span className="lc-shine" />
         </div>
         {tops.has('cream') && <span className="lc-cream" />}
@@ -134,7 +144,44 @@ export function LiveCup({ name, sweet, sizeAt = 0, sizes = 1, addons = [] }) {
         {pct >= 75 && <span className="lc-spark" key={pct}><b /><b /><b /></span>}
         {pct != null && pct > 0 && <span className="lc-drip" key={`d${pct}`} aria-hidden="true"><b /><b /></span>}
       </div>
-      <span className="lc-cap">{sweetWord || 'Your cup'}</span>
+      {pct != null && <span className="lc-meter" aria-hidden="true">{[1, 2, 3, 4].map((k) => <i key={k} className={k <= dots ? 'on' : ''} style={{ '--k': k }} />)}</span>}
+      <span className="lc-cap">{[sizes > 1 ? sizeLabel : '', sweetWord].filter(Boolean).join(' · ') || 'Your cup'}</span>
+    </div>
+  );
+}
+
+/** Big moment on the drink photo when the customer changes something:
+ *  sweetness → syrup drops fall into the cup; size → the cup bounces with a floor ripple and arrows;
+ *  extra matcha → a whisk spins and matcha powder bursts out. A label floats up to say what changed. */
+export function HeroFx({ kind, label, level = 50, up = true, matcha = true, spot }) {
+  if (calm()) return label ? <div className="hfx calm" style={spot || undefined} aria-hidden="true"><em className="hfx-label">{label}</em></div> : null;
+  const drops = Math.max(1, Math.round(1 + level / 16));
+  return (
+    <div className={`hfx hfx-${kind}`} style={spot || undefined} aria-hidden="true">
+      {kind === 'sweet' && (<>
+        {level === 0
+          ? Array.from({ length: 7 }, (_, i) => <b key={i} className="hfx-leaf" style={{ '--a': `${i * 52 - 150}deg`, '--i': i }} />)
+          : Array.from({ length: drops }, (_, i) => <b key={i} className="hfx-drop" style={{ '--i': i, '--x': `${((i % 3) - 1) * 12 + (i % 2 ? 4 : -3)}px` }} />)}
+        {level > 0 && <><i className="hfx-ring" style={{ '--d': `${0.38 + drops * 0.09}s` }} /><i className="hfx-ring r2" style={{ '--d': `${0.5 + drops * 0.09}s` }} /></>}
+        {level > 0 && <span className="hfx-glow" style={{ '--g': level / 100 }} />}
+        {level >= 75 && [[-1, -0.2], [1.05, 0.1], [-0.8, 0.9], [0.9, 1.1]].map(([dx, dy], i) => <b key={`t${i}`} className="hfx-twinkle" style={{ '--i': i, left: `calc(50% + var(--cupw) * ${dx * 0.62} - 8px)`, top: `calc(var(--top) + var(--cupw) * ${dy * 0.5})` }} />)}
+      </>)}
+      {kind === 'size' && (<>
+        <i className="hfx-floor" /><i className="hfx-floor r2" />
+        <span className={`hfx-arrows ${up ? 'up' : 'down'}`}><b /><b /><b /></span>
+        <span className={`hfx-arrows r ${up ? 'up' : 'down'}`}><b /><b /><b /></span>
+      </>)}
+      {(kind === 'add' || kind === 'remove') && (<>
+        {kind === 'add' && matcha && (
+          <svg className="hfx-whisk" viewBox="0 0 40 80"><path d="M20 2v30" /><path d="M20 32c-12 6-14 30-6 44M20 32c-6 8-7 30-2 44M20 32v44M20 32c6 8 7 30 2 44M20 32c12 6 14 30 6 44" /></svg>
+        )}
+        {Array.from({ length: kind === 'add' ? 22 : 10 }, (_, i) => (
+          <b key={i} className={`hfx-dust ${matcha ? 'm' : 'g'}`} style={{ '--a': `${i * (360 / (kind === 'add' ? 22 : 10))}deg`, '--d': `${62 + (i % 4) * 22}px`, '--i': i, '--z': `${0.6 + (i % 3) * 0.3}` }} />
+        ))}
+        <i className="hfx-puff" />
+        {kind === 'add' && <i className="hfx-swirl" />}
+      </>)}
+      {label && <em className={`hfx-label k-${kind}`}>{label}</em>}
     </div>
   );
 }
