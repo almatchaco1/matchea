@@ -157,3 +157,9 @@ body:has(.shell){padding:0;margin:0}
 @media print{.sb,.tb,.sb-scrim{display:none!important}.shell{display:block}}
 /* keep the page title clear of the menu handle */
 @media (min-width:761px){.shell .tb{padding-left:40px}}
+
+/* Barista "done" bar: dark green in both themes, Undo button readable */
+.bar-undo{background:#1E2C14 !important;color:#FFF8E8 !important;box-shadow:0 0 0 1px rgba(201,227,176,.18),0 18px 34px -16px rgba(0,0,0,.6) !important}
+.bar-undo .btn.btn.btn.btn{background:#C9E3B0 !important;color:#10200B !important;border:0;box-shadow:none;font-weight:800;min-height:36px;padding:0 18px;border-radius:999px;opacity:1}
+.bar-undo .btn.btn.btn.btn:hover{background:#DCEFC8 !important;color:#10200B !important}
+.bar-undo .btn.btn.btn.btn:focus-visible{outline:2px solid #FFF8E8;outline-offset:2px}
