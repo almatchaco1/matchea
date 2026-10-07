@@ -293,8 +293,6 @@
 .shop .ld8-all-n{font-family:var(--serif);font-size:3.4rem;line-height:1;color:#F6E3A7}
 .shop .ld8-all b{font-size:1.05rem}
 .shop .ld8-all-go{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:9px 14px;border-radius:999px;font-weight:800;font-size:.88rem;background:#F6E3A7;color:#22340F}
-.shop .ld8-all-go svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .3s var(--spring)}
-.shop .ld8-all:hover .ld8-all-go svg{transform:translateX(4px)}
 .shop .ld8-all-cups{position:absolute;right:-10px;bottom:-14px;display:flex;z-index:-1;opacity:.9}
 .shop .ld8-all-cups img{position:static;width:70px;height:auto;margin-left:-26px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.4))}
 

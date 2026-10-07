@@ -11,10 +11,7 @@
 /* CTA with an arrow chip */
 .shop .ld9 .hx-ctas{margin-top:30px;gap:12px}
 .shop .ld9 .hx-ctas .sh-btn{min-height:58px;padding:0 28px;border-radius:999px;font-size:1.04rem}
-.shop .ld9 .sh-btn.hx-go{gap:14px;padding:0 8px 0 28px;box-shadow:inset 0 0 0 1px rgba(237,217,182,.22),0 18px 30px -16px rgba(22,51,15,.85)}
-.shop .hx-go-i{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#FFF8E8;color:var(--green);transition:transform .4s var(--spring)}
-.shop .hx-go-i svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.shop .sh-btn.hx-go:hover .hx-go-i{transform:translateX(3px) rotate(-45deg)}
+.shop .ld9 .sh-btn.hx-go{padding:0 30px;box-shadow:inset 0 0 0 1px rgba(237,217,182,.22),0 18px 30px -16px rgba(22,51,15,.85)}
 
 /* proof row: stacked cups + count + rating */
 .shop .hx-proof{display:flex;align-items:center;gap:14px;margin-top:28px;animation:rise .7s var(--ease-out) .45s both}
@@ -132,7 +129,6 @@
   .shop .ld9 .ld-lede{font-size:1rem}
   .shop .ld9 .hx-ctas{width:100%}
   .shop .ld9 .hx-ctas .sh-btn{flex:1 1 100%;justify-content:center}
-  .shop .ld9 .sh-btn.hx-go{justify-content:space-between}
   .shop .hx-perks{grid-template-columns:1fr}
   .shop .hx-perks li{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:12px}
   .shop .hx-perk-i{grid-row:span 2;margin:0}

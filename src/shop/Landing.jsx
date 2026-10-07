@@ -39,7 +39,7 @@ export default function Landing({ menu, err, go, me }) {
           <h1><span className="ld-line"><span>Good matcha,</span></span><br /><span className="ld-line"><em>good mood.</em></span></h1>
           <p className="ld-lede">Whisked-to-order matcha lattes, from classic to Putobumbong. {dlv ? 'Order on your phone, then pick it up at the counter or have it delivered to your door by Lalamove.' : 'Order on your phone, pay online or at the counter, and skip the line at pickup.'}</p>
           <div className="ld-ctas hx-ctas">
-            <a href={start} className="sh-btn hx-go" onClick={nav(go, start)}>{me ? 'Start your order' : 'Create an account'}<span className="hx-go-i" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span></a>
+            <a href={start} className="sh-btn hx-go" onClick={nav(go, start)}>{me ? 'Start your order' : 'Create an account'}</a>
             {!me && <a href="/signin" className="sh-btn ghost" onClick={nav(go, '/signin')}>I already have one</a>}
           </div>
           {items.length > 0 && (
@@ -120,7 +120,7 @@ export default function Landing({ menu, err, go, me }) {
             <a href={start} className="ld8-tile ld8-all" onClick={nav(go, start)} data-reveal style={{ '--i': 5 }}>
               <span className="ld8-all-n">{items.length}</span>
               <b>drinks on the menu</b>
-              <span className="ld8-all-go">{me ? 'See them all' : 'Sign up to order'} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
+              <span className="ld8-all-go">{me ? 'See them all' : 'Sign up to order'}</span>
               <span className="ld8-all-cups" aria-hidden="true">{strip.slice(4, 7).map((x) => x.image && <img key={x._id} src={x.image} alt="" loading="lazy" />)}</span>
             </a>
           </div>

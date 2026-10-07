@@ -57,9 +57,6 @@
 
 /* main button */
 .shop .au9 .sh-btn.big.au9-go{display:flex;align-items:center;justify-content:center;gap:12px;min-height:58px;border-radius:999px;margin-top:6px;position:relative;font-size:1.06rem}
-.shop .au9-go-i{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#FFF8E8;color:var(--green);transition:transform .4s var(--spring)}
-.shop .au9-go-i svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.shop .au9-go:hover:not(:disabled) .au9-go-i{transform:translateY(-50%) translateX(3px)}
 .shop .au9-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,248,232,.35);border-top-color:#FFF8E8;animation:au9Spin .8s linear infinite}
 @keyframes au9Spin{to{transform:rotate(360deg)}}
 
@@ -97,8 +94,7 @@
   .shop .au9-tabs a[aria-selected="true"]{color:#10200B !important}
   .shop .au9 .au-pw button{background:rgba(255,255,255,.06)}
   .shop .au-ic:focus-within .au-ic-i{stroke:#C9E3B0}
-  .shop .au9-go-i{background:#10200B;color:#C9E3B0}
-}
+  }
 @media (prefers-color-scheme:dark) and (max-width:860px){
   .shop .au-card.au9-card{background:#141A10}
 }

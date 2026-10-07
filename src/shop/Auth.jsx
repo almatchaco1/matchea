@@ -116,7 +116,7 @@ export function AuthPage({ mode, go, onSignedIn, shop, items = [] }) {
           {errs.agree && <small className="au-err" role="alert">{errs.agree}</small>}
           {msg && <div className="shop-alert" role="alert">{msg}</div>}
           <button className="sh-btn big au9-go" disabled={busy}>
-            {busy ? <><span className="au9-spin" aria-hidden="true" />Please wait…</> : <>{signup ? 'Create account' : 'Sign in'}<span className="au9-go-i" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span></>}
+            {busy ? <><span className="au9-spin" aria-hidden="true" />Please wait…</> : <>{signup ? 'Create account' : 'Sign in'}</>}
           </button>
         </form>
         <p className="au-foot">
