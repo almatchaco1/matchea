@@ -40,9 +40,16 @@
   transform-origin:50% 96%;transition:transform .9s cubic-bezier(.22,1.15,.36,1);mix-blend-mode:multiply}
 .shop .sheet-hero.size-0 .hfx-tint{transform:scale(.86)}.shop .sheet-hero.size-1 .hfx-tint{transform:scale(1.02)}.shop .sheet-hero.size-2 .hfx-tint{transform:scale(1.1)}
 .shop .hfx-tint i{position:absolute;left:0;right:0}
-.shop .hfx-tint.t-honey i{bottom:calc(100% - var(--base0));height:calc((var(--base0) - var(--top0)) * (.18 + var(--lv) * .5));
-  background:linear-gradient(0deg,rgba(214,140,30,.55),rgba(244,196,96,.42) 70%,rgba(244,196,96,0));transform-origin:50% 100%;animation:hfxRise 2.3s var(--ease) .45s both}
-@keyframes hfxRise{0%{transform:scaleY(0);opacity:1}45%{transform:scaleY(1);opacity:1}75%{opacity:.85}100%{transform:scaleY(1);opacity:0}}
+/* honey that stays in the cup at the chosen sweetness and glides to a new level */
+.shop .hfx-tint.honey-level{z-index:1}
+.shop .hfx-tint.honey-level i{bottom:calc(100% - var(--base0));height:0;opacity:0;
+  background:linear-gradient(0deg,rgba(205,130,25,.5),rgba(240,186,80,.38) 75%,rgba(240,186,80,.18));
+  transition:height 1.1s cubic-bezier(.22,1,.36,1) .35s,opacity .5s ease .3s}
+.shop .hfx-tint.honey-level.on i{height:calc((var(--base0) - var(--top0)) * (.1 + var(--lv) * .4));opacity:1}
+/* the honey's surface: a soft wave that slowly moves */
+.shop .hfx-tint.honey-level i::before{content:"";position:absolute;left:-20%;right:-20%;top:-7px;height:9px;
+  background:radial-gradient(12px 7px at 12px 8px,rgba(240,186,80,.5) 98%,transparent 100%) 0 0/24px 9px repeat-x;animation:honeyWave 3.2s linear infinite}
+@keyframes honeyWave{to{transform:translateX(24px)}}
 .shop .hfx-tint.t-matcha i,.shop .hfx-tint.t-gold i{top:var(--top0);height:calc((var(--base0) - var(--top0)) * .55);transform-origin:50% 0;animation:hfxSink 2.3s var(--ease) .55s both}
 .shop .hfx-tint.t-matcha i{background:linear-gradient(180deg,rgba(70,120,40,.55),rgba(110,160,70,.35) 65%,rgba(110,160,70,0))}
 .shop .hfx-tint.t-gold i{background:linear-gradient(180deg,rgba(214,150,40,.45),rgba(214,150,40,0))}
@@ -116,7 +123,10 @@
   .shop .hfx-ruler i{background:#C9E3B0}
   .shop .hfx-ruler b{color:#C9E3B0}
   .shop .hfx-floor{background:radial-gradient(closest-side,rgba(201,227,176,.35),transparent)}
-  .shop .hfx-tint{mix-blend-mode:screen}
+  .shop .hfx-tint{mix-blend-mode:normal}
+  .shop .hfx-tint.honey-level i{background:linear-gradient(0deg,rgba(214,150,40,.42),rgba(240,190,90,.28) 75%,rgba(240,190,90,.12))}
+  .shop .hfx-tint.t-matcha i{background:linear-gradient(180deg,rgba(60,105,35,.5),rgba(60,105,35,0))}
+  .shop .hfx-tint.t-fade i{background:rgba(10,14,8,.35)}
   .shop .hfx-label{background:rgba(24,30,20,.92);color:#E8F1E0;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 14px 28px -14px rgba(0,0,0,.8)}
   .shop .hfx-label.k-size{background:#C9E3B0;color:#10200B}
 }
@@ -129,6 +139,8 @@
   .shop .hfx-label{top:calc(var(--top) - 56px)}
 }
 @media (prefers-reduced-motion:reduce){
+  .shop .hfx-tint.honey-level i::before{animation:none}
+  .shop .hfx-tint.honey-level i{transition:none}
   .shop .lc-wave,.shop .lc-bubbles b,.shop .s7-size.on svg,.shop .s7-sw.on .s7-sw-cup,.shop .s7-sw.on .s7-sw-cup i,.shop .s7-addon.on .s7-check{animation:none}
 }
 

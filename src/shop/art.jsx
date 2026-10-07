@@ -193,9 +193,32 @@ export function CupTint({ fx, img }) {
     const u = `url("${el.currentSrc || el.src}")`;
     t.style.webkitMaskImage = u; t.style.maskImage = u;
   }, [img]);
-  if (calm() || !['sweet', 'add', 'remove'].includes(fx.kind) || (fx.kind === 'sweet' && !fx.level)) return null;
-  const k = fx.kind === 'sweet' ? 'honey' : fx.kind === 'add' ? (fx.matcha ? 'matcha' : 'gold') : 'fade';
+  if (calm() || !['add', 'remove'].includes(fx.kind)) return null;
+  const k = fx.kind === 'add' ? (fx.matcha ? 'matcha' : 'gold') : 'fade';
   return <span ref={box} className={`hfx-tint t-${k}`} style={{ ...fx.spot, '--lv': (fx.level ?? 50) / 100 }} aria-hidden="true"><i /></span>;
+}
+
+/** The sweetness you chose, shown as honey sitting in the bottom of the cup photo.
+ *  It stays there and glides up or down to the new level (it never starts again from empty). */
+export function HoneyLevel({ img, level, spot }) {
+  const box = useRef(null);
+  useLayoutEffect(() => {
+    const fit = () => {
+      const el = img.current, t = box.current;
+      if (!el || !t) return;
+      const cs = getComputedStyle(el);
+      Object.assign(t.style, { padding: cs.padding, left: `${el.offsetLeft}px`, top: `${el.offsetTop}px`, width: `${el.offsetWidth}px`, height: `${el.offsetHeight}px` });
+      const u = `url("${el.currentSrc || el.src}")`;
+      t.style.webkitMaskImage = u; t.style.maskImage = u;
+    };
+    fit();
+    const el = img.current;
+    el?.addEventListener('load', fit);
+    window.addEventListener('resize', fit);
+    return () => { el?.removeEventListener('load', fit); window.removeEventListener('resize', fit); };
+  }, [img, spot]);
+  if (level == null || !spot) return null;
+  return <span ref={box} className={`hfx-tint honey-level ${level > 0 ? 'on' : ''}`} style={{ ...spot, '--lv': level / 100 }} aria-hidden="true"><i /></span>;
 }
 
 /** Profile picture with the first letter underneath, so it never shows as an empty circle if the photo can't load. */

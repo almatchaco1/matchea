@@ -6,7 +6,7 @@ import StampCard from './StampCard';
 import { CountUp, photoFrom, morphIn, morphOut, useScrollIn, calm } from './fx';
 import { TabInk } from '../lib/motion';
 import { sceneVar, sceneBg } from '../lib/drinkImages';
-import { Doodle, LiveCup, HeroFx, CupTint } from './art';
+import { Doodle, LiveCup, HeroFx, CupTint, HoneyLevel } from './art';
 import { ShareDrink } from './share';
 import './sheetfx.css';
 
@@ -231,6 +231,9 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
     if (K) el.animate(K, { duration: fx.kind === 'sweet' ? 1400 : 1100, easing: 'cubic-bezier(.45,0,.25,1)' });
   }, [fx]);
   useLayoutEffect(() => { morphIn(hero.current); }, []); // the menu photo grows into this sheet
+  // Where the cup sits on the photo (for the honey level); measured again if the window changes size
+  const [spot0, setSpot0] = useState(null);
+  useLayoutEffect(() => { const f = () => setSpot0(cupSpot(0)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const close = () => { morphOut(hero.current); onClose(); }; // …and shrinks back when it closes
   useEffect(() => { if (sharing) return undefined; const k = (e) => e.key === 'Escape' && close(); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, [onClose, sharing]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -245,6 +248,7 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
           {item.image && <img ref={hero} src={item.image} alt="" />}
           {item.hasSizes && menu.sizes.length > 1 && <span className="sh-size" key={x.sizeId}>{menu.sizes[sizeAt]?.label}</span>}
           <span className="sh-tags">{picked.map((a) => <i key={a._id}>+ {a.label}</i>)}</span>
+          {item.sweet && <HoneyLevel img={hero} level={sweetPct(L.sweet)} spot={spot0} />}
           {fx && <CupTint key={`t${fx.n}`} fx={fx} img={hero} />}
           {fx && <HeroFx key={fx.n} {...fx} />}
           <LiveCup name={item.name} sweet={item.sweet ? L.sweet : null} sizeAt={item.hasSizes ? sizeAt : 0} sizes={item.hasSizes ? menu.sizes.length : 1} sizeLabel={menu.sizes[sizeAt]?.label || ''} addons={picked} pulse={fx?.n || 0} />
