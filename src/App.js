@@ -12,6 +12,7 @@ import Customers from './components/Customers';
 import Barista from './components/Barista';
 import Inbox from './components/Inbox';
 import Home from './components/Home';
+import Modal from './components/Modal';
 import PrinterSettings from './components/PrinterSettings';
 import { loadPrinterSettings, reconnect } from './lib/printer';
 import { usePosRipples } from './lib/motion';
@@ -99,7 +100,9 @@ export default function App() {
 
   const toast = useCallback((m) => { setToastMsg(m); clearTimeout(window.__t); window.__t = setTimeout(() => setToastMsg(''), Math.max(2800, String(m).length * 55)); }, []);
   const logout = useCallback(() => { setToken(null); setUser(null); setCart([]); setWeakPin(false); }, []);
-  const signOut = () => { api.post('/auth/logout').catch(() => {}).finally(logout); };
+  const [askOut, setAskOut] = useState(false); // "Sign out?" confirmation
+  const [outBusy, setOutBusy] = useState(false);
+  const signOut = () => { setOutBusy(true); api.post('/auth/logout').catch(() => {}).finally(() => { setOutBusy(false); setAskOut(false); logout(); }); };
   // Locked or signed out by the owner (or session expired): back to sign-in with the reason
   useEffect(() => setUnauthorizedHandler((d) => { if (d?.error) setSignedOutMsg(d.error); logout(); }), [logout]);
 
@@ -259,7 +262,7 @@ export default function App() {
             <div className="sb-user" title={`${user.name} · ${user.superAdmin ? 'Super admin' : isAdmin ? 'Admin' : 'Cashier'}`}>
               <span className="sb-ava" aria-hidden="true">{String(user.name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()}</span>
               <span className="uc-name sb-label"><b>{user.name}</b><span className="uc-role">{user.superAdmin ? 'Super admin' : isAdmin ? 'Admin' : 'Cashier'}</span></span>
-              <button className="sb-out" onClick={signOut} aria-label="Sign out" title="Sign out">
+              <button className="sb-out" onClick={() => setAskOut(true)} aria-label="Sign out" title="Sign out">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10" /></svg>
               </button>
             </div>
@@ -326,6 +329,27 @@ export default function App() {
         </div>
       </div>
       {printerOpen && <PrinterSettings toast={toast} onClose={() => setPrinterOpen(false)} />}
+      {askOut && (() => {
+        const items = cart.reduce((a, l) => a + (l.qty || 1), 0);
+        const warn = [
+          items > 0 && { tone: 'red', t: `The order in the Register will be cleared (${items} ${items === 1 ? 'item' : 'items'}, not paid yet).` },
+          !training && newCount > 0 && { tone: 'amber', t: `${newCount} online ${newCount === 1 ? 'order is' : 'orders are'} waiting to be accepted.` },
+          barShown > 0 && { tone: 'amber', t: `${barShown} ${barShown === 1 ? 'order is' : 'orders are'} still on the Barista screen.` },
+          !training && msgCount > 0 && { tone: 'blue', t: `${msgCount} unread customer ${msgCount === 1 ? 'chat' : 'chats'}.` },
+        ].filter(Boolean);
+        return (
+          <Modal title="Sign out?" onClose={() => !outBusy && setAskOut(false)}
+            footer={<><button className="btn" onClick={() => setAskOut(false)} disabled={outBusy} autoFocus>Stay signed in</button><button className="btn danger so-go" onClick={signOut} disabled={outBusy}>{outBusy ? 'Signing out…' : items > 0 ? 'Clear order and sign out' : 'Sign out'}</button></>}>
+            <div className="so-who">
+              <span className="so-ava" aria-hidden="true">{String(user.name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()}</span>
+              <span><b>{user.name}</b><small>{user.superAdmin ? 'Super admin' : isAdmin ? 'Admin' : 'Cashier'}</small></span>
+            </div>
+            {warn.length > 0
+              ? <><p className="so-lead">Before you go:</p><ul className="so-warn">{warn.map((w) => <li key={w.t} className={`t-${w.tone}`}>{w.t}</li>)}</ul></>
+              : <p className="so-lead">Nothing is waiting. The next person will need their own PIN to sign in.</p>}
+          </Modal>
+        );
+      })()}
       {idleLeft != null && (
           <div className="scrim idle-scrim" role="alertdialog" aria-label="Still there?">
             <div className="modal idle-box">
