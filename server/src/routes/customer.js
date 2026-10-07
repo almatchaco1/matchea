@@ -333,7 +333,8 @@ r.get('/orders', requireCustomer, ah(async (req, res) => {
     createdAt: s.createdAt, paidOnline: !!s.paidOnline, items: s.lines.map((l) => `${l.qty}× ${l.name}`).join(', '),
     fulfil: s.fulfil || 'pickup', riderState: s.fulfil === 'delivery' ? s.delivery?.state || 'waiting' : null,
     pickupCode: ['new', 'preparing', 'ready'].includes(s.status) ? s.pickupCode || '' : '',
-    lines: s.lines.map(({ product, name, mods, qty }) => ({ product, name, mods, qty })),
+    lines: s.lines.map(({ product, name, mods, qty, sizeId, addonIds }) => ({ product, name, mods, qty, sizeId: sizeId || null, addonIds: addonIds || [],
+      sweet: (/(?:^| · )Sweet ([^·]+?)(?= · |$)/.exec(mods || '') || [])[1] || '' })), // the choices too, for "Order again"
     rating: s.rating?.stars ? { stars: s.rating.stars, comment: s.rating.comment || '' } : null,
     canRate: s.status === 'paid' && !s.rating?.stars && Date.now() - new Date(s.completedAt || s.updatedAt) < RATE_DAYS * 864e5,
   })));

@@ -17,41 +17,99 @@ const LABEL = { awaiting_payment: 'Waiting for payment', new: 'Order received', 
 const DLABEL = { waiting: 'Preparing', booked: 'Waiting for a rider', picked: 'On the way', delivered: 'Delivered' };
 const labelOf = (o) => (o.fulfil === 'delivery' && ['preparing', 'ready', 'paid'].includes(o.status) ? (o.status === 'ready' && (o.riderState || 'waiting') === 'waiting' ? 'Ready · booking a rider' : DLABEL[o.status === 'paid' ? 'delivered' : o.riderState]) : LABEL[o.status]) || o.status;
 
-export function OrdersPage({ orders, go, reload }) {
+const ACTIVE = ['awaiting_payment', 'new', 'preparing', 'ready'];
+// Where an order is, as steps: pickup 4 steps, delivery 4 steps
+const stepsOf = (o) => (o.fulfil === 'delivery'
+  ? { labels: ['Received', 'Making', 'Rider', 'On the way'], at: o.status === 'new' || o.status === 'awaiting_payment' ? 0 : o.status === 'preparing' ? 1 : { picked: 3, booked: 2 }[o.riderState] ?? 2 }
+  : { labels: ['Received', 'Making', 'Ready', 'Picked up'], at: { awaiting_payment: 0, new: 0, preparing: 1, ready: 2, paid: 3 }[o.status] ?? 0 });
+
+export function OrdersPage({ orders, go, reload, menu, onReorder }) {
   const { pull, busy } = usePullRefresh(reload);
+  const [again, setAgain] = useState('');
+  const now = orders.filter((o) => ACTIVE.includes(o.status));
+  const past = orders.filter((o) => !ACTIVE.includes(o.status));
+  const photoOf = (l) => menu?.items.find((i) => String(i._id) === String(l.product))?.image;
+  const when = (d) => `${new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} · ${new Date(d).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}`;
+  const Thumbs = ({ o }) => (
+    <span className="o7-thumbs" aria-hidden="true">
+      {(o.lines || []).slice(0, 3).map((l, k) => { const src = photoOf(l); return src ? <img key={k} src={src} alt="" style={{ '--k': k }} /> : <i key={k} style={{ '--k': k }} />; })}
+      {(o.lines || []).length > 3 && <em>+{o.lines.length - 3}</em>}
+    </span>
+  );
   return (
-    <section className="panel">
+    <section className="o7">
       <div className={`ptr ${busy ? 'busy' : ''}`} style={{ '--p': Math.min(1, pull), height: busy ? 56 : Math.min(1.3, pull) * 56 }} aria-hidden={!busy} role="status">
         <svg className="ptr-whisk" viewBox="0 0 24 40" style={{ transform: busy ? undefined : `rotate(${pull * 300}deg)` }}><rect x="9" y="1" width="6" height="15" rx="2.5" /><path d="M9 16l-6 22M10.5 16l-3 23M12 16v23.5M13.5 16l3 23M15 16l6 22" /></svg>
         <span>{busy ? 'Refreshing…' : pull >= 0.8 ? 'Let go to refresh' : 'Pull to refresh'}</span>
       </div>
-      <h1>My orders</h1>
+      <div className="o7-head">
+        <h1>My orders</h1>
+        {orders.length > 0 && <button className="sh-btn sm" onClick={() => go('/menu')}>Order something</button>}
+      </div>
       {!orders.length ? (
-        <div className="empty-state"><Doodle kind="orders" /><p className="muted">No orders yet. Your first matcha is waiting for you!</p><button className="sh-btn" onClick={() => go('/menu')}>Order something</button></div>
-      ) : (
-        <ul className="olist">
-          {orders.map((o) => (
-            <li key={o.code}>
-              <button className="olist-row" onClick={() => go('/order/' + o.code)}>
-                <div>
-                  <b>#{pad(o.no)}</b>{o.fulfil === 'delivery' && <i className="olist-dl">Delivery</i>} <span className="muted">· {new Date(o.createdAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} {new Date(o.createdAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</span>
-                  <small>{o.items}</small>
-                </div>
-                <div className="olist-r">
-                  <span className={`pill s-${o.status}`}>{labelOf(o)}</span>
-                  {o.rating ? <Stars value={o.rating.stars} small /> : o.canRate && <span className="rate-link">Rate ★</span>}
-                  <b>{peso(o.total)}</b>
-                </div>
-              </button>
-              {o.status === 'cancelled' && (
-                <button className="olist-rm" onClick={async () => { try { await call('POST', `/customer/orders/${o.code}/hide`); await reload?.(); } catch { /* stays in the list */ } }}>
-                  Remove from my orders
+        <div className="panel empty-state"><Doodle kind="orders" /><p className="muted">No orders yet. Your first matcha is waiting for you!</p><button className="sh-btn" onClick={() => go('/menu')}>Order something</button></div>
+      ) : (<>
+        {now.length > 0 && (
+          <div className="o7-now">
+            <h2><span className="o7-live" aria-hidden="true" />Happening now</h2>
+            {now.map((o) => {
+              const st = stepsOf(o);
+              return (
+                <button key={o.code} className="o7-live-card" onClick={() => go('/order/' + o.code)}>
+                  <div className="o7-live-top">
+                    <Thumbs o={o} />
+                    <span className="o7-live-t">
+                      <b>Order #{pad(o.no)}{o.fulfil === 'delivery' && <i className="olist-dl">Delivery</i>}</b>
+                      <small>{o.items}</small>
+                    </span>
+                    {o.pickupCode && o.status === 'ready' ? <span className="o7-code"><small>Code</small><b className="num">{o.pickupCode}</b></span> : <span className="o7-amt num">{peso(o.total)}</span>}
+                  </div>
+                  <ol className="o7-steps" aria-label={labelOf(o)}>
+                    {st.labels.map((l, k) => <li key={l} className={k < st.at ? 'done' : k === st.at ? 'now' : ''}><i />{l}</li>)}
+                  </ol>
+                  <span className="o7-status">{labelOf(o)} <span aria-hidden="true">›</span></span>
                 </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+              );
+            })}
+          </div>
+        )}
+        {past.length > 0 && (
+          <div className="o7-past">
+            <h2>Past orders</h2>
+            <ul>
+              {past.map((o) => (
+                <li key={o.code} className={`o7-card s-${o.status}`}>
+                  <button className="o7-card-main" onClick={() => go('/order/' + o.code)}>
+                    <Thumbs o={o} />
+                    <span className="o7-card-t">
+                      <b>#{pad(o.no)}<span className="muted"> · {when(o.createdAt)}</span></b>
+                      <small>{o.items}</small>
+                      <span className="o7-card-meta">
+                        <span className={`pill s-${o.status}`}>{labelOf(o)}</span>
+                        {o.rating ? <Stars value={o.rating.stars} small /> : o.canRate && <span className="rate-link">Rate ★</span>}
+                      </span>
+                    </span>
+                    <b className="o7-card-amt num">{peso(o.total)}</b>
+                  </button>
+                  <div className="o7-card-a">
+                    {o.status === 'paid' && onReorder && (
+                      <button className="o7-again" onClick={() => { const n = onReorder(o.lines); if (!n) { setAgain(o.code); setTimeout(() => setAgain(''), 2500); } }}>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4" /></svg>
+                        {again === o.code ? 'Not available now' : 'Order again'}
+                      </button>
+                    )}
+                    {o.status === 'cancelled' && (
+                      <button className="olist-rm" onClick={async () => { try { await call('POST', `/customer/orders/${o.code}/hide`); await reload?.(); } catch { /* stays in the list */ } }}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </>)}
     </section>
   );
 }

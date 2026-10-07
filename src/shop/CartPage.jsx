@@ -152,36 +152,52 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
     </section>
   );
 
+  const step = !delivering || (addr.area && addr.detail && addr.landmark) ? 3 : 2; // where the customer is: the address is the only thing that can hold them up
+  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return (
-    <div className="ck">
-      <section className="panel ck-items">
-        <div className="ck-h"><h1>Your order</h1><button className="shop-link" onClick={() => go('/menu')}>+ Add more</button></div>
-        <ul className="lines">
-          {priced.map((l, i) => (
-            <li key={i} className={l.missing || l.soldOut ? 'gone' : ''}>
-              {l.image && <img src={l.image} alt="" className={sceneBg(l.image) ? 'scene-bg' : undefined} style={sceneBg(l.image)} />}
-              <div className="grow">
-                <b>{l.name || 'Item no longer on the menu'}</b>
-                <small>{l.missing ? 'No longer available' : l.soldOut ? (l.notAvailable ? 'Not available right now' : 'Sold out right now') : l.mods}</small>
-                <div className="line-actions">
-                  {!l.missing && <button className="shop-link" onClick={() => onEdit(i)}>Edit</button>}
-                  <button className="shop-link" onClick={() => setCart(cart.filter((_, k) => k !== i))}>Remove</button>
-                </div>
-              </div>
-              <div className="line-r">
-                <div className="qty sm">
-                  <button onClick={() => setCart(cart.flatMap((x, k) => (k !== i ? [x] : x.qty > 1 ? [{ ...x, qty: x.qty - 1 }] : [])))} aria-label="Fewer">−</button>
-                  <span>{l.qty}</span>
-                  <button onClick={() => setCart(cart.map((x, k) => (k === i ? { ...x, qty: Math.min(ONLINE.lineQty, x.qty + 1) } : x)))} disabled={l.qty >= ONLINE.lineQty} aria-label="More">+</button>
-                </div>
-                <b>{peso(l.total)}</b>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+    <div className="ck ck7">
+      <ol className="ck7-steps" aria-label="Checkout steps">
+        {[['ck7-order', 'Your order', `${drinkCount} ${drinkCount === 1 ? 'drink' : 'drinks'}`], ['ck7-get', delivering ? 'Delivery' : 'Pickup', delivering ? (addr.area || 'Add your address') : 'At the shop'], ['ck7-pay', 'Pay', total > 0 ? peso(fee.total) : 'Free']].map(([id, t, sub], k) => (
+          <li key={id} className={k + 1 < step ? 'done' : k + 1 === step ? 'now' : ''}>
+            <button type="button" onClick={() => scrollTo(id)}>
+              <span className="ck7-n">{k + 1 < step ? <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" /></svg> : k + 1}</span>
+              <span><b>{t}</b><small>{sub}</small></span>
+            </button>
+          </li>
+        ))}
+      </ol>
 
-      <aside className="panel ck-side">
+      <div className="ck7-grid">
+        <div className="ck7-main">
+          <section className="panel ck-items ck7-card" id="ck7-order">
+            <div className="ck-h"><h1><span className="ck7-badge">1</span>Your order</h1><button className="shop-link" onClick={() => go('/menu')}>+ Add more</button></div>
+            <ul className="lines">
+              {priced.map((l, i) => (
+                <li key={i} className={l.missing || l.soldOut ? 'gone' : ''}>
+                  {l.image && <img src={l.image} alt="" className={sceneBg(l.image) ? 'scene-bg' : undefined} style={sceneBg(l.image)} />}
+                  <div className="grow">
+                    <b>{l.name || 'Item no longer on the menu'}</b>
+                    <small>{l.missing ? 'No longer available' : l.soldOut ? (l.notAvailable ? 'Not available right now' : 'Sold out right now') : l.mods}</small>
+                    <div className="line-actions">
+                      {!l.missing && <button className="shop-link" onClick={() => onEdit(i)}>Edit</button>}
+                      <button className="shop-link" onClick={() => setCart(cart.filter((_, k) => k !== i))}>Remove</button>
+                    </div>
+                  </div>
+                  <div className="line-r">
+                    <div className="qty sm">
+                      <button onClick={() => setCart(cart.flatMap((x, k) => (k !== i ? [x] : x.qty > 1 ? [{ ...x, qty: x.qty - 1 }] : [])))} aria-label="Fewer">−</button>
+                      <span>{l.qty}</span>
+                      <button onClick={() => setCart(cart.map((x, k) => (k === i ? { ...x, qty: Math.min(ONLINE.lineQty, x.qty + 1) } : x)))} disabled={l.qty >= ONLINE.lineQty} aria-label="More">+</button>
+                    </div>
+                    <b>{peso(l.total)}</b>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="panel ck7-card" id="ck7-get">
+            <h2 className="ck7-h"><span className="ck7-badge">2</span>{canDeliver ? 'Pickup or delivery' : 'Pickup'}</h2>
         {canDeliver && (
           <div className="ck-fulfil" role="radiogroup" aria-label="Pickup or delivery">
             <button type="button" role="radio" aria-checked={!delivering} className={!delivering ? 'on' : ''} onClick={() => chooseFulfil('pickup')}>
@@ -199,6 +215,10 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
           <span>Note for the shop <i className="opt">optional</i></span>
           <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={ONLINE.pickupNote} placeholder="Picking up at 3pm" />
         </label>}
+          </section>
+
+          <section className="panel ck7-card ck7-paycard" id="ck7-pay">
+            <h2 className="ck7-h"><span className="ck7-badge">3</span>Payment</h2>
         {canReward && live.length > 0 && (
           <label className={`reward ${useReward ? 'on' : ''}`}>
             <input type="checkbox" checked={useReward} onChange={(e) => setUseReward(e.target.checked)} />
@@ -207,7 +227,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         )}
         {bigOrder && !noShowRule && total > 0 && <div className="note-box">For big orders (over {peso(ONLINE.payFirstOver)} or more than {ONLINE.payFirstDrinks} drinks), please pay first with {Object.keys(qrs).map((k) => (k === 'gcash' ? 'GCash' : 'Maya')).join(' or ') || 'online payment'}. Thank you!</div>}
         {noShowRule && total > 0 && <div className="note-box">Because 2 recent orders weren’t picked up, please pay first for this order (GCash, Maya or online). Pay at pickup will be back after a while.</div>}
-        {total > 0 && options.length > 1 && (
+        {total > 0 && options.length > 0 && (
           <fieldset className="pay pay2">
             <legend><span>Payment</span><em>Total <b className="num">{peso(total)}</b></em></legend>
             {options.map((k) => (
@@ -289,6 +309,18 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
             <p className="qp-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>The shop checks your payment, then starts your drinks.</p>
           </div>
         )}
+            {total <= 0 && <p className="muted">Nothing to pay. Enjoy your free drink!</p>}
+          </section>
+        </div>
+
+        <aside className="panel ck-side ck7-sum">
+          <h2 className="ck7-sum-h">Order summary</h2>
+          <ul className="ck7-mini">
+            {priced.filter((l) => !l.missing).map((l, i) => (
+              <li key={i}><span className="ck7-q">{l.qty}×</span><span className="ck7-nm">{l.name}<small>{l.mods}</small></span><b className="num">{peso(l.total)}</b></li>
+            ))}
+          </ul>
+          <div className="ck-disc ck7-sub"><span>Subtotal</span><b className="num">{peso(subtotal)}</b></div>
         {useReward && canReward && <div className="ck-disc"><span>Free drink (stamp card)</span><b>−{peso(subtotal - itemsTotal)}</b></div>}
         {delivering && quote && (
           <div className="ck-disc ck-deliv"><span>Delivery · {quote.area}{quote.free ? ` · free from ${dcfg.freeDrinks} drinks` : ''}</span><b>{quote.free ? <><s>{peso(quote.fee)}</s> Free</> : `+${peso(quote.charge)}`}</b></div>
@@ -301,7 +333,8 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
           {busy ? (payable ? 'Opening secure payment…' : 'Placing order…') : payable ? `Pay ${peso(fee.total)} with ${PM_NAME[payType]}` : needQr ? `I’ve paid · Place order` : `Place order · ${peso(total)}`}
         </button>
         <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your receipt screenshot.' : 'Pay at the counter by cash, GCash or Maya.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
-      </aside>
+        </aside>
+      </div>
     </div>
   );
 }

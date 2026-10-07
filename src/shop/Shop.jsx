@@ -20,6 +20,7 @@ import './shop.css';
 import './matchea.css';
 import './v3.css';
 import './shop-v6.css';
+import './shop-v7.css';
 
 const PROTECTED = /^\/(menu|cart|account|orders|welcome|help)(\/|$)/;
 const CART = 'alm.cart';
@@ -119,32 +120,35 @@ export default function Shop() {
   if (checking) return <div className="shop"><div className="shop-loading"><Loader /></div></div>;
 
   const decor = menu?.shop?.decor || [];
-  const track = pathname.match(/^\/order\/([\w-]{8,20})$/);
-  let page;
-  if (pathname === '/forgot') page = <ForgotPage go={go} onSignedIn={onSignedIn} />;
-  else if (pathname === '/signin' || pathname === '/signup') page = <AuthPage mode={pathname.slice(1)} go={go} onSignedIn={onSignedIn} shop={menu?.shop} />;
-  else if (track) page = <Track code={track[1]} go={go} onChange={loadOrders} signedIn={!!me} menu={menu} who={me?.name} mine={orders.find((o) => o.code === track[1])}
-    onReorder={menu ? (lines) => {
-      // Put the same drinks back in the cart (skipping anything no longer on the menu or sold out)
-      const again = lines.filter((l) => byId[l.productId] && !byId[l.productId].soldOut).map((l) => {
+  // Put the same drinks back in the cart (skipping anything no longer on the menu or sold out). Returns how many were added.
+  const reorder = (lines) => {
+    if (!menu) return 0;
+    const again = (lines || []).map((l) => ({ ...l, productId: l.productId || (l.product ? String(l.product) : null) }))
+      .filter((l) => byId[l.productId] && !byId[l.productId].soldOut).map((l) => {
         const it = byId[l.productId];
         return { productId: it._id, qty: l.qty, note: l.note || '',
           sizeId: menu.sizes.some((s) => String(s._id) === String(l.sizeId)) ? l.sizeId : menu.sizes[0]?._id || null,
           sweet: it.sweet ? (menu.sweetness.includes(l.sweet) ? l.sweet : menu.sweetness[Math.min(2, menu.sweetness.length - 1)] || '') : '',
           addonIds: (l.addonIds || []).filter((a) => it.addons.includes(a)) };
       });
-      if (again.length) { setCart((c) => [...c, ...again]); bumpCart(); go('/cart'); }
-      return again.length;
-    } : null} />;
+    if (again.length) { setCart((c) => [...c, ...again]); bumpCart(); go('/cart'); }
+    return again.length;
+  };
+  const track = pathname.match(/^\/order\/([\w-]{8,20})$/);
+  let page;
+  if (pathname === '/forgot') page = <ForgotPage go={go} onSignedIn={onSignedIn} />;
+  else if (pathname === '/signin' || pathname === '/signup') page = <AuthPage mode={pathname.slice(1)} go={go} onSignedIn={onSignedIn} shop={menu?.shop} />;
+  else if (track) page = <Track code={track[1]} go={go} onChange={loadOrders} signedIn={!!me} menu={menu} who={me?.name} mine={orders.find((o) => o.code === track[1])}
+    onReorder={menu ? reorder : null} />;
   else if (pathname === '/privacy') page = <Privacy shop={menu?.shop} />;
   else if (pathname === '/terms') page = <Terms shop={menu?.shop} />;
   else if (!me) page = <Landing menu={menu} err={menuErr} go={go} />;
   else if (pathname === '/welcome') page = <AddPhone me={me} setMe={setMe} go={go} />;
-  else if (pathname === '/menu') page = <MenuPage menu={menu} err={menuErr} reload={loadMenu} me={me} active={active} go={go} onPick={(item) => setPicking({ item })}
+  else if (pathname === '/menu') page = <MenuPage menu={menu} err={menuErr} reload={loadMenu} me={me} active={active} orders={orders} go={go} onPick={(item) => setPicking({ item })}
     onQuickAdd={(line, img) => { flyToCart(img); setCart((c) => [...c, { ...line, qty: 1 }]); }}
     onRemoveFav={async (id) => { const r = await call('DELETE', `/customer/favorites/${id}`); setMe(r.customer); }} />;
   else if (pathname === '/cart') page = <CartPage menu={menu} me={me} payFirst={payFirst} cart={cart} setCart={setCart} priced={priced} total={total} go={go} onEdit={(i) => setPicking({ item: byId[cart[i].productId], index: i })} onPlaced={() => { loadOrders(); refreshMe(); }} />;
-  else if (pathname === '/orders') page = <OrdersPage orders={orders} go={go} reload={loadOrders} />;
+  else if (pathname === '/orders') page = <OrdersPage orders={orders} go={go} reload={loadOrders} menu={menu} onReorder={menu ? reorder : null} />;
   else if (pathname === '/account') page = <AccountPage me={me} setMe={setMe} go={go} signOut={signOut} helpUnread={helpUnread} />;
   else if (pathname === '/help') page = <HelpChat me={me} go={go} orders={orders} shop={menu?.shop} onSeen={seenHelp} />;
   else page = <Landing menu={menu} err={menuErr} go={go} me={me} />;
