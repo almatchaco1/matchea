@@ -70,8 +70,11 @@ export default function Home({ data, user, go, counts, isAdmin }) {
     <div className="hm">
       <section className="hm-hero">
         <div className="hm-hello">
-          <p className="hm-date">{dateTxt}</p>
-          <h2>{hello}, {first}<span aria-hidden="true">.</span></h2>
+          <p className="hm-date">
+            <span className="hm-tod" aria-hidden="true"><svg viewBox="0 0 24 24"><path d={hour >= 18 || hour < 5 ? 'M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z' : 'M12 4V2m0 20v-2m8-8h2M2 12h2m13.7-5.7 1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2-1.4-1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'} /></svg></span>
+            {dateTxt}
+          </p>
+          <h2><span className="hm-greet">{hello},</span> <span className="hm-name">{first}</span></h2>
           <p className="hm-sub">
             <span className={`hm-live ${open ? 'on' : ''}`}><i />{open ? 'Online ordering is open' : 'Online ordering is closed'}</span>
           </p>
