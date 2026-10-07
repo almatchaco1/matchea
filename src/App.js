@@ -190,6 +190,11 @@ export default function App() {
   const [slim, setSlimState] = useState(() => { try { return localStorage.getItem('matchaPos.slim') === '1'; } catch { return false; } });
   const setSlim = (v) => { setSlimState(v); try { localStorage.setItem('matchaPos.slim', v ? '1' : '0'); } catch {} };
   const [drawer, setDrawer] = useState(false);
+  // iPad width: the menu is icons only; the handle opens the full menu over the page
+  const [peek, setPeek] = useState(false);
+  const narrow = () => window.matchMedia('(max-width:1180px)').matches;
+  const toggleMenu = () => (narrow() ? setPeek(!peek) : setSlim(!slim));
+  const compact = narrow() ? !peek : slim;
   const [bell, setBell] = useState(false);
   const [clock, setClock] = useState(() => new Date());
   useEffect(() => { const t = setInterval(() => setClock(new Date()), 15000); return () => clearInterval(t); }, []);
@@ -211,15 +216,12 @@ export default function App() {
   const trainProps = { training, trainTickets, setTrainTickets, addTrainingSale, nextTrainNo };
   return (
     <>
-      <div className={`shell ${slim ? 'slim' : ''} ${drawer ? 'drawer-open' : ''}`}>
+      <div className={`shell ${slim ? 'slim' : ''} ${drawer ? 'drawer-open' : ''} ${peek ? 'wide' : ''}`}>
         <aside className="sb" aria-label="Main menu">
           {data.settings?.decorPos !== false && <DecorString decor={data.settings?.decor} />}
           <div className="sb-brand">
             <img className="sb-word" src="/brand/matchea-word-sm.webp" alt={data.settings?.name || 'Matchéa'} width="420" height="128" />
             <img className="sb-seal" src="/brand/matchea-seal-sm.webp" alt="" width="64" height="64" />
-            <button className="sb-slim" onClick={() => setSlim(!slim)} aria-label={slim ? 'Show the menu names' : 'Icons only'} title={slim ? 'Expand' : 'Collapse'}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d={slim ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
-            </button>
           </div>
           <nav className="tabs sb-nav" role="tablist" aria-orientation="vertical">
             {NAV.map(([group, items]) => (
@@ -229,7 +231,7 @@ export default function App() {
                   const blocked = (adminOnly && !isAdmin) ? 'Admins only' : (training && !TRAIN_TABS.includes(k)) ? 'Not open during training' : '';
                   const badge = k === 'online' ? newCount : k === 'messages' ? msgCount : k === 'barista' ? barShown : k === 'inventory' ? lowCount : 0;
                   return (
-                    <button key={k} data-tab={k} role="tab" aria-selected={shownTab === k} onClick={() => { if (!blocked) { go(k); setDrawer(false); } }} disabled={!!blocked}
+                    <button key={k} data-tab={k} role="tab" aria-selected={shownTab === k} onClick={() => { if (!blocked) { go(k); setDrawer(false); setPeek(false); } }} disabled={!!blocked}
                       className={`sb-item ${blocked ? 'locked' : ''}`} title={blocked || (slim ? n : undefined)}>
                       <span className="sb-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon} /></svg>{badge > 0 && <i className="sb-pip" />}</span>
                       <span className="sb-label">{n}</span>
@@ -263,7 +265,12 @@ export default function App() {
             </div>
           </div>
         </aside>
-        <button className="sb-scrim" aria-label="Close menu" tabIndex={drawer ? 0 : -1} onClick={() => setDrawer(false)} />
+        {/* collapse / expand: a round handle on the sidebar's edge */}
+        <button className={`sb-handle ${compact ? 'is-compact' : ''}`} onClick={toggleMenu} aria-label={compact ? 'Expand the menu' : 'Collapse the menu to icons'} aria-expanded={!compact}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5" /></svg>
+          <span className="sb-handle-tip">{compact ? 'Expand' : 'Collapse'}</span>
+        </button>
+        <button className="sb-scrim" aria-label="Close menu" tabIndex={drawer || peek ? 0 : -1} onClick={() => { setDrawer(false); setPeek(false); }} />
 
         <div className="app">
         <header className="tb">

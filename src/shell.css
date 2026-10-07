@@ -14,9 +14,18 @@ body:has(.shell){padding:0;margin:0}
 .sb-brand{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 4px 12px;min-height:56px}
 .sb-word{width:150px;height:auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
 .sb-seal{display:none;width:44px;height:44px;border-radius:50%}
-.sb-slim{flex:none;width:30px;height:30px;border-radius:10px;border:0;display:grid;place-items:center;cursor:pointer;color:#F5EBD3;background:rgba(255,255,255,.08);transition:background .2s}
-.sb-slim:hover{background:rgba(255,255,255,.16)}
-.sb-slim svg,.sb-out svg,.tb-menu svg,.tb-bell svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sb-handle{position:fixed;top:30px;left:calc(var(--sbw) - 17px);z-index:60;width:34px;height:34px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+  background:linear-gradient(135deg,#F6E3A7,#E9CF8A);color:#1E3012;box-shadow:0 0 0 3px var(--bg),0 8px 18px -6px rgba(0,0,0,.45);
+  transition:left .3s cubic-bezier(.22,1,.36,1),transform .2s,box-shadow .2s}
+.sb-handle::before{content:"";position:absolute;inset:-10px;border-radius:50%} /* bigger area to tap */
+.sb-handle:hover{transform:scale(1.1);box-shadow:0 0 0 3px var(--bg),0 10px 22px -6px rgba(0,0,0,.5)}
+.sb-handle:active{transform:scale(.95)}
+.sb-handle:focus-visible{outline:3px solid #A9D38A;outline-offset:3px}
+.sb-handle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.sb-handle.is-compact svg{transform:rotate(180deg)}
+.sb-handle-tip{position:absolute;left:calc(100% + 10px);top:50%;transform:translate(-4px,-50%);padding:5px 10px;border-radius:9px;background:#1E2F15;color:#F6E3A7;font-size:.78rem;font-weight:700;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s}
+.sb-handle:hover .sb-handle-tip,.sb-handle:focus-visible .sb-handle-tip{opacity:1;transform:translate(0,-50%)}
+.sb-out svg,.sb-out svg,.tb-menu svg,.tb-bell svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
 /* nav (keeps class "tabs" so the rest of the app finds it; old pill styles undone here) */
 .shell .sb-nav.tabs{display:flex;flex-direction:column;gap:14px;flex:1;background:none;box-shadow:none;padding:0;border-radius:0;overflow:visible;max-width:none}
@@ -56,7 +65,7 @@ body:has(.shell){padding:0;margin:0}
 .shell.slim .sb{padding-inline:12px}
 .shell.slim .sb-word,.shell.slim .sb-label,.shell.slim .sb-glabel,.shell.slim .sb-nav .dot,.shell.slim .sb-on,.shell.slim .sb .lock-ico{display:none}
 .shell.slim .sb-seal{display:block}
-.shell.slim .sb-brand{flex-direction:column;padding-inline:0}
+.shell.slim .sb-brand{justify-content:center;padding-inline:0}
 .shell.slim .sb .sb-item{justify-content:center;padding:0}
 .shell.slim .sb-pip{display:block}
 .shell.slim .sb-nav.tabs button.sb-item[aria-selected="true"]::before{left:-12px}
@@ -104,7 +113,7 @@ body:has(.shell){padding:0;margin:0}
 @media (max-width:1180px){
   .shell:not(.wide){--sbw:84px}
   .shell .sb{padding-inline:12px}
-  .shell .sb-word,.shell .sb-label,.shell .sb-glabel,.shell .sb-nav .dot,.shell .sb-on,.shell .sb .lock-ico,.shell .sb-slim{display:none}
+  .shell .sb-word,.shell .sb-label,.shell .sb-glabel,.shell .sb-nav .dot,.shell .sb-on,.shell .sb .lock-ico{display:none}
   .shell .sb-seal{display:block}
   .shell .sb-brand{justify-content:center;padding-inline:0}
   .shell .sb .sb-item{justify-content:center;padding:0}
@@ -113,8 +122,21 @@ body:has(.shell){padding:0;margin:0}
   .shell .sb-user{flex-direction:column;padding:8px 4px}
   .shell .sb .dstring,.shell .sb .decor-string{display:none}
 }
+/* iPad: the handle opens the full menu over the page */
+@media (min-width:761px) and (max-width:1180px){
+  .shell.wide .sb{position:fixed;left:0;top:0;bottom:0;width:248px;padding-inline:14px;box-shadow:24px 0 60px -20px rgba(0,0,0,.6)}
+  .shell.wide .sb-word,.shell.wide .sb-label,.shell.wide .sb-glabel,.shell.wide .sb-on{display:revert}
+  .shell.wide .sb-nav .dot{display:inline-block}
+  .shell.wide .sb-seal,.shell.wide .sb-pip{display:none}
+  .shell.wide .sb-brand{justify-content:flex-start;padding-inline:4px}
+  .shell.wide .sb .sb-item{justify-content:flex-start;padding:0 12px}
+  .shell.wide .sb-user{flex-direction:row;padding:10px}
+  .shell.wide .sb-handle{left:231px}
+  .shell.wide .sb-scrim{display:block;position:fixed;inset:0;z-index:35;border:0;background:rgba(10,14,8,.4)}
+}
 /* phones: the sidebar slides in */
 @media (max-width:760px){
+  .sb-handle{display:none}
   .shell,.shell.slim{grid-template-columns:minmax(0,1fr)}
   .shell .sb{position:fixed;left:0;top:0;bottom:0;width:260px;padding-inline:14px;transform:translateX(-105%);transition:transform .3s cubic-bezier(.22,1,.36,1);z-index:120}
   .shell.drawer-open .sb{transform:none}
@@ -133,3 +155,5 @@ body:has(.shell){padding:0;margin:0}
   .tb-title h1{font-size:1.35rem}
 }
 @media print{.sb,.tb,.sb-scrim{display:none!important}.shell{display:block}}
+/* keep the page title clear of the menu handle */
+@media (min-width:761px){.shell .tb{padding-left:40px}}
