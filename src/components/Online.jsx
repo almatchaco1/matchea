@@ -4,7 +4,7 @@ import { api, getToken } from '../lib/api';
 import { peso, pad, timeOf } from '../lib/format';
 import { PAY_LABELS, r2 } from '../shared/pricing.mjs';
 import PayPicker from './PayPicker';
-import { checkCheckout, LIMITS } from '../shared/rules.mjs';
+import { checkCheckout } from '../shared/rules.mjs';
 import Modal from './Modal';
 import { Field, useErrors } from './Field';
 import ReceiptModal, { printCupLabels, printHtml } from './Receipt';
@@ -261,8 +261,8 @@ function PayModal({ order, settings, onClose, onDone, toast }) {
         <div className="change"><span>Change</span><span className="num" style={{ color: tendered - order.total < 0 ? 'var(--bad)' : 'var(--ok)' }}>{tendered ? peso(r2(tendered - order.total)) : '—'}</span></div>
       </> : (<>
         <QrHint kind={pay.method} settings={settings} amount={order.total} onShow={() => setShowQr(pay.method)} />
-        <Field id="oRef" label="Reference no. (optional)" error={errs.ref}>
-          <input id="oRef" maxLength={LIMITS.ref} value={pay.ref} onChange={(e) => setPay({ ...pay, ref: e.target.value.trim() })} />
+        <Field id="oRef" label="Last 4 digits of reference no. (optional)" error={errs.ref} hint="From the end of the reference no. on the GCash receipt">
+          <span className="ref4"><i aria-hidden="true">•••• </i><input id="oRef" maxLength={4} inputMode="numeric" pattern="[0-9]*" autoComplete="off" placeholder="1234" value={pay.ref} onChange={(e) => setPay({ ...pay, ref: e.target.value.replace(/\D/g, '').slice(0, 4) })} /></span>
         </Field>
       </>)}
       {showQr && <ShowQr kind={showQr} settings={settings} amount={order.total} onClose={() => setShowQr(null)} />}

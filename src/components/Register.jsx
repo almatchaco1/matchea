@@ -351,9 +351,9 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
               <span><b>{cart.length ? `I received ${peso(t.total)} in our ${PAY_METHODS[pay.method]} app` : `Payment received in our ${PAY_METHODS[pay.method]} app`}</b>
                 <small>Check the amount and the sender’s name in the app before charging.</small></span>
             </label>
-            <Field id="payRef" label="Reference no. (optional)" error={pay.ref ? cErr.ref || (refTaken?.ref === pay.ref ? refTaken.msg : undefined) : errFor('ref')} hint={pay.method === 'gcash' ? '13 digits, from the GCash notification' : 'From the receipt'}>
-              <input id="payRef" maxLength={LIMITS.ref + 6} inputMode={pay.method === 'gcash' ? 'numeric' : 'text'} placeholder={pay.method === 'gcash' ? '1011 234 567890' : 'Reference ID'} value={pay.ref}
-                onChange={(e) => { setPay({ ...pay, ref: e.target.value.replace(/[^0-9A-Za-z -]/g, '') }); touch('ref'); }} /></Field>
+            <Field id="payRef" label="Last 4 digits of reference no. (optional)" error={pay.ref ? cErr.ref || (refTaken?.ref === pay.ref ? refTaken.msg : undefined) : errFor('ref')} hint="From the end of the reference no. on the GCash receipt">
+              <span className="ref4"><i aria-hidden="true">•••• </i><input id="payRef" maxLength={4} inputMode="numeric" pattern="[0-9]*" autoComplete="off" placeholder="1234" value={pay.ref}
+                onChange={(e) => { setPay({ ...pay, ref: e.target.value.replace(/\D/g, '').slice(0, 4) }); touch('ref'); }} /></span></Field>
           </>)}
           </div>
           </section>

@@ -89,7 +89,7 @@ r.post('/:id/complete', ah(async (req, res) => {
   const tendered = pay.method === 'cash' ? r2(+pay.tendered) : cur.total;
   const sale = await move(req.params.id, ['ready', 'preparing'], {
     status: 'paid', completedAt: new Date(), cashier: req.user._id, cashierName: req.user.name,
-    pay: { method: pay.method, tendered, change: r2(tendered - cur.total), ref: String(pay.ref || '').trim() },
+    pay: { method: pay.method, tendered, change: r2(tendered - cur.total), ref: pay.method === 'cash' ? '' : String(pay.ref || '').replace(/\D/g, '').slice(-4) },
   });
   if (!cur.stockDeducted) { // completed straight from "new": take the stock now
     await applyUsage(usageMap(sale.usage), -1, { reason: 'sale', by: req.user.name, sale: sale._id, note: 'Online order' });

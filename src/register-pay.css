@@ -107,3 +107,9 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]) .seg.pay-pick.pp-tiles button[aria-pressed="true"] .pp-ico{background:#10200B;color:#B4DA97}
 }
+
+/* GCash reference: only the last 4 digits */
+.ref4{position:relative;display:block;max-width:240px}
+.ref4>i{position:absolute;left:14px;font-size:18px;line-height:1;top:50%;transform:translateY(-50%);font-style:normal;font-weight:800;letter-spacing:.18em;color:var(--muted,#8a8f7d);pointer-events:none}
+.ref4>input{width:100%;padding-left:64px !important;font-size:18px !important;font-weight:800;letter-spacing:.32em;font-variant-numeric:tabular-nums}
+.ref4>input::placeholder{font-weight:600;letter-spacing:.32em;opacity:.45}

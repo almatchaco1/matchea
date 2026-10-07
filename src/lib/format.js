@@ -1,3 +1,5 @@
+/** A reference no. for display: only the last 4 digits were typed → •••• 1234 */
+export const refShow = (r) => (/^\d{4}$/.test(String(r || '')) ? `•••• ${r}` : String(r || ''));
 export const peso = (n) => '₱' + (+n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const qfmt = (n) => {
   n = +n || 0;

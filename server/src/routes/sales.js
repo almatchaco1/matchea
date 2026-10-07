@@ -47,12 +47,8 @@ r.post('/', ah(async (req, res) => {
   }
   if (discount.type === 'scpwd') Object.assign(t.discount, { idNo: String(discount.idNo).trim().toUpperCase(), idName: String(discount.idName).trim().replace(/\s+/g, ' ') });
   if (approvedBy) t.discount.approvedBy = approvedBy;
-  // GCash reference: stored without spaces; one receipt can't pay for two sales
-  const payRef = method === 'cash' ? '' : String(b.pay.ref || '').replace(/[\s-]/g, '').toUpperCase().slice(0, 60);
-  if (payRef) {
-    const used = await Sale.findOne({ $or: [{ 'pay.ref': payRef }, { 'qrPay.ref': payRef }], status: { $nin: ['void', 'cancelled'] } }, 'no date');
-    if (used) throw new HttpError(409, `That reference no. was already used for order #${String(used.no).padStart(3, '0')} (${used.date}). Check the customer's receipt.`, { ref: 'Already used for another sale.' });
-  }
+  // GCash reference: staff type only the last 4 digits (not checked for repeats: different payments can share them)
+  const payRef = method === 'cash' ? '' : String(b.pay.ref || '').replace(/\D/g, '').slice(-4);
   let tendered = t.total, change = 0;
   if (method === 'cash') {
     tendered = r2(+b.pay.tendered);

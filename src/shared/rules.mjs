@@ -242,10 +242,9 @@ export function checkCheckout({ lineCount, total, discount = {}, pay = {}, custo
     else if (Number(pay.tendered) + 1e-9 < total) e.tendered = `That's ₱${(total - Number(pay.tendered)).toFixed(2)} short.`;
     else if (Number(pay.tendered) - total >= LIMITS.maxChange - 1e-9) e.tendered = `That would be ₱${(Number(pay.tendered) - total).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} change. Check the cash received.`;
   } else {
-    // Reference no. is optional at the counter, but when typed it must look like a real one
+    // Reference no. is optional at the counter; staff type only its last 4 digits
     const ref = String(pay.ref || '').replace(/[\s-]/g, '');
-    if (ref.length > LIMITS.ref) e.ref = `At most ${LIMITS.ref} characters.`;
-    else if (ref && pay.method === 'gcash' && !/^\d{13}$/.test(ref)) e.ref = /\D/.test(ref) ? 'A GCash reference no. has numbers only.' : `A GCash reference no. has 13 digits (this has ${ref.length}).`;
+    if (ref && !/^\d{4}$/.test(ref)) e.ref = /\D/.test(ref) ? 'Numbers only.' : 'Type the last 4 digits of the reference no.';
   }
   return e;
 }

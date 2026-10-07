@@ -2,7 +2,7 @@
 // payment to tick off against the phone. "Close the day" saves the totals and makes a backup.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
-import { peso, pad, dayKey } from '../lib/format';
+import { peso, pad, dayKey, refShow } from '../lib/format';
 import { PAY_LABELS } from '../shared/pricing.mjs';
 import { printReceipt } from './Receipt';
 import { printClosing } from '../lib/printer';
@@ -116,7 +116,7 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
                           <label className={r.checked ? 'on' : ''}>
                             <input type="checkbox" checked={r.checked} onChange={() => tick(r)} />
                             <span className="cl-no">#{pad(r.no)}</span>
-                            <span className="cl-meta"><span><b>{PAY_LABELS[r.method] || r.method}</b> · {r.time}{r.by && r.by !== 'Online' ? ` · ${r.by}` : r.by === 'Online' ? ' · online order' : ''}</span><small>{r.ref ? `Ref ${r.ref}` : <em>No reference number</em>}</small></span>
+                            <span className="cl-meta"><span><b>{PAY_LABELS[r.method] || r.method}</b> · {r.time}{r.by && r.by !== 'Online' ? ` · ${r.by}` : r.by === 'Online' ? ' · online order' : ''}</span><small>{r.ref ? `Ref ${refShow(r.ref)}` : <em>No reference number</em>}</small></span>
                             <span className="num"><b>{peso(r.total)}</b></span>
                           </label>
                         </li>

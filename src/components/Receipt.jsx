@@ -1,4 +1,4 @@
-import { peso, pad } from '../lib/format';
+import { peso, pad, refShow } from '../lib/format';
 import { PAY_LABELS as PAY_METHODS } from '../shared/pricing.mjs';
 import { useRef, useState } from 'react';
 import { printSale, printLabels } from '../lib/printer';
@@ -39,7 +39,7 @@ export function Receipt({ sale, settings: s = {} }) {
       <hr />
       <R l={sale.pay.method === 'cash' ? 'Cash received' : `Paid by ${PAY_METHODS[sale.pay.method] || sale.pay.method}`} r={peso(sale.pay.tendered)} />
       {sale.pay.method === 'cash' && <R l="Change" r={peso(sale.pay.change)} />}
-      {sale.pay.ref && <R l="Ref no." r={sale.pay.ref} />}
+      {sale.pay.ref && <R l="Ref no." r={refShow(sale.pay.ref)} />}
       {sale.stampsAwarded != null && (
         <>
           <hr />
