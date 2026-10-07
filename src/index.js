@@ -9,6 +9,11 @@ import './touch.css';
 const isPos = /^\/pos(\/|$)/.test(window.location.pathname);
 const App = lazy(() => (isPos ? import('./App') : import('./shop/Shop')));
 
+// POS: keep a copy of the app on this device so it can still open without internet
+if (isPos && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/pos-sw.js', { scope: '/pos' }).catch(() => {}); });
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Suspense fallback={null}>

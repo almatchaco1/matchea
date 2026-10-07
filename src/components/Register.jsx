@@ -14,6 +14,7 @@ import { checkCheckout, LIMITS, normPhone, DISC_PIN_OVER } from '../shared/rules
 import AdminPin from './AdminPin';
 import { QrHint, ShowQr } from './PayQr';
 import GoalBar from './GoalBar';
+import { useOffline, queueSale, nextOfflineNo, newClientId } from '../lib/offline';
 import { STAMPS_PER_REWARD, rewardValue, rewardsReady, stampProgress } from '../shared/loyalty.mjs';
 
 let lineKey = 0;
@@ -36,6 +37,10 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   useEffect(() => { if (staffMode && !staffList.length) api.get('/auth/staff').then(setStaffList).catch(() => {}); }, [staffMode]); // eslint-disable-line react-hooks/exhaustive-deps
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState(null);
+  // Offline: sales are saved on this device and sent later (one id per order, so it's never saved twice)
+  const net = useOffline();
+  const offline = !net.online && !training;
+  const cid = useRef(newClientId());
   const [nextNo, setNextNo] = useState(null);
   const [armClear, setArmClear] = useState(false);
   const [showQr, setShowQr] = useState(null); // 'gcash' while the QR is shown to the customer
@@ -124,7 +129,10 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
   const staffOn = staffMode && !training;
   const staffErr = staffOn && (cart.length > 5 || cart.some((l) => l.qty > 5)) ? 'A staff drink order can have up to 5 drinks.' : '';
   const dupBlock = !training && !!dupOf && dupOk !== typedName; // same name already waiting: add a letter, or keep it on purpose
-  const canCharge = staffOn ? cart.length && !busy && !hasMissing && !staffErr && staffFor : cart.length && !busy && !hasMissing && !Object.keys(cErr).length && !stampPending && !dupBlock && !needGot;
+  const offlineBlock = !offline ? '' : staffOn ? 'Staff drinks need internet. Turn off Staff drink to sell offline.'
+    : stampCust || rewardOn ? 'Stamp cards and free drinks need internet. Remove the stamp card to sell offline.'
+    : discount.type === 'pct' && +discount.pct > DISC_PIN_OVER && !isAdmin ? `Discounts over ${DISC_PIN_OVER}% need an admin’s PIN, which needs internet.` : '';
+  const canCharge = offlineBlock ? false : staffOn ? cart.length && !busy && !hasMissing && !staffErr && staffFor : cart.length && !busy && !hasMissing && !Object.keys(cErr).length && !stampPending && !dupBlock && !needGot;
 
   const chargeRef = useRef(null);
   const charge = async () => {
@@ -157,14 +165,13 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
       setReceipt(sale);
       return;
     }
-    setBusy(true);
-    try {
-      const sale = await api.post('/sales', {
-        lines: cart.map(({ productId, sizeId, milkId, addonIds, sweet, note, qty }) => ({ productId, sizeId, milkId, addonIds, sweet, note, qty })),
-        customer, discount: rewardOn ? { type: 'none' } : discount, pay: { method: pay.method, tendered: pay.method === 'cash' ? tendered : undefined, ref: pay.ref },
-        loyaltyPhone: stampCust ? normPhone(stampPhone) : undefined, useReward: rewardOn || undefined, override: override.current || undefined,
-      });
-      override.current = null;
+    const body = {
+      lines: cart.map(({ productId, sizeId, milkId, addonIds, sweet, note, qty }) => ({ productId, sizeId, milkId, addonIds, sweet, note, qty })),
+      customer, discount: rewardOn ? { type: 'none' } : discount, pay: { method: pay.method, tendered: pay.method === 'cash' ? tendered : undefined, ref: pay.ref },
+    };
+    // After a sale (online or saved offline): clear the order, print, show the receipt
+    const finish = async (sale) => {
+      cid.current = newClientId();
       clearStamps(); setSheet(false); setCart([]); setCustomer(''); setDiscount({ type: 'none', pct: discount.pct, idNo: '', idName: '' }); setPay({ method: pay.method, tendered: '', ref: '', got: false }); setTouched({});
       // Receipt printer: print straight away when set up on this device
       const ps = loadPrinterSettings();
@@ -173,10 +180,32 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
         try { await printSale(sale, settings); printed = 'Printed.'; } catch (err) { printed = err.message; }
       }
       if (ps.kind && ps.labels) { try { await printLabels(sale, settings); } catch (err) { printed = printed || err.message; } } // one label per cup
-      setDupOk(''); loadNames();
+      setDupOk('');
       setReceipt({ ...sale, _printed: printed });
-      refresh(); loadNext();
+    };
+    const saveOffline = async () => {
+      const at = new Date().toISOString(), localNo = nextOfflineNo();
+      queueSale({ id: cid.current, body, at, localNo, total: t.total, method: pay.method, customer });
+      await finish({
+        _id: `off-${cid.current}`, offline: true, no: localNo, createdAt: at, status: 'paid', source: 'pos',
+        cashierName: user?.name || '', customer,
+        lines: priced.map((l) => ({ product: l.productId, name: l.name, mods: l.mods, qty: l.qty, unit: l.unit, total: l.total, sizeId: l.sizeId, milkId: l.milkId, addonIds: l.addonIds })),
+        subtotal: t.subtotal, discount: t.discount, total: t.total, vat: t.vat, vatExempt: t.vatExempt,
+        pay: { method: pay.method, tendered: pay.method === 'cash' ? tendered : t.total, change: pay.method === 'cash' ? change : 0, ref: pay.ref },
+      });
+    };
+    setBusy(true);
+    try {
+      if (offline) { await saveOffline(); return; }
+      const sale = await api.post('/sales', { ...body, clientId: cid.current,
+        loyaltyPhone: stampCust ? normPhone(stampPhone) : undefined, useReward: rewardOn || undefined, override: override.current || undefined,
+      });
+      override.current = null;
+      await finish(sale);
+      loadNames(); refresh(); loadNext();
     } catch (e) {
+      // The connection dropped while charging: keep the sale on this device (sent later; never saved twice)
+      if (e.offline && !stampCust && !rewardOn && !override.current) { try { await saveOffline(); } catch (err) { toast(err.message); } return; }
       override.current = null;
       if (e.fields?.override === 'discount') { setAsking(true); return; } // a cashier's big discount: ask an admin
       if (e.fields) setTouched({ all: true });
@@ -235,9 +264,10 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
       {sheet && <div className="sheet-scrim" onClick={() => setSheet(false)} aria-hidden="true" />}
       <aside className={`cart panel ${sheet ? 'open' : ''}`} id="cart" aria-label="Current order">
         <div className="cart-h">
-          <h2 className="sec">Order</h2><span className="ord num">{training ? <span className="pill warn">Practice</span> : nextNo ? `#${pad(nextNo)}` : ''}</span>
+          <h2 className="sec">Order</h2><span className="ord num">{training ? <span className="pill warn">Practice</span> : offline ? <span className="pill off-pill">Offline</span> : nextNo ? `#${pad(nextNo)}` : ''}</span>
           <button className="btn sm ghost sheet-close" onClick={() => setSheet(false)} aria-label="Back to the menu">Back to menu ▾</button>
         </div>
+        {offline && <div className="off-note" role="status"><b>No internet. Keep selling.</b> Cash and GCash sales are saved on this tablet and sent when the connection is back. Stamp cards, free drinks and staff drinks need internet.</div>}
         <div className="lines">
           {!cart.length ? (
             <div className="empty op-empty">
@@ -352,16 +382,17 @@ export default function Register({ data, refresh, toast, cart, setCart, user, is
                 <small>Check the amount and the sender’s name in the app before charging.</small></span>
             </label>
             <Field id="payRef" label="Last 4 digits of reference no. (optional)" error={pay.ref ? cErr.ref || (refTaken?.ref === pay.ref ? refTaken.msg : undefined) : errFor('ref')} hint="From the end of the reference no. on the GCash receipt">
-              <span className="ref4"><i aria-hidden="true">•••• </i><input id="payRef" maxLength={4} inputMode="numeric" pattern="[0-9]*" autoComplete="off" placeholder="1234" value={pay.ref}
-                onChange={(e) => { setPay({ ...pay, ref: e.target.value.replace(/\D/g, '').slice(0, 4) }); touch('ref'); }} /></span></Field>
+              <span className="ref4"><i aria-hidden="true">•••• </i><input id="payRef" maxLength={20} inputMode="numeric" pattern="[0-9]*" autoComplete="off" placeholder="1234" value={pay.ref}
+                onChange={(e) => { setPay({ ...pay, ref: e.target.value.replace(/\D/g, '').slice(-4) }); touch('ref'); }} /></span></Field>
           </>)}
           </div>
           </section>
           {showQr && <ShowQr kind={showQr} settings={settings} amount={cart.length ? t.total : null} onClose={() => { setShowQr(null); setTimeout(() => document.getElementById('payRef')?.focus(), 50); }} />}
           </>)}
+          {offlineBlock && cart.length > 0 && <div className="formerr" role="alert">{offlineBlock}</div>}
           {serverErr && <div className="formerr" role="alert">{serverErr}</div>}
           {hasMissing && <div className="formerr" role="alert">Remove the items that are no longer on the menu to continue.</div>}
-          <button className={`btn primary charge ${!staffOn && bigArmed ? 'big-cash' : ''}`} disabled={!canCharge} onClick={charge} aria-live="polite">{busy ? 'Saving…' : staffOn ? 'Save staff drink' : bigArmed ? `Confirm ${peso(tendered)} cash` : needGot && cart.length ? `Tick “received” to charge` : `Charge ${peso(t.total)}`}</button>
+          <button className={`btn primary charge ${!staffOn && bigArmed ? 'big-cash' : ''}`} disabled={!canCharge} onClick={charge} aria-live="polite">{busy ? 'Saving…' : staffOn ? 'Save staff drink' : bigArmed ? `Confirm ${peso(tendered)} cash` : needGot && cart.length ? `Tick “received” to charge` : offline ? `Charge ${peso(t.total)} offline` : `Charge ${peso(t.total)}`}</button>
           {cart.length > 0 && <button className="btn ghost sm" onClick={() => { if (armClear) { setCart([]); setArmClear(false); } else { setArmClear(true); setTimeout(() => setArmClear(false), 4000); } }}>{armClear ? 'Tap again to clear' : 'Clear order'}</button>}
         </div>
       </aside>

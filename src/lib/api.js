@@ -1,3 +1,5 @@
+import { setOnline } from './net';
+
 const KEY = 'matchaPos.token';
 
 export const getToken = () => { try { return localStorage.getItem(KEY); } catch { return null; } };
@@ -16,8 +18,18 @@ async function request(method, path, body) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new Error('Cannot reach the server. Check the internet connection.');
+    setOnline(false);
+    const e = new Error('Cannot reach the server. Check the internet connection.');
+    e.offline = true;
+    throw e;
   }
+  if (res.status >= 502 && res.status <= 504) { // the host answered but the server is down / starting
+    setOnline(false);
+    const e = new Error('The server is not answering right now. Try again in a moment.');
+    e.offline = true;
+    throw e;
+  }
+  if (navigator.onLine !== false) setOnline(true); // (a reply that was already on its way doesn't count when the device says it's offline)
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
   if (res.status === 401 && token) onUnauthorized(data);

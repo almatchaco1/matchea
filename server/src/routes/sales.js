@@ -20,6 +20,17 @@ r.param('id', checkId);
 r.post('/', ah(async (req, res) => {
   const b = req.body || {};
   if (b.staffDrink) return staffDrink(req, res);
+  // Each POS order has its own id: if the tablet sends it again (lost reply, or saved offline), return the one already saved
+  const clientId = typeof b.clientId === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(b.clientId) ? b.clientId : '';
+  if (clientId) { const had = await Sale.findOne({ clientId }); if (had) return res.json(had); }
+  // Sold while offline: keep the time it really happened (up to 7 days back)
+  let offAt = null;
+  if (b.offline?.at) {
+    const d = new Date(b.offline.at);
+    if (Number.isNaN(+d) || d > Date.now() + 5 * 60e3 || d < Date.now() - 7 * 864e5) throw new HttpError(400, 'This offline sale has a wrong date. Check the tablet’s clock.');
+    offAt = d;
+    if (b.useReward || b.loyaltyPhone) throw new HttpError(400, 'Stamp cards can’t be used on an offline sale.');
+  }
   const method = b.pay?.method;
   if (!PAY_METHODS[method]) throw new HttpError(400, 'Choose a payment method.', { method: 'Choose a payment method.' });
   const { settings, priced, usage, subtotal, cost } = await priceOrder(b.lines);
@@ -37,7 +48,11 @@ r.post('/', ah(async (req, res) => {
   if (useReward && !cust) throw new HttpError(400, 'Enter the customer\'s number to use a free drink.', { loyaltyPhone: 'Enter their number first.' });
   const discount = useReward ? { type: 'none' } : { type: b.discount?.type || 'none', pct: b.discount?.pct, idNo: b.discount?.idNo, idName: b.discount?.idName };
   const t = computeTotals(subtotal, useReward ? { type: 'reward', amount: rewardValue(priced.map((l) => l.base)) } : discount, settings.vat);
-  assertValid(checkCheckout({ lineCount: lines.length, total: t.total, discount, pay: b.pay, customer: b.customer, needName: true }));
+  // Offline sale and the prices changed since: the money was already taken, so the cash check uses the new total
+  const charged = offAt ? r2(+b.offline.charged || 0) : null;
+  const priceChanged = offAt != null && Math.abs(charged - t.total) > 0.009;
+  const payIn = priceChanged && method === 'cash' && +b.pay?.tendered < t.total ? { ...b.pay, tendered: t.total } : b.pay;
+  assertValid(checkCheckout({ lineCount: lines.length, total: t.total, discount, pay: payIn, customer: b.customer, needName: true }));
   // Big promo discounts by a cashier need an admin's PIN
   let approvedBy;
   if (discount.type === 'pct' && +discount.pct > DISC_PIN_OVER && req.user.role !== 'admin') {
@@ -51,15 +66,21 @@ r.post('/', ah(async (req, res) => {
   const payRef = method === 'cash' ? '' : String(b.pay.ref || '').replace(/\D/g, '').slice(-4);
   let tendered = t.total, change = 0;
   if (method === 'cash') {
-    tendered = r2(+b.pay.tendered);
+    tendered = r2(+payIn.tendered);
     change = r2(tendered - t.total);
   }
 
   if (useReward) await redeemReward(cust._id);
-  const { date, hour, no } = await nextOrderNo();
+  const { date, hour, no } = offAt ? await orderNoFor(offAt) : await nextOrderNo();
   let sale;
   try { sale = await Sale.create({
     no, date, hour,
+    ...(clientId ? { clientId } : {}),
+    ...(offAt ? {
+      offline: { at: offAt, localNo: String(b.offline.localNo || '').slice(0, 12), charged, sentAt: new Date(), priceChanged },
+      // made during the outage: don't put old orders back on the Barista screen
+      ...(Date.now() - offAt > 15 * 60e3 ? { baristaDone: true, madeAt: offAt, madeBy: req.user.name } : {}),
+    } : {}),
     cashier: req.user._id, cashierName: req.user.name,
     customer: String(b.customer || '').trim().replace(/\s+/g, ' ').slice(0, 60),
     lines: priced,
@@ -69,12 +90,23 @@ r.post('/', ah(async (req, res) => {
     customerId: cust?._id, stampsUsed: useReward ? 9 : 0,
   }); } catch (e) {
     if (useReward) await Customer.updateOne({ _id: cust._id }, { $inc: { stamps: 9, rewardsUsed: -1 } });
+    if (e?.code === 11000 && clientId) { const had = await Sale.findOne({ clientId }); if (had) return res.json(had); } // sent twice at once
     throw e;
+  }
+  if (offAt) { // keep the real time of the sale
+    await Sale.collection.updateOne({ _id: sale._id }, { $set: { createdAt: offAt } });
+    sale = await Sale.findById(sale._id);
   }
   await applyUsage(usage, -1, { reason: 'sale', by: req.user.name, sale: sale._id });
   if (cust) sale = await awardStamps(sale);
   res.status(201).json(sale);
 }));
+
+/** Order number on the day an offline sale really happened. */
+async function orderNoFor(when) {
+  const { date, hour } = shopTime(when);
+  return { date, hour, no: await Counter.next(`order-${date}`) };
+}
 
 // Staff drink: made and taken off stock, but not a sale (total ₱0, shown separately in reports)
 async function staffDrink(req, res) {

@@ -87,6 +87,9 @@ const saleSchema = new mongoose.Schema(
     // Barista screen
     lineDone: { type: [Number], default: undefined }, // drinks already made (line numbers)
     baristaDone: Boolean, madeAt: Date, madeBy: String,
+    // Rung up while the POS had no internet: sent later from the tablet (clientId stops it being saved twice)
+    clientId: { type: String, index: { unique: true, sparse: true } },
+    offline: { at: Date, localNo: String, charged: Number, sentAt: Date, priceChanged: Boolean },
     // Customer's private rating after pickup
     rating: { stars: { type: Number, min: 1, max: 5 }, comment: { type: String, maxlength: 300 }, at: Date },
     // Free drink for a staff member: stock is used, but it isn't a sale

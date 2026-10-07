@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, getToken, setToken, setUnauthorizedHandler } from './lib/api';
-import { ingStatus, needsRestock } from './lib/format';
+import { useOffline, syncOutbox, saveCache, loadCache, saveMe, loadMe, ping, removeSale, retrySale } from './lib/offline';
+import { isOnline, setOnline as setNetOnline } from './lib/net';
+import { ingStatus, needsRestock, peso, pad } from './lib/format';
 import Login from './components/Login';
 import Register from './components/Register';
 import Inventory from './components/Inventory';
@@ -12,7 +14,7 @@ import Customers from './components/Customers';
 import Barista from './components/Barista';
 import Inbox from './components/Inbox';
 import Home from './components/Home';
-import Modal from './components/Modal';
+import Modal, { ConfirmButton } from './components/Modal';
 import PrinterSettings from './components/PrinterSettings';
 import { loadPrinterSettings, reconnect } from './lib/printer';
 import { usePosRipples } from './lib/motion';
@@ -108,15 +110,22 @@ export default function App() {
 
   useEffect(() => {
     if (!getToken()) return;
-    api.get('/auth/me').then(setUser).catch(() => setToken(null)).finally(() => setChecking(false));
+    // Offline: keep the same sign-in from last time, so selling can go on
+    api.get('/auth/me').then(setUser).catch((e) => { const m = e.offline && loadMe(getToken()); if (m) setUser(m); else setToken(null); }).finally(() => setChecking(false));
   }, []);
 
   const refresh = useCallback(async () => {
     try {
       const [settings, ingredients, products] = await Promise.all([api.get('/settings'), api.get('/ingredients'), api.get('/products')]);
       setData({ settings, ingredients, products, loaded: true });
+      saveCache({ settings, ingredients, products });
       setError('');
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      if (!e.offline) { setError(e.message); return; }
+      setError('');
+      const c = loadCache(); // offline: use the menu and prices this device saw last
+      if (c) setData((d) => (d.loaded ? d : { settings: c.settings, ingredients: c.ingredients, products: c.products, loaded: true, cachedAt: c.at }));
+    }
   }, []);
 
   // Load, then keep every register in sync: refresh every 20 s and when the tab regains focus
@@ -182,6 +191,7 @@ export default function App() {
     evs.forEach((e) => window.addEventListener(e, mark, { passive: true }));
     const t = setInterval(() => {
       if (document.fullscreenElement && document.querySelector('.barista')) { mark(); return; }
+      if (!isOnline()) { mark(); return; } // offline: no auto sign-out (nobody could sign back in until the internet is back)
       const idle = Date.now() - last();
       if (idle >= LIMIT) { setIdleLeft(null); setSignedOutMsg(`You were signed out after ${IDLE_MIN} minutes with no activity.`); api.post('/auth/logout').catch(() => {}).finally(logout); }
       else if (idle >= LIMIT - WARN) setIdleLeft(Math.ceil((LIMIT - idle) / 1000));
@@ -189,6 +199,21 @@ export default function App() {
     }, 1000);
     return () => { clearInterval(t); evs.forEach((e) => window.removeEventListener(e, mark)); };
   }, [user, logout]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Offline selling: send saved sales when the server is back; check for it every few seconds while offline
+  const net = useOffline();
+  const [netOpen, setNetOpen] = useState(false);
+  useEffect(() => { if (user && getToken()) saveMe(getToken(), user); }, [user]);
+  useEffect(() => {
+    if (!user || !net.online || !net.waiting) return;
+    syncOutbox().then((n) => { if (n) { toast(`${n} offline ${n === 1 ? 'sale was' : 'sales were'} sent to the server.`); refresh(); } });
+  }, [user, net.online, net.waiting]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const off = () => setNetOnline(false), on = () => ping();
+    window.addEventListener('offline', off); window.addEventListener('online', on);
+    const t = !net.online ? setInterval(ping, 8000) : null;
+    return () => { window.removeEventListener('offline', off); window.removeEventListener('online', on); if (t) clearInterval(t); };
+  }, [net.online]);
+  useEffect(() => { if (user && net.online && !data.loaded) refresh(); }, [net.online]); // eslint-disable-line react-hooks/exhaustive-deps
   // Sidebar: icons only (remembered on this device); on phones it slides in from the left
   const [slim, setSlimState] = useState(() => { try { return localStorage.getItem('matchaPos.slim') === '1'; } catch { return false; } });
   const setSlim = (v) => { setSlimState(v); try { localStorage.setItem('matchaPos.slim', v ? '1' : '0'); } catch {} };
@@ -285,6 +310,12 @@ export default function App() {
             <span className="tb-clock num">{clock.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' })} · {clock.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</span>
           </div>
           {training && <span className="tb-train">Training</span>}
+          {(!net.online || net.waiting > 0 || net.failed > 0) && (
+            <button className={`tb-net ${!net.online ? 'off' : net.failed ? 'bad' : 'sync'}`} onClick={() => setNetOpen(true)}>
+              <i aria-hidden="true" />
+              {!net.online ? <>Offline{net.waiting ? <small> · {net.waiting} to send</small> : null}</> : net.failed ? `${net.failed} offline ${net.failed === 1 ? 'sale needs' : 'sales need'} a look` : `Sending ${net.waiting}…`}
+            </button>
+          )}
           <div className="tb-bell-wrap">
             <button className={`tb-bell ${alerts.length ? 'has' : ''}`} onClick={() => setBell(!bell)} aria-label={`${alerts.length} alerts`} aria-expanded={bell}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Zm4 4h4" /></svg>
@@ -305,7 +336,7 @@ export default function App() {
             </>}
           </div>
         </header>
-        {error && <div className="banner">{error}</div>}
+        {error && net.online && <div className="banner">{error}</div>}
         {training && (
           <div className="banner trainbanner" role="status">
             <span><b>Training mode.</b> Practice orders only: nothing is saved to sales, stock or reports. Only Register and Barista are open.</span>
@@ -329,9 +360,27 @@ export default function App() {
         </div>
       </div>
       {printerOpen && <PrinterSettings toast={toast} onClose={() => setPrinterOpen(false)} />}
+      {netOpen && (
+        <Modal title="Offline sales" onClose={() => setNetOpen(false)} footer={<>{net.online && net.waiting > 0 && <button className="btn" onClick={() => syncOutbox()}>Send now</button>}<button className="btn primary" onClick={() => setNetOpen(false)} autoFocus>Close</button></>}>
+          <p className={`net-state ${net.online ? 'on' : 'off'}`}><i aria-hidden="true" />{net.online ? 'Connected. Saved sales are sent automatically.' : 'No internet. Keep selling: cash and GCash sales are saved on this device and sent when the connection is back.'}</p>
+          {net.list.length === 0 ? <p className="muted">No sales saved offline.</p> : (
+            <ul className="net-list">
+              {[...net.list].reverse().map((x) => (
+                <li key={x.id} className={`s-${x.status}`}>
+                  <span className="net-no">{x.status === 'sent' ? `#${pad(x.no)}` : x.localNo}</span>
+                  <span className="net-t"><b>{x.customer || 'Walk-in'} · {peso(x.total)}</b><small>{new Date(x.at).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })} · {x.method === 'cash' ? 'Cash' : 'GCash'} · {x.status === 'sent' ? `Sent as order #${pad(x.no)}${x.serverTotal != null && Math.abs(x.serverTotal - x.total) > 0.009 ? ` (server total ${peso(x.serverTotal)})` : ''}` : x.status === 'failed' ? x.error : 'Waiting to send'}</small></span>
+                  {x.status === 'failed' && <span className="net-act"><button className="btn sm" onClick={() => retrySale(x.id)}>Try again</button><ConfirmButton className="btn sm danger" confirmText="Tap again: not in reports" onConfirm={() => removeSale(x.id)}>Remove</ConfirmButton></span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Modal>
+      )}
       {askOut && (() => {
         const items = cart.reduce((a, l) => a + (l.qty || 1), 0);
         const warn = [
+          !net.online && { tone: 'red', t: 'You’re offline. Nobody can sign in again until the internet is back.' },
+          net.waiting > 0 && { tone: 'amber', t: `${net.waiting} offline ${net.waiting === 1 ? 'sale hasn’t' : 'sales haven’t'} been sent yet. ${net.waiting === 1 ? 'It stays' : 'They stay'} on this device and ${net.waiting === 1 ? 'is' : 'are'} sent after the next sign-in.` },
           items > 0 && { tone: 'red', t: `The order in the Register will be cleared (${items} ${items === 1 ? 'item' : 'items'}, not paid yet).` },
           !training && newCount > 0 && { tone: 'amber', t: `${newCount} online ${newCount === 1 ? 'order is' : 'orders are'} waiting to be accepted.` },
           barShown > 0 && { tone: 'amber', t: `${barShown} ${barShown === 1 ? 'order is' : 'orders are'} still on the Barista screen.` },

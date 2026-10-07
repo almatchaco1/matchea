@@ -262,7 +262,7 @@ function PayModal({ order, settings, onClose, onDone, toast }) {
       </> : (<>
         <QrHint kind={pay.method} settings={settings} amount={order.total} onShow={() => setShowQr(pay.method)} />
         <Field id="oRef" label="Last 4 digits of reference no. (optional)" error={errs.ref} hint="From the end of the reference no. on the GCash receipt">
-          <span className="ref4"><i aria-hidden="true">•••• </i><input id="oRef" maxLength={4} inputMode="numeric" pattern="[0-9]*" autoComplete="off" placeholder="1234" value={pay.ref} onChange={(e) => setPay({ ...pay, ref: e.target.value.replace(/\D/g, '').slice(0, 4) })} /></span>
+          <span className="ref4"><i aria-hidden="true">•••• </i><input id="oRef" maxLength={20} inputMode="numeric" pattern="[0-9]*" autoComplete="off" placeholder="1234" value={pay.ref} onChange={(e) => setPay({ ...pay, ref: e.target.value.replace(/\D/g, '').slice(-4) })} /></span>
         </Field>
       </>)}
       {showQr && <ShowQr kind={showQr} settings={settings} amount={order.total} onClose={() => setShowQr(null)} />}
