@@ -11,9 +11,10 @@ import Staff from './components/Staff';
 import Customers from './components/Customers';
 import Barista from './components/Barista';
 import Inbox from './components/Inbox';
+import Home from './components/Home';
 import PrinterSettings from './components/PrinterSettings';
 import { loadPrinterSettings, reconnect } from './lib/printer';
-import { usePosRipples, TabInk, useHeaderFit } from './lib/motion';
+import { usePosRipples } from './lib/motion';
 import { DecorString } from './lib/decor';
 import { LockIcon } from './components/Locked';
 import './styles.css';
@@ -22,8 +23,19 @@ import './pos-v3.css';
 import './order-v4.css';
 import './register-pay.css';
 import './pos-v6.css';
+import './shell.css';
 
-const TABS = [['register', 'Register'], ['online', 'Online'], ['messages', 'Messages'], ['barista', 'Barista'], ['inventory', 'Inventory'], ['menu', 'Menu'], ['reports', 'Reports'], ['customers', 'Customers', 'admin'], ['staff', 'Staff', 'admin']];
+// Sidebar: [key, label, icon, admins only]
+const NAV = [
+  ['Sell', [['home', 'Today', 'M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1v-9Z'], ['register', 'Register', 'M4 7h16v12H4zM8 3h8v4H8zM8 11h2M12 11h2M16 11h0M8 15h2M12 15h2'],
+    ['online', 'Online orders', 'M3 7h18l-2 12H5L3 7Zm5 0 2-4m6 4-2-4M9 12v3m6-3v3'], ['messages', 'Messages', 'M12 21a9 9 0 1 0-8-4.9L3 21l4.9-1A9 9 0 0 0 12 21Z'],
+    ['barista', 'Barista', 'M6 8h12l-1.3 11.2A2 2 0 0 1 14.7 21H9.3a2 2 0 0 1-2-1.8L6 8Zm-1 0h14M9 8l1-4h4l1 4']]],
+  ['Manage', [['inventory', 'Inventory', 'M4 8l8-4 8 4v8l-8 4-8-4V8Zm0 0 8 4 8-4M12 12v8'], ['menu', 'Menu', 'M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Zm4 5h6M9 13h6'],
+    ['reports', 'Reports', 'M4 20V10M10 20V4M16 20v-7M22 20H2'], ['customers', 'Customers', 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 10a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-4-6.3', true],
+    ['staff', 'Staff', 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0M19 8l1.5 1.5L23 7', true]]],
+];
+const TABS = NAV.flatMap(([, items]) => items);
+const TITLE = Object.fromEntries(TABS.map(([k, n]) => [k, n]));
 // Short two-note chime for new online orders (browsers may block sound until the page was clicked once)
 function chime() {
   try {
@@ -39,7 +51,7 @@ function chime() {
 }
 const TRAIN_TABS = ['register', 'barista']; // the only tabs open while training
 const IDLE_MIN = 30; // minutes with no activity before the POS signs out by itself
-const savedTab = () => { try { return localStorage.getItem('matchaPos.tab') || 'register'; } catch { return 'register'; } };
+const savedTab = () => { try { return localStorage.getItem('matchaPos.tab') || 'home'; } catch { return 'register'; } };
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -70,7 +82,6 @@ export default function App() {
   const nextTrainNo = () => (trainNo.current += 1);
   // Reconnect the receipt printer quietly when the POS opens
   useEffect(() => { if (user && loadPrinterSettings().kind) reconnect(); }, [user]);
-  const [hideStock, setHideStock] = useState('');
   // Online orders: polled on every tab so staff notice new ones
   const [online, setOnline] = useState([]);
   const [onlineMeta, setOnlineMeta] = useState({ awaitingPayment: 0, refundsDue: 0, paymentMode: 'off' });
@@ -151,9 +162,7 @@ export default function App() {
   const lowCount = useMemo(() => data.ingredients.filter((i) => ingStatus(i) !== 'ok').length, [data.ingredients]);
   const lowList = useMemo(() => data.ingredients.filter(needsRestock), [data.ingredients]);
   const outList = lowList.filter((i) => ingStatus(i) === 'bad');
-  const lowKey = lowList.map((i) => i._id).join(',');
   const isAdmin = user?.role === 'admin';
-  const showStock = lowList.length > 0 && tab !== 'inventory' && hideStock !== lowKey;
   const showNew = newCount > 0 && tab !== 'online' && !training;
   const showRefunds = onlineMeta.refundsDue > 0 && tab !== 'online' && !training;
   usePosRipples();
@@ -177,43 +186,113 @@ export default function App() {
     }, 1000);
     return () => { clearInterval(t); evs.forEach((e) => window.removeEventListener(e, mark)); };
   }, [user, logout]); // eslint-disable-line react-hooks/exhaustive-deps
-  const navRef = useRef(null);
-  const topRef = useRef(null);
-  useHeaderFit(topRef, `${user?._id}|${training}|${newCount > 0}|${lowCount > 0}|${barShown > 0}|${checking}`);
+  // Sidebar: icons only (remembered on this device); on phones it slides in from the left
+  const [slim, setSlimState] = useState(() => { try { return localStorage.getItem('matchaPos.slim') === '1'; } catch { return false; } });
+  const setSlim = (v) => { setSlimState(v); try { localStorage.setItem('matchaPos.slim', v ? '1' : '0'); } catch {} };
+  const [drawer, setDrawer] = useState(false);
+  const [bell, setBell] = useState(false);
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => { const t = setInterval(() => setClock(new Date()), 15000); return () => clearInterval(t); }, []);
 
   if (checking) return null;
   if (!user || user.needsNewPin) return <Login key={user?._id || 'in'} notice={signedOutMsg} pending={user?.needsNewPin ? user : null} onSignOut={logout}
     onLogin={(token, u, weak) => { setToken(token); setUser(u); setWeakPin(!!weak); setSignedOutMsg(''); }} />;
 
   const shared = { data, refresh, toast, user, isAdmin };
+  // Everything that used to sit in the row of notes now lives in the bell
+  const alerts = [
+    showNew && { k: 'new', tone: 'green', icon: 'M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Zm4 4h4', title: `${newCount} new online ${newCount === 1 ? 'order' : 'orders'}`, sub: 'Tap to open', go: () => go('online') },
+    showRefunds && { k: 'refund', tone: 'red', icon: 'M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4', title: `${onlineMeta.refundsDue} ${onlineMeta.refundsDue === 1 ? 'refund' : 'refunds'} to send`, sub: 'Paid orders that were cancelled', go: () => go('online') },
+    msgCount > 0 && tab !== 'messages' && !training && { k: 'msg', tone: 'blue', icon: 'M12 21a9 9 0 1 0-8-4.9L3 21l4.9-1A9 9 0 0 0 12 21Z', title: `${msgCount} unread ${msgCount === 1 ? 'chat' : 'chats'}`, sub: 'Customer service', go: () => go('messages') },
+    lowList.length > 0 && tab !== 'inventory' && { k: 'stock', tone: outList.length ? 'red' : 'amber', icon: 'M4 8l8-4 8 4v8l-8 4-8-4V8Zm0 0 8 4 8-4M12 12v8', title: outList.length ? `${outList.length} out of stock` : `${lowList.length} running low`, sub: `${lowList.slice(0, 2).map((i) => i.name).join(', ')}${lowList.length > 2 ? ` +${lowList.length - 2}` : ''} · Shopping list`, go: () => { go('inventory'); setOpenRestock(true); } },
+    weakPin && { k: 'pin', tone: 'amber', icon: 'M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5zM12 15v2', title: 'Your PIN is easy to guess', sub: isAdmin ? 'Tap to change it' : 'Ask an admin for a new PIN', go: () => { if (isAdmin) { go('staff'); setWeakPin(false); } } },
+  ].filter(Boolean);
   const shownTab = training && !TRAIN_TABS.includes(tab) ? 'register' : tab;
   const trainProps = { training, trainTickets, setTrainTickets, addTrainingSale, nextTrainNo };
   return (
     <>
-      <div className="app">
-        <header className="top" ref={topRef} data-fit="0">
-          {data.settings?.decorPos !== false && <DecorString decor={data.settings?.decor} wide />}
-          <div className="brand">
-            <span className="seal-logo top-word"><img src="/brand/matchea-word-sm.webp" alt="" width="420" height="128" /></span>
-            <div><h1 className="sr-only">{data.settings?.name || 'Matchéa'}</h1><small>Point of sale · Inventory</small></div>
+      <div className={`shell ${slim ? 'slim' : ''} ${drawer ? 'drawer-open' : ''}`}>
+        <aside className="sb" aria-label="Main menu">
+          {data.settings?.decorPos !== false && <DecorString decor={data.settings?.decor} />}
+          <div className="sb-brand">
+            <img className="sb-word" src="/brand/matchea-word-sm.webp" alt={data.settings?.name || 'Matchéa'} width="420" height="128" />
+            <img className="sb-seal" src="/brand/matchea-seal-sm.webp" alt="" width="64" height="64" />
+            <button className="sb-slim" onClick={() => setSlim(!slim)} aria-label={slim ? 'Show the menu names' : 'Icons only'} title={slim ? 'Expand' : 'Collapse'}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d={slim ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
+            </button>
           </div>
-          <nav className="tabs" role="tablist" ref={navRef}>
-            <TabInk nav={navRef} dep={`${shownTab}|${training}|${isAdmin}|${lowCount}|${newCount}|${barShown > 0}|${msgCount > 0}`} />
-            {TABS.map(([k, n, who]) => {
-              const blocked = (who && !isAdmin) ? 'Admins only' : (training && !TRAIN_TABS.includes(k)) ? 'Not open during training' : '';
-              return (
-              <button key={k} data-tab={k} role="tab" aria-selected={shownTab === k} onClick={() => !blocked && go(k)} disabled={!!blocked} className={blocked ? 'locked' : undefined} title={blocked || undefined}>
-                {blocked && <LockIcon />}{n}{k === 'inventory' && lowCount > 0 && <span className="dot">{lowCount}</span>}{k === 'online' && newCount > 0 && <span className="dot new">{newCount}</span>}{k === 'messages' && msgCount > 0 && <span className="dot new" aria-label={`${msgCount} unread`}>{msgCount}</span>}{k === 'barista' && barShown > 0 && <span className="dot new" aria-label={`${barShown} to make`}>{barShown}</span>}
-              </button>
-              );
-            })}
+          <nav className="tabs sb-nav" role="tablist" aria-orientation="vertical">
+            {NAV.map(([group, items]) => (
+              <div className="sb-group" key={group}>
+                <span className="sb-glabel">{group}</span>
+                {items.map(([k, n, icon, adminOnly]) => {
+                  const blocked = (adminOnly && !isAdmin) ? 'Admins only' : (training && !TRAIN_TABS.includes(k)) ? 'Not open during training' : '';
+                  const badge = k === 'online' ? newCount : k === 'messages' ? msgCount : k === 'barista' ? barShown : k === 'inventory' ? lowCount : 0;
+                  return (
+                    <button key={k} data-tab={k} role="tab" aria-selected={shownTab === k} onClick={() => { if (!blocked) { go(k); setDrawer(false); } }} disabled={!!blocked}
+                      className={`sb-item ${blocked ? 'locked' : ''}`} title={blocked || (slim ? n : undefined)}>
+                      <span className="sb-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon} /></svg>{badge > 0 && <i className="sb-pip" />}</span>
+                      <span className="sb-label">{n}</span>
+                      {blocked ? <LockIcon /> : badge > 0 && <span className={`dot ${k === 'inventory' ? '' : 'new'}`} aria-label={`${badge}`}>{badge}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
-          <div className="userchip">
-            <span className="uc-name" title={`${user.name} · ${user.superAdmin ? 'Super admin' : isAdmin ? 'Admin' : 'Cashier'}`}><b>{user.name}</b><span className="uc-role">{user.superAdmin ? 'Super admin' : isAdmin ? 'Admin' : 'Cashier'}</span></span>
-            <button className={`btn sm ${training ? 'train-on' : 'ghost'}`} onClick={() => setTraining(!training)} title="Practice orders that don't count">{training ? 'Training on' : 'Training'}</button>
-            <button className="btn sm ghost" onClick={() => setPrinterOpen(true)} title="Receipt printer">Printer</button>
-            <a className="btn sm ghost" href="/" target="_blank" rel="noopener" title="Opens the customer ordering site in a new tab"><span className="hide-sm">Customer site</span><span className="show-sm">Shop</span> ↗</a>
-            <button className="btn sm" onClick={signOut}>Sign out</button>
+          <div className="sb-foot">
+            <button className={`sb-item sb-train ${training ? 'on' : ''}`} onClick={() => setTraining(!training)} title="Practice orders that don't count">
+              <span className="sb-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-5 9 5-9 5-9-5Zm4 2.5V16c0 1.5 2.5 3 5 3s5-1.5 5-3v-4.5M21 9v5" /></svg></span>
+              <span className="sb-label">{training ? 'Training on' : 'Training'}</span>
+              {training && <span className="sb-on">ON</span>}
+            </button>
+            <button className="sb-item" onClick={() => setPrinterOpen(true)} title="Receipt printer">
+              <span className="sb-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5M7 17H4V9h16v8h-3M7 14h10v7H7z" /></svg></span>
+              <span className="sb-label">Printer</span>
+            </button>
+            <a className="sb-item" href="/" target="_blank" rel="noopener" title="Opens the customer ordering site in a new tab">
+              <span className="sb-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg></span>
+              <span className="sb-label">Customer site</span>
+            </a>
+            <div className="sb-user" title={`${user.name} · ${user.superAdmin ? 'Super admin' : isAdmin ? 'Admin' : 'Cashier'}`}>
+              <span className="sb-ava" aria-hidden="true">{String(user.name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()}</span>
+              <span className="uc-name sb-label"><b>{user.name}</b><span className="uc-role">{user.superAdmin ? 'Super admin' : isAdmin ? 'Admin' : 'Cashier'}</span></span>
+              <button className="sb-out" onClick={signOut} aria-label="Sign out" title="Sign out">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10" /></svg>
+              </button>
+            </div>
+          </div>
+        </aside>
+        <button className="sb-scrim" aria-label="Close menu" tabIndex={drawer ? 0 : -1} onClick={() => setDrawer(false)} />
+
+        <div className="app">
+        <header className="tb">
+          <button className="tb-menu" onClick={() => setDrawer(true)} aria-label="Open menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          </button>
+          <div className="tb-title">
+            <h1>{TITLE[shownTab] || 'Matchéa'}</h1>
+            <span className="tb-clock num">{clock.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' })} · {clock.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</span>
+          </div>
+          {training && <span className="tb-train">Training</span>}
+          <div className="tb-bell-wrap">
+            <button className={`tb-bell ${alerts.length ? 'has' : ''}`} onClick={() => setBell(!bell)} aria-label={`${alerts.length} alerts`} aria-expanded={bell}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Zm4 4h4" /></svg>
+              {alerts.length > 0 && <span className="tb-count">{alerts.length}</span>}
+            </button>
+            {bell && <>
+              <button className="tb-bell-scrim" aria-label="Close alerts" onClick={() => setBell(false)} />
+              <div className="tb-pop" role="menu">
+                <div className="tb-pop-h"><b>Alerts</b><small>{alerts.length ? `${alerts.length} need you` : 'Nothing right now'}</small></div>
+                {!alerts.length && <p className="tb-pop-none">All caught up.</p>}
+                {alerts.map((a) => (
+                  <button key={a.k} role="menuitem" className={`tb-alert a-${a.tone}`} onClick={() => { setBell(false); a.go(); }}>
+                    <NoteIcon d={a.icon} />
+                    <span><b>{a.title}</b><small>{a.sub}</small></span>
+                  </button>
+                ))}
+              </div>
+            </>}
           </div>
         </header>
         {error && <div className="banner">{error}</div>}
@@ -223,44 +302,11 @@ export default function App() {
             <button className="btn sm" onClick={() => setTraining(false)}>End training</button>
           </div>
         )}
-        {(showNew || showStock || weakPin || showRefunds) && (
-          <div className="notes" role="status">
-            {showNew && (
-              <button className="note n-new" onClick={() => go('online')}>
-                <NoteIcon d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Zm4 4h4" />
-                <span><b>{newCount} new online {newCount === 1 ? 'order' : 'orders'}</b><small>Tap to open</small></span>
-              </button>
-            )}
-            {showRefunds && (
-              <button className="note n-refund" onClick={() => go('online')}>
-                <NoteIcon d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4" />
-                <span><b>{onlineMeta.refundsDue} {onlineMeta.refundsDue === 1 ? 'refund' : 'refunds'} to send</b><small>Paid orders that were cancelled</small></span>
-              </button>
-            )}
-            {showStock && (
-              <span className={`note n-stock ${outList.length ? 'bad' : ''}`}>
-                <button className="note-main" onClick={() => { go('inventory'); setOpenRestock(true); }} title={lowList.map((i) => i.name).join(', ')}>
-                  <NoteIcon d="M4 8l8-4 8 4v8l-8 4-8-4V8Zm0 0 8 4 8-4M12 12v8" />
-                  <span><b>{outList.length ? `${outList.length} out of stock` : `${lowList.length} running low`}</b><small>{lowList.slice(0, 2).map((i) => i.name).join(', ')}{lowList.length > 2 ? ` +${lowList.length - 2}` : ''} · Restock list</small></span>
-                </button>
-                <button className="note-x" onClick={() => setHideStock(lowKey)} aria-label="Hide until something else runs low" title="Hide">×</button>
-              </span>
-            )}
-            {weakPin && (
-              <span className="note n-pin">
-                <button className="note-main" onClick={() => { if (isAdmin) { go('staff'); setWeakPin(false); } }} disabled={!isAdmin}>
-                  <NoteIcon d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5zM12 15v2" />
-                  <span><b>Your PIN is easy to guess</b><small>{isAdmin ? 'Tap to change it' : 'Ask an admin for a new PIN'}</small></span>
-                </button>
-                <button className="note-x" onClick={() => setWeakPin(false)} aria-label="Remind me later" title="Later">×</button>
-              </span>
-            )}
-          </div>
-        )}
         <main key={shownTab} className="tabpane">
           {(shownTab === 'register' || ((shownTab === 'staff' || shownTab === 'customers') && !isAdmin)) && <Register {...shared} {...trainProps} cart={cart} setCart={setCart} />}
           {shownTab === 'barista' && <Barista {...shared} {...trainProps} key={training ? 'train' : 'real'} />}
           {!training && <>
+          {tab === 'home' && <Home data={data} user={user} isAdmin={isAdmin} go={go} counts={{ newOrders: newCount, toMake: barShown, messages: msgCount, refunds: onlineMeta.refundsDue || 0 }} />}
           {tab === 'messages' && <Inbox toast={toast} onCount={loadMsgs} onOrders={loadOnline} />}
           {tab === 'online' && <Online {...shared} orders={online} meta={onlineMeta} reload={loadOnline} />}
           {tab === 'inventory' && <Inventory {...shared} openRestock={openRestock} onRestockShown={() => setOpenRestock(false)} />}
@@ -270,6 +316,7 @@ export default function App() {
           {tab === 'staff' && isAdmin && <Staff {...shared} onMe={setUser} />}
           </>}
         </main>
+        </div>
       </div>
       {printerOpen && <PrinterSettings toast={toast} onClose={() => setPrinterOpen(false)} />}
       {idleLeft != null && (
