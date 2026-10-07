@@ -6,7 +6,7 @@ import StampCard from './StampCard';
 import { CountUp, photoFrom, morphIn, morphOut, useScrollIn, calm } from './fx';
 import { TabInk } from '../lib/motion';
 import { sceneVar, sceneBg } from '../lib/drinkImages';
-import { Doodle, LiveCup, HeroFx } from './art';
+import { Doodle, LiveCup, HeroFx, CupTint } from './art';
 import { ShareDrink } from './share';
 import './sheetfx.css';
 
@@ -216,19 +216,19 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
     const w = img.offsetWidth - pl - pr, h = img.offsetHeight - pt - pb, side = Math.min(w, h), y0 = img.offsetTop + pt + (h - side) / 2;
     const S = [0.86, 1.02, 1.1][at] || 1, origin = img.offsetTop + img.offsetHeight * 0.96; // the photo is scaled per size from near its bottom
     const y = (v) => origin + (v - origin) * S;
-    return { '--top': `${Math.round(y(y0 + side * 0.24))}px`, '--base': `${Math.round(y(y0 + side * 0.945))}px`, '--cupw': `${Math.round(side * S * 0.42)}px` };
+    return { '--top': `${Math.round(y(y0 + side * 0.24))}px`, '--base': `${Math.round(y(y0 + side * 0.945))}px`, '--cupw': `${Math.round(side * S * 0.42)}px`,
+      '--top0': `${Math.round(y0 + side * 0.2)}px`, '--base0': `${Math.round(y0 + side * 0.945)}px` };
   };
   // The photo reacts too: bounces bigger/smaller, dips as syrup lands, hops when an add-on goes in
   useEffect(() => {
     const el = hero.current;
     if (!fx || !el?.animate || calm()) return;
     const K = {
-      size: [{ scale: '1 1' }, { scale: fx.up ? '1.07 .9' : '.93 1.06' }, { scale: fx.up ? '.96 1.07' : '1.04 .95' }, { scale: '1.01 .99' }, { scale: '1 1' }],
-      sweet: [{ translate: '0 0' }, { translate: '0 0', offset: 0.35 }, { translate: '0 7px' }, { translate: '0 -3px' }, { translate: '0 0' }],
-      add: [{ translate: '0 0', rotate: '0deg' }, { translate: '0 -16px', rotate: '-4deg' }, { translate: '0 2px', rotate: '3deg' }, { translate: '0 0', rotate: '0deg' }],
-      remove: [{ rotate: '0deg' }, { rotate: '-3deg' }, { rotate: '3deg' }, { rotate: '0deg' }],
+      sweet: [{ translate: '0 0' }, { translate: '0 0', offset: 0.3 }, { translate: '0 5px', offset: 0.5 }, { translate: '0 0' }],
+      add: [{ rotate: '0deg' }, { rotate: '-2.5deg', offset: 0.35 }, { rotate: '1.5deg', offset: 0.7 }, { rotate: '0deg' }],
+      remove: [{ rotate: '0deg' }, { rotate: '1.5deg', offset: 0.4 }, { rotate: '0deg' }],
     }[fx.kind];
-    if (K) el.animate(K, { duration: fx.kind === 'sweet' ? 1100 : 700, easing: 'cubic-bezier(.3,1.3,.5,1)' });
+    if (K) el.animate(K, { duration: fx.kind === 'sweet' ? 1400 : 1100, easing: 'cubic-bezier(.45,0,.25,1)' });
   }, [fx]);
   useLayoutEffect(() => { morphIn(hero.current); }, []); // the menu photo grows into this sheet
   const close = () => { morphOut(hero.current); onClose(); }; // …and shrinks back when it closes
@@ -245,6 +245,7 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
           {item.image && <img ref={hero} src={item.image} alt="" />}
           {item.hasSizes && menu.sizes.length > 1 && <span className="sh-size" key={x.sizeId}>{menu.sizes[sizeAt]?.label}</span>}
           <span className="sh-tags">{picked.map((a) => <i key={a._id}>+ {a.label}</i>)}</span>
+          {fx && <CupTint key={`t${fx.n}`} fx={fx} img={hero} />}
           {fx && <HeroFx key={fx.n} {...fx} />}
           <LiveCup name={item.name} sweet={item.sweet ? L.sweet : null} sizeAt={item.hasSizes ? sizeAt : 0} sizes={item.hasSizes ? menu.sizes.length : 1} sizeLabel={menu.sizes[sizeAt]?.label || ''} addons={picked} pulse={fx?.n || 0} />
         </div>

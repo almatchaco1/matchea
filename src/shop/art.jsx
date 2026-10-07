@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { calm } from './fx';
 // Hand-drawn style pictures for the customer site: empty states, the loading whisk, and the order cup.
 
@@ -120,7 +120,7 @@ export function LiveCup({ name, sweet, sizeAt = 0, sizes = 1, sizeLabel = '', ad
   const stage = useRef(null);
   useEffect(() => { // a little slosh when something changes
     if (!pulse || calm() || !stage.current?.animate) return;
-    stage.current.animate([{ rotate: '0deg' }, { rotate: '-7deg' }, { rotate: '5deg' }, { rotate: '-2deg' }, { rotate: '0deg' }], { duration: 700, easing: 'ease-out' });
+    stage.current.animate([{ rotate: '0deg' }, { rotate: '-5deg', offset: 0.25 }, { rotate: '3deg', offset: 0.55 }, { rotate: '-1deg', offset: 0.8 }, { rotate: '0deg' }], { duration: 1200, easing: 'cubic-bezier(.45,0,.25,1)' });
   }, [pulse]);
   const dots = pct == null ? 0 : Math.round(pct / 25);
   return (
@@ -150,40 +150,52 @@ export function LiveCup({ name, sweet, sizeAt = 0, sizes = 1, sizeLabel = '', ad
   );
 }
 
-/** Big moment on the drink photo when the customer changes something:
- *  sweetness → syrup drops fall into the cup; size → the cup bounces with a floor ripple and arrows;
- *  extra matcha → a whisk spins and matcha powder bursts out. A label floats up to say what changed. */
+/** Big, smooth moment on the drink photo when the customer changes something:
+ *  sweetness → a ribbon of honey pours into the cup; size → a measuring guide grows beside the cup;
+ *  extra matcha → a whisk swirls and a ribbon of matcha spirals in. A label glides up to say what changed. */
 export function HeroFx({ kind, label, level = 50, up = true, matcha = true, spot }) {
   if (calm()) return label ? <div className="hfx calm" style={spot || undefined} aria-hidden="true"><em className="hfx-label">{label}</em></div> : null;
-  const drops = Math.max(1, Math.round(1 + level / 16));
   return (
     <div className={`hfx hfx-${kind}`} style={spot || undefined} aria-hidden="true">
-      {kind === 'sweet' && (<>
-        {level === 0
-          ? Array.from({ length: 7 }, (_, i) => <b key={i} className="hfx-leaf" style={{ '--a': `${i * 52 - 150}deg`, '--i': i }} />)
-          : Array.from({ length: drops }, (_, i) => <b key={i} className="hfx-drop" style={{ '--i': i, '--x': `${((i % 3) - 1) * 12 + (i % 2 ? 4 : -3)}px` }} />)}
-        {level > 0 && <><i className="hfx-ring" style={{ '--d': `${0.38 + drops * 0.09}s` }} /><i className="hfx-ring r2" style={{ '--d': `${0.5 + drops * 0.09}s` }} /></>}
-        {level > 0 && <span className="hfx-glow" style={{ '--g': level / 100 }} />}
-        {level >= 75 && [[-1, -0.2], [1.05, 0.1], [-0.8, 0.9], [0.9, 1.1]].map(([dx, dy], i) => <b key={`t${i}`} className="hfx-twinkle" style={{ '--i': i, left: `calc(50% + var(--cupw) * ${dx * 0.62} - 8px)`, top: `calc(var(--top) + var(--cupw) * ${dy * 0.5})` }} />)}
-      </>)}
+      {kind === 'sweet' && (level === 0
+        ? Array.from({ length: 6 }, (_, i) => <b key={i} className="hfx-leaf" style={{ '--a': `${i * 60 - 150}deg`, '--i': i }} />)
+        : (<>
+          <span className="hfx-stream" style={{ '--w': `${6 + level / 12}px` }}><i /></span>
+          <i className="hfx-ring" /><i className="hfx-ring r2" />
+          {level >= 75 && [[-1, -0.1], [1.05, 0.2], [-0.75, 0.95], [0.85, 1.1]].map(([dx, dy], i) => <b key={`t${i}`} className="hfx-twinkle" style={{ '--i': i, left: `calc(50% + var(--cupw) * ${dx * 0.62} - 8px)`, top: `calc(var(--top) + var(--cupw) * ${dy * 0.5})` }} />)}
+        </>))}
       {kind === 'size' && (<>
-        <i className="hfx-floor" /><i className="hfx-floor r2" />
-        <span className={`hfx-arrows ${up ? 'up' : 'down'}`}><b /><b /><b /></span>
-        <span className={`hfx-arrows r ${up ? 'up' : 'down'}`}><b /><b /><b /></span>
+        <span className={`hfx-ruler ${up ? 'up' : 'down'}`}><i /><b>{label?.split(' · ')[0]}</b></span>
+        <i className="hfx-floor" />
       </>)}
-      {(kind === 'add' || kind === 'remove') && (<>
-        {kind === 'add' && matcha && (
-          <svg className="hfx-whisk" viewBox="0 0 40 80"><path d="M20 2v30" /><path d="M20 32c-12 6-14 30-6 44M20 32c-6 8-7 30-2 44M20 32v44M20 32c6 8 7 30 2 44M20 32c12 6 14 30 6 44" /></svg>
-        )}
-        {Array.from({ length: kind === 'add' ? 22 : 10 }, (_, i) => (
-          <b key={i} className={`hfx-dust ${matcha ? 'm' : 'g'}`} style={{ '--a': `${i * (360 / (kind === 'add' ? 22 : 10))}deg`, '--d': `${62 + (i % 4) * 22}px`, '--i': i, '--z': `${0.6 + (i % 3) * 0.3}` }} />
-        ))}
+      {kind === 'add' && (<>
+        {matcha && <svg className="hfx-whisk" viewBox="0 0 40 80"><path d="M20 2v30" /><path d="M20 32c-12 6-14 30-6 44M20 32c-6 8-7 30-2 44M20 32v44M20 32c6 8 7 30 2 44M20 32c12 6 14 30 6 44" /></svg>}
+        <svg className={`hfx-spiral ${matcha ? 'm' : 'g'}`} viewBox="0 0 200 120" preserveAspectRatio="none"><path d="M100 4c40 0 70 14 70 30s-30 30-70 30-58-12-58-24 26-22 58-22 44 9 44 18-18 18-44 18-30-7-30-13 13-11 30-11" /></svg>
         <i className="hfx-puff" />
-        {kind === 'add' && <i className="hfx-swirl" />}
+        {Array.from({ length: 8 }, (_, i) => <b key={i} className={`hfx-mote ${matcha ? 'm' : 'g'}`} style={{ '--i': i, '--x': `${(i - 3.5) * 14}px` }} />)}
       </>)}
-      {label && <em className={`hfx-label k-${kind}`}>{label}</em>}
+      {kind === 'remove' && <i className="hfx-puff" />}
+      {label && kind !== 'size' && <em className={`hfx-label k-${kind}`}>{label}</em>}
+      {label && kind === 'size' && <em className="hfx-label k-size">{label}</em>}
     </div>
   );
+}
+
+/** The drink photo itself fills with colour: honey rising from the bottom (sweetness), or matcha
+ *  thickening from the top (extra matcha). A copy of the photo is used as a mask, so only the cup is tinted. */
+export function CupTint({ fx, img }) {
+  const box = useRef(null);
+  useLayoutEffect(() => {
+    const el = img.current, t = box.current;
+    if (!el || !t) return;
+    const cs = getComputedStyle(el);
+    Object.assign(t.style, { padding: cs.padding, left: `${el.offsetLeft}px`, top: `${el.offsetTop}px`, width: `${el.offsetWidth}px`, height: `${el.offsetHeight}px` });
+    const u = `url("${el.currentSrc || el.src}")`;
+    t.style.webkitMaskImage = u; t.style.maskImage = u;
+  }, [img]);
+  if (calm() || !['sweet', 'add', 'remove'].includes(fx.kind) || (fx.kind === 'sweet' && !fx.level)) return null;
+  const k = fx.kind === 'sweet' ? 'honey' : fx.kind === 'add' ? (fx.matcha ? 'matcha' : 'gold') : 'fade';
+  return <span ref={box} className={`hfx-tint t-${k}`} style={{ ...fx.spot, '--lv': (fx.level ?? 50) / 100 }} aria-hidden="true"><i /></span>;
 }
 
 /** Profile picture with the first letter underneath, so it never shows as an empty circle if the photo can't load. */
