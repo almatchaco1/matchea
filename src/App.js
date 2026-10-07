@@ -106,7 +106,8 @@ export default function App() {
   const [outBusy, setOutBusy] = useState(false);
   const signOut = () => { setOutBusy(true); api.post('/auth/logout').catch(() => {}).finally(() => { setOutBusy(false); setAskOut(false); logout(); }); };
   // Locked or signed out by the owner (or session expired): back to sign-in with the reason
-  useEffect(() => setUnauthorizedHandler((d) => { if (d?.error) setSignedOutMsg(d.error); logout(); }), [logout]);
+  // (braces: the handler must not be returned, or React would run it as the effect's clean-up and sign you out on refresh)
+  useEffect(() => { setUnauthorizedHandler((d) => { if (d?.error) setSignedOutMsg(d.error); logout(); }); }, [logout]);
 
   useEffect(() => {
     if (!getToken()) return;
