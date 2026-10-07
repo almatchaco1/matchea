@@ -73,7 +73,7 @@ export default function Landing({ menu, err, go, me }) {
           </div>
           <div className="hx-rib hx-rib1">
             <div className="ld-track">
-              {[0, 1].map((k) => <span key={k}>{items.map((it) => <em key={it._id + k}>{it.name.replace(/ Matcha Latte$/, '')}<i>✦</i></em>)}</span>)}
+              {[0, 1].map((k) => <span key={k}>{items.map((it) => <em key={it._id + k}>{it.name}<i>✦</i></em>)}</span>)}
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function Landing({ menu, err, go, me }) {
                 {it.image && <img src={it.image} alt="" loading="lazy" />}
                 {it.soldOut ? <i className="ld-best ld-na">{it.notAvailable ? 'Not available' : 'Sold out'}</i> : it.bestSeller && <i className="ld-best hanko"><b lang="ja">人気</b>Best seller</i>}
                 <span className="ld8-tile-t">
-                  <b>{it.name.replace(/ Matcha Latte$/, '')}</b>
+                  <b>{it.name}</b>
                   {i === 0 && it.desc && <small>{it.desc}</small>}
                   <span className="ld8-price">{peso(priceOf(it))}</span>
                 </span>
@@ -196,7 +196,7 @@ function Showcase({ items, priceOf, start, go, count }) {
   const pos = (i) => { const d = (((i - at) % n) + n) % n; return d === 0 ? 'c' : d === 1 ? 'r' : d === n - 1 ? 'l' : 'h'; };
   const move = (k) => setCur((((at + k) % n) + n) % n);
   const it = list[at];
-  const name = it.name.replace(/ Matcha Latte$/, '');
+  const name = it.name;
   // Swipe left / right on the cups (phones)
   const down = (e) => { swipe.current = { x: e.clientX, y: e.clientY, t: Date.now() }; };
   const up = (e) => {

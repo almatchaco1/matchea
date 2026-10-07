@@ -2,7 +2,7 @@
 // Used by seed.js (new databases) and update-menu.js (existing databases).
 
 export const slug = (name) => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/'/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-export const PHOTO_V = 10; // bump when the photos in public/drinks change, so browsers fetch the new ones
+export const PHOTO_V = 11; // bump when the photos in public/drinks change, so browsers fetch the new ones
 // Bundled photos are cut-outs (transparent background, .webp); the old .jpg paths saved in the database map to them
 export const imageFor = (name) => `/drinks/${slug(name)}.webp?v=${PHOTO_V}`;
 /** A bundled photo path saved in the database -> the current cut-out photo. */
@@ -17,7 +17,10 @@ export const sceneUrl = (src) => {
 };
 // Photos that ship in public/drinks (cropped from the Matchéa menu)
 export const BUNDLED = ['matcha-latte', 'strawberry-matcha-latte', 'mango-matcha-latte', 'creme-brulee-matcha-latte', 'kinako-dango-matcha-latte',
-  'banana-pudding-matcha-latte', 'putobumbong-matcha-latte', 'smores-matcha-latte', 'caramel-matcha-latte', 'salted-caramel-matcha-latte', 'cinnamon-bun-matcha-latte'];
+  'banana-pudding-matcha-latte', 'putobumbong-matcha-latte', 'smores-matcha-latte', 'caramel-matcha-latte', 'salted-caramel-matcha-latte', 'cinnamon-bun-matcha-latte',
+  // new menu (Oct 2026)
+  'classic-matcha-latte', 'caramel-bliss-matcha', 'berry-matcha-strawberry', 'putobumbong-matcha', 'coconut-matcha-cloud', 'banana-pudding-matcha',
+  'creme-brulee-matcha', 'kinako-dango-seasalt-matcha', 'pistachio-kataifi-matcha'];
 export const hasBundledImage = (name) => BUNDLED.includes(slug(name));
 
 // Every drink offers only Extra Matcha.

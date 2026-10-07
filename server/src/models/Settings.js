@@ -33,6 +33,7 @@ const settingsSchema = new mongoose.Schema(
     dailyGoal: { type: Number, default: 0, min: 0 }, // ₱ sales target per day (0 = off)
     decor: { type: [String], default: [] }, // decorations picked by the owner (ids from src/shared/decor.mjs)
     decorGreeting: { type: String, default: '', maxlength: 80 }, // greeting shown on the website home page
+    menuVer: { type: Number, default: 0 }, // which built-in menu update was applied (see lib/menuV2.js)
     decorPos: { type: Boolean, default: true }, // also show the top string (lights, flags…) on the POS
     // Delivery by Lalamove (the shop books it). Nearby areas only, each with its fee; free from freeDrinks drinks (the shop pays).
     delivery: {

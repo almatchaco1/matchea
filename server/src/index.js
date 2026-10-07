@@ -29,6 +29,7 @@ import { applyMenuDefaults } from './update-menu.js';
 import { installDefaultQr } from './lib/defaultQr.js';
 import { startDecorPicker } from './lib/decorStart.js';
 import { freshStartIfRequested } from './lib/freshStart.js';
+import { applyNewMenu } from './lib/menuV2.js';
 import User from './models/User.js';
 
 const app = express();
@@ -92,6 +93,7 @@ mongoose
       if (n) console.log(`Added photos / add-on rules to ${n} drinks.`);
     } catch (e) { console.error('Could not update menu defaults:', e.message); }
     try { await freshStartIfRequested(); } catch (e) { console.error('Could not start fresh:', e.message); }
+    try { const n = await applyNewMenu({ log: () => {} }); if (n) console.log(`New menu applied: ${n} drinks updated.`); } catch (e) { console.error('Could not apply the new menu:', e.message); }
     try { const who = await User.ensureSuperAdmin(); if (who) console.log(`${who} is the super admin.`); } catch (e) { console.error('Could not set the super admin:', e.message); }
     try { await installDefaultQr(); } catch (e) { console.error('Could not add the GCash QR:', e.message); }
     try { await startDecorPicker(); } catch (e) { console.error('Could not set up decorations:', e.message); }

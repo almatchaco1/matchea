@@ -163,3 +163,6 @@
 @media (prefers-reduced-motion:reduce){
   .shop .hx-seal svg,.shop .hx-rings i,.shop .hx-cup.pos-c img,.shop .hx-spark,.shop .hx-rib .ld-track{animation:none}
 }
+
+/* longer drink names (new menu): the caption wraps to two lines instead of cutting off */
+.shop .hx-cap-t b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:clamp(1.05rem,1.6vw,1.35rem);line-height:1.15}
