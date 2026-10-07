@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { sceneBg } from '../lib/drinkImages';
+import { sceneVar } from '../lib/drinkImages';
+import { toneFor } from '../lib/format';
 import { calm } from './fx';
 import { greetIcon } from '../lib/decor';
 import { peso } from '../lib/format';
 import { call } from './api';
 
+// Logos for the "Pay your way" band
+const PAY_LOGO = {
+  gcash: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0A6DFF" /><path d="M15.6 9.2A4.4 4.4 0 1 0 16.4 12h-4" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></svg>,
+  maya: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#00A86B" /><path d="M7.5 15.5v-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" /></svg>,
+  counter: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5 5.6 4h12.8L20 9.5M5 9.5V20h14V9.5" /><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0M10 20v-5h4v5" /></svg>,
+  dlv: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg>,
+};
 const nav = (go, to) => (e) => { e.preventDefault(); go(to); };
 
 export default function Landing({ menu, err, go, me }) {
@@ -18,11 +26,14 @@ export default function Landing({ menu, err, go, me }) {
   const priceOf = (it) => it.price + (it.hasSizes ? +menu.sizes[0]?.price || 0 : 0);
 
   return (
-    <div className="ld">
+    <div className="ld ld8">
       <section className="ld-hero">
         <div className="ld-copy">
           {menu?.shop?.greeting && <p className={`ld-season s-${greetIcon(menu.shop.decor)}`}><i aria-hidden="true" />{menu.shop.greeting}</p>}
-          <p className="ld-eyebrow"><span className="ld-leaf" aria-hidden="true" />{menu?.shop?.name || 'Matchéa'} · Order ahead</p>
+          <div className="ld8-top">
+            <p className="ld-eyebrow"><span className="ld-leaf" aria-hidden="true" />{menu?.shop?.name || 'Matchéa'} · Order ahead</p>
+            {menu && <span className={`ld8-open ${menu.shop.open ? 'on' : ''}`}><i aria-hidden="true" />{menu.shop.open ? 'Taking orders now' : 'Closed right now'}</span>}
+          </div>
           <h1><span className="ld-line"><span>Good matcha,</span></span><br /><span className="ld-line"><em>good mood.</em></span></h1>
           <p className="ld-lede">Whisked-to-order matcha lattes, from classic to Putobumbong. {dlv ? 'Order on your phone, then pick it up at the counter or have it delivered to your door by Lalamove.' : 'Order on your phone, pay online or at the counter, and skip the line at pickup.'}</p>
           <div className="ld-ctas">
@@ -72,24 +83,54 @@ export default function Landing({ menu, err, go, me }) {
         </ol>
       </section>
 
-      <section className="ld-menu">
+      <section className="ld-menu ld8-fav">
         <p className="ld-kicker" data-reveal><span className="jp" lang="ja">お品書き</span>Whisked to order</p>
         <div className="ld-menu-h" data-reveal>
-          <h2>On the menu</h2>
-          <a href={start} onClick={nav(go, start)}>{me ? 'Order now →' : 'Sign up to order →'}</a>
+          <h2>Crowd favourites</h2>
+          <a href={start} onClick={nav(go, start)}>{me ? 'See the full menu →' : 'Sign up to order →'}</a>
         </div>
-        {!menu && !err ? <div className="ld-strip" aria-busy="true">{Array.from({ length: 6 }, (_, i) => <div key={i} className="ld-drink skel-card"><div className="skel" style={{ aspectRatio: '1 / 1' }} /><div style={{ padding: '10px 12px 12px' }}><div className="skel skel-line" style={{ width: '70%' }} /><div className="skel skel-line" style={{ width: '45%' }} /></div></div>)}</div> : err && !menu ? <p className="shop-alert">{err}</p> : (
-          <div className="ld-strip">
-            {strip.map((it, i) => (
-              <a key={it._id} href={start} className={`ld-drink ${it.soldOut ? 'off' : ''}`} onClick={nav(go, start)} data-reveal style={{ '--i': Math.min(i, 8) }}>
-                <img src={it.image} alt="" loading="lazy" className={sceneBg(it.image) ? 'scene-bg' : undefined} style={sceneBg(it.image)} />
+        {!menu && !err ? <div className="ld8-bento" aria-busy="true">{Array.from({ length: 6 }, (_, i) => <div key={i} className={`ld8-tile skel-card ${i === 0 ? 'big' : ''}`}><div className="skel" style={{ height: '100%' }} /></div>)}</div> : err && !menu ? <p className="shop-alert">{err}</p> : (
+          <div className="ld8-bento">
+            {strip.slice(0, 4).map((it, i) => (
+              <a key={it._id} href={start} className={`ld8-tile ${i === 0 ? 'big' : ''} ${it.soldOut ? 'off' : ''} ${sceneVar(it.image) ? 'has-scene' : ''}`} onClick={nav(go, start)} data-reveal
+                style={{ '--i': i, '--tone': toneFor(it.name), ...(sceneVar(it.image) || {}) }}>
+                {it.image && <img src={it.image} alt="" loading="lazy" />}
                 {it.soldOut ? <i className="ld-best ld-na">{it.notAvailable ? 'Not available' : 'Sold out'}</i> : it.bestSeller && <i className="ld-best hanko"><b lang="ja">人気</b>Best seller</i>}
-                <b>{it.name.replace(/ Matcha Latte$/, '')}</b>
-                <span>{peso(priceOf(it))}</span>
+                <span className="ld8-tile-t">
+                  <b>{it.name.replace(/ Matcha Latte$/, '')}</b>
+                  {i === 0 && it.desc && <small>{it.desc}</small>}
+                  <span className="ld8-price">{peso(priceOf(it))}</span>
+                </span>
               </a>
             ))}
+            <a href={start} className="ld8-tile ld8-all" onClick={nav(go, start)} data-reveal style={{ '--i': 5 }}>
+              <span className="ld8-all-n">{items.length}</span>
+              <b>drinks on the menu</b>
+              <span className="ld8-all-go">{me ? 'See them all' : 'Sign up to order'} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
+              <span className="ld8-all-cups" aria-hidden="true">{strip.slice(4, 7).map((x) => x.image && <img key={x._id} src={x.image} alt="" loading="lazy" />)}</span>
+            </a>
           </div>
         )}
+      </section>
+
+      <section className="ld8-pay" data-reveal>
+        <div className="ld8-pay-t">
+          <p className="ld-kicker"><span className="jp" lang="ja">お支払い</span>Pay your way</p>
+          <h2>Pay how you like.</h2>
+          <p>Scan our QR with GCash or Maya and upload your receipt. We check it and start whisking.{menu?.shop?.payAtPickup !== false ? ' Or just pay at the counter.' : ''}</p>
+        </div>
+        <ul className="ld8-pay-l">
+          {(Object.keys(menu?.shop?.qr || {}).length ? Object.keys(menu.shop.qr) : ['gcash', 'maya']).map((k) => (
+            <li key={k} className={`p-${k}`}>
+              <span className="ld8-pay-i" aria-hidden="true">{PAY_LOGO[k]}</span>
+              <b>{k === 'gcash' ? 'GCash' : 'Maya'}</b><small>Scan our QR · no fee</small>
+            </li>
+          ))}
+          {menu?.shop?.payAtPickup !== false && (
+            <li className="p-counter"><span className="ld8-pay-i" aria-hidden="true">{PAY_LOGO.counter}</span><b>At the counter</b><small>Cash, GCash or Maya</small></li>
+          )}
+          {dlv && <li className="p-dlv"><span className="ld8-pay-i" aria-hidden="true">{PAY_LOGO.dlv}</span><b>Delivery</b><small>{freeFrom ? `Free from ${freeFrom} drinks` : 'By Lalamove'}</small></li>}
+        </ul>
       </section>
 
       <section className="ld-info">

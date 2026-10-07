@@ -1,0 +1,88 @@
+/* ===== Checkout payment v3: brand cards, progress, phone-framed QR ===== */
+/* choices: a grid of cards */
+.shop .pay.pay3{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0;background:none;box-shadow:none;overflow:visible}
+.shop .pay.pay3::before{display:none}
+.shop .pay.pay3.n-1{grid-template-columns:1fr}
+.shop .pay.pay3 legend{grid-column:1 / -1;float:none;margin:0 0 2px}
+.shop .pay.pay3 label{--b1:#5E7A44;--b2:#25361A;--soft:#E5EFD9;--ink-on:#FFF8E8;
+  display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:start;gap:10px 12px;min-height:118px;padding:16px;border-radius:22px;
+  background:var(--card);box-shadow:0 0 0 1.5px var(--line),0 10px 22px -18px rgba(30,36,24,.5);overflow:hidden;isolation:isolate}
+.shop .pay.pay3 label.pk-gcash,.shop .pay.pay3 label.pk-pm-gcash{--b1:#2B86FF;--b2:#0047B3;--soft:#E3EEFF}
+.shop .pay.pay3 label.pk-maya,.shop .pay.pay3 label.pk-pm-paymaya{--b1:#1BC47D;--b2:#0B3D2B;--soft:#DDF5EA}
+.shop .pay.pay3 label::after{content:"";position:absolute;right:-40px;bottom:-60px;width:150px;height:150px;border-radius:50%;z-index:-1;background:var(--soft);opacity:.7;transition:transform .5s var(--spring),opacity .3s}
+.shop .pay.pay3 label:hover:not(.on)::after{transform:scale(1.15)}
+.shop .pay.pay3 .pay2-ico{width:46px;height:46px;border-radius:15px;background:var(--soft)}
+.shop .pay.pay3 .pay2-ico svg{width:26px;height:26px}
+.shop .pay.pay3 label>span{grid-column:1 / -1;grid-row:2}
+.shop .pay.pay3 label b{font-size:1rem;line-height:1.25}
+.shop .pay.pay3 label small{font-size:.8rem}
+.shop .pay3-badge{position:absolute;left:72px;top:26px;padding:4px 10px;border-radius:999px;font-style:normal;font-size:.72rem;font-weight:800;letter-spacing:.02em;background:var(--soft);color:var(--b2);white-space:nowrap}
+.shop .pay.pay3 .pay2-tick{top:20px;margin-top:0;right:16px;width:26px;height:26px}
+.shop .pay.pay3 .pay2-tick svg{width:14px;height:14px}
+/* chosen: the card takes the brand colours */
+.shop .pay.pay3 label.on{color:var(--ink-on);background:radial-gradient(130% 120% at 100% 0%,rgba(255,255,255,.22),transparent 50%),linear-gradient(150deg,var(--b1),var(--b2));
+  box-shadow:0 0 0 2px var(--b2),0 18px 30px -16px color-mix(in srgb,var(--b2) 80%,transparent);transform:translateY(-2px)}
+.shop .pay.pay3 label.on::after{opacity:.12;background:#fff;transform:scale(1.3)}
+.shop .pay.pay3 label.on .pay2-ico{background:#fff;transform:rotate(-6deg) scale(1.05)}
+.shop .pay.pay3 label.on .pay3-badge{background:rgba(255,255,255,.2);color:#fff}
+.shop .pay.pay3 label.on .pay2-tick{background:#fff}
+.shop .pay.pay3 label.on .pay2-tick svg{stroke:var(--b2)}
+.shop .pay.pay3 label.on small{color:rgba(255,255,255,.82)}
+.shop .pay3-safe{grid-column:1 / -1;display:flex;align-items:center;gap:8px;margin:2px 0 0;padding:10px 12px;border-radius:14px;font-size:.82rem;font-weight:600;color:var(--ink-2);background:var(--pink-2)}
+.shop .pay3-safe svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--green);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:560px){
+  .shop .pay.pay3{grid-template-columns:1fr}
+  .shop .pay.pay3 label{min-height:0;grid-template-columns:auto 1fr;grid-template-rows:auto;align-items:center;padding:14px 52px 14px 14px}
+  .shop .pay.pay3 label>span{grid-column:2;grid-row:1}
+  .shop .pay3-badge{position:static;grid-column:2;justify-self:start;margin-top:-4px}
+  .shop .pay.pay3 .pay2-tick{top:50%;margin-top:-13px}
+}
+
+/* QR panel */
+.shop .qrpay.qp3{border-radius:28px;overflow:hidden}
+.shop .qrpay.qp3 .qp-head{padding:22px 22px 24px;background:radial-gradient(120% 140% at 100% 0%,rgba(255,255,255,.22),transparent 55%),linear-gradient(140deg,var(--app),var(--app-2))}
+.shop .qrpay.qp3 .qp-amt b{font-size:34px}
+.shop .qp3-copy{margin-left:8px;padding:3px 9px;border:0;border-radius:999px;cursor:pointer;font:inherit;font-size:.72rem;font-weight:800;background:#fff;color:var(--app-2)}
+.shop .qp3-track{list-style:none;margin:0;padding:14px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:color-mix(in srgb,var(--app-soft) 55%,var(--card));border-bottom:1px solid var(--line)}
+.shop .qp3-track li{position:relative;display:flex;align-items:center;gap:8px;font-size:.84rem;font-weight:700;color:var(--ink-2)}
+.shop .qp3-track li:not(:last-child)::after{content:"";flex:1;height:2px;margin-left:4px;border-radius:2px;background:var(--line)}
+.shop .qp3-track li.done:not(:last-child)::after{background:var(--app)}
+.shop .qp3-track i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:.78rem;font-weight:800;background:var(--card);color:var(--ink-2);box-shadow:inset 0 0 0 1.5px var(--line)}
+.shop .qp3-track li.now{color:var(--ink)}
+.shop .qp3-track li.now i{background:var(--app);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--app) 22%,transparent);animation:qp3Pulse 2s ease-in-out infinite}
+.shop .qp3-track li.done i{background:var(--app);color:#fff;box-shadow:none}
+@keyframes qp3Pulse{50%{box-shadow:0 0 0 8px color-mix(in srgb,var(--app) 0%,transparent)}}
+/* the QR sits in a phone */
+.shop .qrpay.qp3 .qp-code{position:relative;padding:22px 14px 16px;border-radius:30px;background:#151A12;box-shadow:inset 0 0 0 2px #2C3526,0 22px 40px -24px rgba(0,0,0,.7)}
+.shop .qrpay.qp3 .qp-code::before{content:"";position:absolute;top:8px;left:50%;width:46px;height:6px;margin-left:-23px;border-radius:99px;background:#2C3526}
+.shop .qrpay.qp3 .qp-frame{border-radius:16px}
+.shop .qrpay.qp3 .qrpay-btns .sh-btn.ghost{color:#FFF8E8;border-color:rgba(255,255,255,.3)}
+.shop .qrpay.qp3.has-shot .qp-body{opacity:.75}
+/* upload: a drop zone */
+.shop .qrpay.qp3 .qr-up{min-height:96px;padding:18px}
+.shop .qrpay.qp3 .qr-up.drag{border-style:solid;border-color:var(--app);background:color-mix(in srgb,var(--app-soft) 70%,var(--card));transform:scale(1.01)}
+.shop .qrpay.qp3 .qr-read.busy img,.shop .qrpay.qp3 .qr-read.busy .qr-read-ph{position:relative}
+.shop .qrpay.qp3 .qr-read{position:relative;overflow:hidden}
+.shop .qrpay.qp3 .qr-read.busy::after{content:"";position:absolute;left:0;right:0;top:0;height:30%;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--app) 30%,transparent),transparent);animation:qp3Scan 1.4s ease-in-out infinite}
+@keyframes qp3Scan{from{transform:translateY(-100%)}to{transform:translateY(340%)}}
+.shop .qrpay.qp3 .qr-read.ok{box-shadow:0 0 0 2px var(--ok)}
+
+@media (prefers-color-scheme:dark){
+  .shop .pay.pay3 label{background:rgba(255,255,255,.04);box-shadow:0 0 0 1.5px rgba(255,255,255,.08)}
+  .shop .pay.pay3 label.pk-gcash,.shop .pay.pay3 label.pk-pm-gcash{--soft:rgba(43,134,255,.18)}
+  .shop .pay.pay3 label.pk-maya,.shop .pay.pay3 label.pk-pm-paymaya{--soft:rgba(27,196,125,.16)}
+  .shop .pay.pay3 label.pk-pickup{--b1:#9CCB7A;--b2:#4E7A33;--soft:rgba(155,203,120,.14);--ink-on:#10200B}
+  .shop .pay.pay3 label.on,.shop .pay.pay3 label.on:has(input:checked){color:var(--ink-on);background:radial-gradient(130% 120% at 100% 0%,rgba(255,255,255,.2),transparent 50%),linear-gradient(150deg,var(--b1),var(--b2));box-shadow:0 0 0 2px var(--b1),0 18px 30px -16px rgba(0,0,0,.9)}
+  .shop .pay.pay3 label.pk-pickup.on small{color:rgba(16,32,11,.75)}
+  .shop .pay.pay3 label.on .pay2-ico{background:#fff}
+  .shop .pay3-badge{color:#E8F1E0}
+  .shop .pay3-safe{background:rgba(255,255,255,.05)}
+  .shop .qp3-track{background:rgba(255,255,255,.04);border-bottom-color:rgba(255,255,255,.08)}
+  .shop .qp3-track i{background:rgba(255,255,255,.06)}
+}
+@media (prefers-reduced-motion:reduce){.shop .qp3-track li.now i,.shop .qrpay.qp3 .qr-read.busy::after{animation:none}}
+@media (max-width:560px){
+  .shop .qp3-track{padding:12px 10px}
+  .shop .qp3-track li{flex-direction:column;gap:5px;text-align:center;font-size:.72rem;line-height:1.2}
+  .shop .qp3-track li:not(:last-child)::after{position:absolute;left:calc(50% + 18px);right:calc(-50% + 18px);top:13px;margin:0}
+}

@@ -242,3 +242,102 @@
   .shop .o7-again{background:#9CCB7A;color:#10200B}
   .shop .o7-thumbs img,.shop .o7-thumbs i{background:#2A3322}
 }
+
+/* ---------- HOME PAGE v8 ---------- */
+.shop .ld8{display:flex;flex-direction:column;gap:56px}
+.shop .ld8 .ld-hero{position:relative;isolation:isolate;padding:36px 0 18px}
+.shop .ld8 .ld-hero::before{content:"";position:absolute;inset:-40px -40vw 0;z-index:-1;pointer-events:none;
+  background:radial-gradient(40% 55% at 78% 45%,rgba(139,165,98,.22),transparent 70%),radial-gradient(30% 40% at 10% 10%,rgba(246,227,167,.35),transparent 70%)}
+.shop .ld8-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.shop .ld8-top .ld-eyebrow{margin:0}
+.shop .ld8-open{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:.8rem;font-weight:800;background:var(--card);color:var(--ink-2);box-shadow:0 0 0 1px var(--line)}
+.shop .ld8-open i{width:8px;height:8px;border-radius:50%;background:#D9534F}
+.shop .ld8-open.on{color:var(--green)}
+.shop .ld8-open.on i{background:#4FAE2E;box-shadow:0 0 0 0 rgba(79,174,46,.6);animation:o7Pulse 2s ease-out infinite}
+.shop .ld8 .ld-ctas .sh-btn{min-height:54px;padding:0 26px;font-size:1.02rem}
+.shop .ld8 .ld-perks{gap:10px;border-top:0;padding-top:6px}
+.shop .ld8 .ld-perks li{padding:10px 14px 10px 10px;border-radius:18px;background:color-mix(in srgb,var(--card) 80%,transparent);box-shadow:0 0 0 1px rgba(50,70,35,.08),0 10px 20px -18px rgba(30,36,24,.5);backdrop-filter:blur(6px)}
+.shop .ld8 .ld-cap{box-shadow:0 16px 30px -18px rgba(20,30,12,.8)}
+
+/* how it works: a dark band */
+.shop .ld8 .ld-steps{position:relative;padding:40px 32px;border-radius:36px;overflow:hidden;isolation:isolate;color:#FFF8E8;
+  background:radial-gradient(110% 120% at 100% 0%,rgba(169,211,138,.2),transparent 55%),linear-gradient(140deg,#2E4622,#18270F 75%);box-shadow:0 30px 60px -40px rgba(20,30,12,.95)}
+.shop .ld8 .ld-steps::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.08;background-image:radial-gradient(circle at 14px 14px,#fff 1.3px,transparent 1.9px);background-size:26px 26px}
+.shop .ld8 .ld-steps h2{color:#FFF8E8}
+.shop .ld8 .ld-steps .ld-kicker{color:#C9E3B0}
+.shop .ld8 .ld-steps ol::before{border-top-color:rgba(246,227,167,.35)}
+.shop .ld8 .ld-steps li{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);color:#FFF8E8}
+.shop .ld8 .ld-steps li p{color:rgba(255,248,232,.72)}
+.shop .ld8 .ld-steps .ld-num{background:#F6E3A7;color:#22340F}
+.shop .ld8 .ld-steps .ld-ico{background:rgba(255,255,255,.1);color:#F6E3A7;box-shadow:none}
+
+/* crowd favourites: a bento grid */
+.shop .ld8-bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:230px;gap:14px;margin-top:14px}
+.shop .ld8-tile{position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;border-radius:28px;overflow:hidden;isolation:isolate;text-decoration:none;color:var(--ink);
+  background:radial-gradient(90% 80% at 50% 40%,color-mix(in srgb,var(--tone,#8BA562) 32%,#FFFBF2),#FFFBF2);box-shadow:0 0 0 1px rgba(50,70,35,.07),0 18px 34px -26px rgba(30,36,24,.55);transition:transform .4s var(--spring),box-shadow .3s}
+.shop .ld8-tile.has-scene{background:var(--scene) center/cover no-repeat}
+.shop .ld8-tile:hover{transform:translateY(-5px);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--tone,#8BA562) 55%,transparent),0 26px 44px -26px rgba(30,36,24,.6)}
+.shop .ld8-tile.big{grid-column:span 2;grid-row:span 2}
+.shop .ld8-tile img{position:absolute;inset:8px 8px 70px;width:calc(100% - 16px);height:calc(100% - 78px);object-fit:contain;z-index:-1;filter:drop-shadow(0 16px 16px rgba(30,36,24,.25));transition:transform .6s var(--spring)}
+.shop .ld8-tile:hover img{transform:scale(1.07) rotate(-3deg)}
+.shop .ld8-tile.big img{inset:24px 24px 110px;width:calc(100% - 48px);height:calc(100% - 134px)}
+.shop .ld8-tile .ld-best{position:absolute;left:14px;top:14px}
+.shop .ld8-tile-t{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:18px;background:rgba(255,251,242,.88);backdrop-filter:blur(8px);box-shadow:0 8px 18px -14px rgba(0,0,0,.5)}
+.shop .ld8-tile-t b{font-family:var(--serif);font-size:1.05rem;line-height:1.15}
+.shop .ld8-tile.big .ld8-tile-t{padding:14px 16px}
+.shop .ld8-tile.big .ld8-tile-t b{font-size:1.6rem}
+.shop .ld8-tile-t small{color:var(--ink-2);font-size:.88rem}
+.shop .ld8-price{font-weight:800;color:var(--green)}
+.shop .ld8-tile.off{opacity:.6}
+.shop .ld8-all{justify-content:space-between;color:#FFF8E8;background:linear-gradient(150deg,#46602F,#1C2C14)}
+.shop .ld8-all-n{font-family:var(--serif);font-size:3.4rem;line-height:1;color:#F6E3A7}
+.shop .ld8-all b{font-size:1.05rem}
+.shop .ld8-all-go{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:9px 14px;border-radius:999px;font-weight:800;font-size:.88rem;background:#F6E3A7;color:#22340F}
+.shop .ld8-all-go svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .3s var(--spring)}
+.shop .ld8-all:hover .ld8-all-go svg{transform:translateX(4px)}
+.shop .ld8-all-cups{position:absolute;right:-10px;bottom:-14px;display:flex;z-index:-1;opacity:.9}
+.shop .ld8-all-cups img{position:static;width:70px;height:auto;margin-left:-26px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.4))}
+
+/* pay your way */
+.shop .ld8-pay{display:grid;grid-template-columns:1fr 1.2fr;align-items:center;gap:28px;padding:34px;border-radius:36px;background:var(--card);box-shadow:0 0 0 1px rgba(50,70,35,.07),0 24px 50px -36px rgba(30,36,24,.6)}
+.shop .ld8-pay-t h2{margin:4px 0 8px;font-size:clamp(28px,3.4vw,40px);letter-spacing:-.03em}
+.shop .ld8-pay-t p{margin:0;color:var(--ink-2);max-width:42ch}
+.shop .ld8-pay-l{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.shop .ld8-pay-l li{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:16px;border-radius:22px;background:var(--pink-2);box-shadow:inset 0 0 0 1px var(--line);transition:transform .3s var(--spring)}
+.shop .ld8-pay-l li:hover{transform:translateY(-3px) rotate(-.5deg)}
+.shop .ld8-pay-l li.p-gcash{background:linear-gradient(150deg,#E8F1FF,#D6E6FF)}
+.shop .ld8-pay-l li.p-maya{background:linear-gradient(150deg,#E2F7EE,#CDEFE0)}
+.shop .ld8-pay-i{grid-row:span 2;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:#fff;color:var(--green);box-shadow:0 6px 14px -8px rgba(0,0,0,.3)}
+.shop .ld8-pay-i svg{width:28px;height:28px}
+.shop .ld8-pay-l b{font-size:1rem}
+.shop .ld8-pay-l small{color:var(--ink-2);font-size:.82rem}
+
+@media (max-width:900px){
+  .shop .ld8{gap:40px}
+  .shop .ld8-bento{grid-template-columns:1fr 1fr;grid-auto-rows:200px}
+  .shop .ld8-tile.big{grid-column:span 2;grid-row:span 2}
+  .shop .ld8-pay{grid-template-columns:1fr;padding:24px}
+  .shop .ld8 .ld-steps{padding:28px 18px;border-radius:28px}
+  .shop .ld8-top{justify-content:center}
+}
+@media (max-width:520px){
+  .shop .ld8-bento{grid-auto-rows:180px;gap:10px}
+  .shop .ld8-tile{padding:10px;border-radius:22px}
+  .shop .ld8-tile-t{padding:8px 10px}
+  .shop .ld8-tile-t b{font-size:.92rem}
+  .shop .ld8-tile.big .ld8-tile-t b{font-size:1.3rem}
+  .shop .ld8-pay-l{grid-template-columns:1fr}
+}
+@media (prefers-color-scheme:dark){
+  .shop .ld8-open{background:rgba(255,255,255,.06);box-shadow:0 0 0 1px rgba(255,255,255,.1)}
+  .shop .ld8-open.on{color:#A9D38A}
+  .shop .ld8 .ld-perks li{background:rgba(255,255,255,.05);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+  .shop .ld8-tile{background:radial-gradient(90% 80% at 50% 40%,color-mix(in srgb,var(--tone,#8BA562) 28%,#1C2318),#1C2318);color:var(--ink)}
+  .shop .ld8-tile-t{background:rgba(20,26,16,.82)}
+  .shop .ld8-price{color:#A9D38A}
+  .shop .ld8-pay{background:rgba(255,255,255,.04);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+  .shop .ld8-pay-l li,.shop .ld8-pay-l li.p-gcash,.shop .ld8-pay-l li.p-maya{background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .shop .ld8-pay-l li.p-gcash{background:rgba(43,134,255,.12)}
+  .shop .ld8-pay-l li.p-maya{background:rgba(27,196,125,.1)}
+}
+@media (prefers-reduced-motion:reduce){.shop .ld8-tile:hover,.shop .ld8-pay-l li:hover{transform:none}}

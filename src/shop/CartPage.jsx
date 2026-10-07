@@ -14,6 +14,7 @@ import AddressPicker from './AddressPicker';
 import { readReceipt, warmReader } from './receiptRead';
 import './pay2.css';
 import './qp2.css';
+import './pay3.css';
 
 // Payment option icons (same look as the POS)
 const PAY_ICON = {
@@ -96,6 +97,8 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   };
   const clearShot = () => { setShot(''); setShotPrint(''); setShotMsg(''); setRead(null); setSendAnyway(false); };
   const [saved, setSaved] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -228,7 +231,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         {bigOrder && !noShowRule && total > 0 && <div className="note-box">For big orders (over {peso(ONLINE.payFirstOver)} or more than {ONLINE.payFirstDrinks} drinks), please pay first with {Object.keys(qrs).map((k) => (k === 'gcash' ? 'GCash' : 'Maya')).join(' or ') || 'online payment'}. Thank you!</div>}
         {noShowRule && total > 0 && <div className="note-box">Because 2 recent orders weren’t picked up, please pay first for this order (GCash, Maya or online). Pay at pickup will be back after a while.</div>}
         {total > 0 && options.length > 0 && (
-          <fieldset className="pay pay2">
+          <fieldset className={`pay pay2 pay3 n-${options.length}`}>
             <legend><span>Payment</span><em>Total <b className="num">{peso(total)}</b></em></legend>
             {options.map((k) => (
               <label key={k} className={`${method === k ? 'on' : ''} pk-${k.replace(':', '-')}`}>
@@ -236,20 +239,28 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
                 <i className="pay2-ico" aria-hidden="true">{PAY_ICON[k.startsWith('pm:') ? (k.endsWith('gcash') ? 'gcash' : 'maya') : k] || PAY_ICON.pickup}</i>
                 <span>{k === 'gcash' ? <><b>Pay now with GCash</b><small>Scan our QR, then upload your receipt</small></>
                   : k === 'maya' ? <><b>Pay now with Maya</b><small>Scan our QR, then upload your receipt</small></>
-                  : k.startsWith('pm:') ? <><b>Pay in the {PM_NAME[k.slice(3)]} app</b><small>Log in and pay, confirmed right away · +{peso(withOnlineFee(total, k.slice(3)).fee)} online fee</small></>
+                  : k.startsWith('pm:') ? <><b>Pay in the {PM_NAME[k.slice(3)]} app</b><small>Log in and pay, confirmed right away</small></>
                   : <><b>Pay at pickup</b><small>Cash, GCash or Maya at the counter</small></>}</span>
+                <em className="pay3-badge">{k === 'pickup' ? 'Pay later' : k.startsWith('pm:') ? `+${peso(withOnlineFee(total, k.slice(3)).fee)} fee` : 'No fee'}</em>
                 <i className="pay2-tick" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg></i>
               </label>
             ))}
+            <p className="pay3-safe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5V11Zm7 4v2" /></svg>{method === 'pickup' ? 'You pay when you collect your order.' : 'You pay the shop directly. We never ask for your PIN or OTP.'}</p>
           </fieldset>
         )}
         {needQr && (
-          <div className={`qrpay qp2 qp-${qrMethod}`}>
+          <div className={`qrpay qp2 qp3 qp-${qrMethod} ${shot ? 'has-shot' : ''}`}>
             <div className="qp-head">
               <span className={`qp-app ${qrMethod}`}><i aria-hidden="true">{PAY_ICON[qrMethod]}</i>{appName}</span>
               <div className="qp-amt"><small>Amount to pay</small><b className="num">{peso(total)}</b></div>
-              {qrs[qrMethod].name && <div className="qp-to"><small>Send to</small><b>{qrs[qrMethod].name}</b>{qrs[qrMethod].number && <span className="num">{qrs[qrMethod].number.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}</span>}</div>}
+              {qrs[qrMethod].name && <div className="qp-to"><small>Send to</small><b>{qrs[qrMethod].name}</b>{qrs[qrMethod].number && <span className="num">{qrs[qrMethod].number.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}
+                <button type="button" className="qp3-copy" onClick={() => { try { navigator.clipboard.writeText(qrs[qrMethod].number); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* old browser */ } }}>{copied ? 'Copied ✓' : 'Copy'}</button></span>}</div>}
             </div>
+            <ol className="qp3-track" aria-label="Paying by QR">
+              <li className={shot ? 'done' : 'now'}><i>{shot ? '✓' : '1'}</i>Pay in {appName}</li>
+              <li className={shot && read?.status !== 'reading' && (!problem || sendAnyway) ? 'done' : shot ? 'now' : ''}><i>{shot && read?.status !== 'reading' && (!problem || sendAnyway) ? '✓' : '2'}</i>Upload receipt</li>
+              <li className={shot && read?.status !== 'reading' && (!problem || sendAnyway) ? 'now' : ''}><i>3</i>Place order</li>
+            </ol>
             <div className="qp-body">
               <div className="qp-code">
                 <span className="qp-frame"><i aria-hidden="true" /><img className="qrpay-img" src={qrImg || `/api/public/qr/${qrMethod}?v=${qrs[qrMethod].v}`} alt={`Our ${appName} QR code for ${peso(total)}`} /></span>
@@ -276,10 +287,11 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
             <div className="qp-form">
               <span className="qp-step"><i>2</i>Upload your receipt</span>
               {!shot && read?.status !== 'reading' ? (
-                <label className="qr-up">
+                <label className={`qr-up ${dragOver ? 'drag' : ''}`} onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer?.files?.[0]; if (file) pickShot(file); }}>
                   <input type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; if (file) pickShot(file); }} />
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4.5 4.5M12 4l4.5 4.5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" /></svg>
-                  <span><b>Upload {appName} receipt screenshot</b><small>We read the amount and Ref No. for you. Nothing to type.</small></span>
+                  <span><b>Upload {appName} receipt screenshot</b><small>Tap to choose{phone ? '' : ' or drop it here'}. We read the amount and Ref No. for you.</small></span>
                 </label>
               ) : (
                 <div className={`qr-read ${read?.status === 'reading' ? 'busy' : problem ? (sendAnyway ? 'warn' : 'bad') : 'ok'}`} aria-live="polite">
