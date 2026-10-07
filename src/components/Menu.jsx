@@ -36,7 +36,7 @@ export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
     <>
       <div className="toolbar">
         <h2 className="sec grow">Menu</h2>
-        <AdminBtn allowed={isAdmin} className="btn" onClick={() => setModal({ kind: 'qr' })}>GCash & Maya QR</AdminBtn>
+        <AdminBtn allowed={isAdmin} className="btn" onClick={() => setModal({ kind: 'qr' })}>GCash & GoTyme QR</AdminBtn>
         <AdminBtn allowed={isAdmin} className="btn" onClick={() => setModal({ kind: 'shop' })}>Shop & options</AdminBtn>
         <AdminBtn allowed={isAdmin} className="btn primary" onClick={() => setModal({ kind: 'prod' })}>Add drink</AdminBtn>
       </div>

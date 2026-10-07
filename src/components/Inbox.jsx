@@ -15,7 +15,7 @@ const QUICK = [
   'Your order is ready for pickup.',
 ];
 const STATUS = { awaiting_payment: 'Waiting for payment', new: 'New', preparing: 'Preparing', ready: 'Ready', paid: 'Done', cancelled: 'Cancelled', void: 'Cancelled' };
-const METHOD = { gcash: 'GCash', maya: 'Maya', cash: 'Cash', card: 'Card' };
+const METHOD = { gcash: 'GCash', gotyme: 'GoTyme', maya: 'Maya', cash: 'Cash', card: 'Card' };
 const timeOf = (d) => new Date(d).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
 const dayOf = (d) => {
   const f = (x) => new Date(x).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' });
@@ -253,7 +253,7 @@ function SolveModal({ thread, orders, pick, onClose, onDone }) {
   };
   const go = async () => {
     setErr('');
-    if (order?.qrUnchecked && !found) { setErr(`Tick the box after you find the payment in your ${method || 'GCash / Maya'} app.`); return; }
+    if (order?.qrUnchecked && !found) { setErr(`Tick the box after you find the payment in your ${method || 'GCash / GoTyme'} app.`); return; }
     setBusy(true);
     try {
       if (order) {
@@ -290,7 +290,7 @@ function SolveModal({ thread, orders, pick, onClose, onDone }) {
       {order?.qrUnchecked && (
         <label className={`sv-check ${found ? 'on' : ''}`}>
           <input type="checkbox" checked={found} onChange={(e) => { setFound(e.target.checked); setErr(''); }} />
-          <span>I checked our {method || 'GCash / Maya'} app and found <b>{peso(order.total)}</b>{order.qrRef && <> with reference <b>{order.qrRef}</b></>}.</span>
+          <span>I checked our {method || 'GCash / GoTyme'} app and found <b>{peso(order.total)}</b>{order.qrRef && <> with reference <b>{order.qrRef}</b></>}.</span>
         </label>
       )}
       {order?.paidOnline && <div className="warnbox">This order was paid online. Don’t refund it in PayMongo anymore: the customer is getting their drinks.</div>}

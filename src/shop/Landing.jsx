@@ -10,7 +10,7 @@ import './landing9.css';
 // Logos for the "Pay your way" band
 const PAY_LOGO = {
   gcash: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0A6DFF" /><path d="M15.6 9.2A4.4 4.4 0 1 0 16.4 12h-4" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></svg>,
-  maya: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#00A86B" /><path d="M7.5 15.5v-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" /></svg>,
+  gotyme: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0B3954" /><circle cx="12" cy="12" r="8.2" fill="none" stroke="#3FDCEC" strokeWidth="1.2" opacity=".55" /><text x="12" y="15.2" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontSize="8.6" fontWeight="800" letterSpacing="-.2" fill="#3FDCEC">GT</text></svg>,
   counter: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5 5.6 4h12.8L20 9.5M5 9.5V20h14V9.5" /><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0M10 20v-5h4v5" /></svg>,
   dlv: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg>,
 };
@@ -86,7 +86,7 @@ export default function Landing({ menu, err, go, me }) {
         <ol>
           {[['Sign in', 'With your mobile number, Google or Facebook.', 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0'],
             ['Pick your drinks', 'Choose size, sweetness and Extra Matcha.', 'M7 8h10l-1.3 11.2a2 2 0 0 1-2 1.8h-3.4a2 2 0 0 1-2-1.8L7 8Zm-1-3h12M12 5V2'],
-            ['Pay your way', 'GCash or Maya QR, or pay at the counter.', 'M3 7h18v10H3zM3 11h18M7 15h3'],
+            ['Pay your way', 'GCash or GoTyme QR, or pay at the counter.', 'M3 7h18v10H3zM3 11h18M7 15h3'],
             ['Pick up', 'We show you when it’s ready. Just give your order number.', 'M5 12l4 4 10-10']].map(([t, d, icon], i) => (
             <li key={t} data-reveal style={{ '--i': i }}>
               <span className="ld-num">{i + 1}</span>
@@ -131,17 +131,17 @@ export default function Landing({ menu, err, go, me }) {
         <div className="ld8-pay-t">
           <p className="ld-kicker"><span className="jp" lang="ja">お支払い</span>Pay your way</p>
           <h2>Pay how you like.</h2>
-          <p>Scan our QR with GCash or Maya and upload your receipt. We check it and start whisking.{menu?.shop?.payAtPickup !== false ? ' Or just pay at the counter.' : ''}</p>
+          <p>Scan our QR with GCash or GoTyme and upload your receipt. We check it and start whisking.{menu?.shop?.payAtPickup !== false ? ' Or just pay at the counter.' : ''}</p>
         </div>
         <ul className="ld8-pay-l">
-          {(Object.keys(menu?.shop?.qr || {}).length ? Object.keys(menu.shop.qr) : ['gcash', 'maya']).map((k) => (
+          {(Object.keys(menu?.shop?.qr || {}).length ? Object.keys(menu.shop.qr) : ['gcash', 'gotyme']).map((k) => (
             <li key={k} className={`p-${k}`}>
               <span className="ld8-pay-i" aria-hidden="true">{PAY_LOGO[k]}</span>
-              <b>{k === 'gcash' ? 'GCash' : 'Maya'}</b><small>Scan our QR · no fee</small>
+              <b>{k === 'gcash' ? 'GCash' : 'GoTyme'}</b><small>Scan our QR · no fee</small>
             </li>
           ))}
           {menu?.shop?.payAtPickup !== false && (
-            <li className="p-counter"><span className="ld8-pay-i" aria-hidden="true">{PAY_LOGO.counter}</span><b>At the counter</b><small>Cash, GCash or Maya</small></li>
+            <li className="p-counter"><span className="ld8-pay-i" aria-hidden="true">{PAY_LOGO.counter}</span><b>At the counter</b><small>Cash, GCash or GoTyme</small></li>
           )}
           {dlv && <li className="p-dlv"><span className="ld8-pay-i" aria-hidden="true">{PAY_LOGO.dlv}</span><b>Delivery</b><small>{freeFrom ? `Free from ${freeFrom} drinks` : 'By Lalamove'}</small></li>}
         </ul>

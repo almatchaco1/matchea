@@ -8,7 +8,7 @@
   display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:start;gap:10px 12px;min-height:118px;padding:16px;border-radius:22px;
   background:var(--card);box-shadow:0 0 0 1.5px var(--line),0 10px 22px -18px rgba(30,36,24,.5);overflow:hidden;isolation:isolate}
 .shop .pay.pay3 label.pk-gcash,.shop .pay.pay3 label.pk-pm-gcash{--b1:#2B86FF;--b2:#0047B3;--soft:#E3EEFF}
-.shop .pay.pay3 label.pk-maya,.shop .pay.pay3 label.pk-pm-paymaya{--b1:#1BC47D;--b2:#0B3D2B;--soft:#DDF5EA}
+.shop .pay.pay3 label.pk-gotyme{--b1:#14A6BE;--b2:#0B3954;--soft:#DDF3F6}
 .shop .pay.pay3 label::after{content:"";position:absolute;right:-40px;bottom:-60px;width:150px;height:150px;border-radius:50%;z-index:-1;background:var(--soft);opacity:.7;transition:transform .5s var(--spring),opacity .3s}
 .shop .pay.pay3 label:hover:not(.on)::after{transform:scale(1.15)}
 .shop .pay.pay3 .pay2-ico{width:46px;height:46px;border-radius:15px;background:var(--soft)}
@@ -70,7 +70,7 @@
 @media (prefers-color-scheme:dark){
   .shop .pay.pay3 label{background:rgba(255,255,255,.04);box-shadow:0 0 0 1.5px rgba(255,255,255,.08)}
   .shop .pay.pay3 label.pk-gcash,.shop .pay.pay3 label.pk-pm-gcash{--soft:rgba(43,134,255,.18)}
-  .shop .pay.pay3 label.pk-maya,.shop .pay.pay3 label.pk-pm-paymaya{--soft:rgba(27,196,125,.16)}
+  .shop .pay.pay3 label.pk-gotyme{--soft:rgba(63,220,236,.14)}
   .shop .pay.pay3 label.pk-pickup{--b1:#9CCB7A;--b2:#4E7A33;--soft:rgba(155,203,120,.14);--ink-on:#10200B}
   .shop .pay.pay3 label.on,.shop .pay.pay3 label.on:has(input:checked){color:var(--ink-on);background:radial-gradient(130% 120% at 100% 0%,rgba(255,255,255,.2),transparent 50%),linear-gradient(150deg,var(--b1),var(--b2));box-shadow:0 0 0 2px var(--b1),0 18px 30px -16px rgba(0,0,0,.9)}
   .shop .pay.pay3 label.pk-pickup.on small{color:rgba(16,32,11,.75)}

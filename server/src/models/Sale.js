@@ -47,7 +47,7 @@ const saleSchema = new mongoose.Schema(
     paidAt: Date,
     checkoutId: String,
     checkoutUrl: String,
-    // Paid by scanning the shop's QR when ordering online; staff checks their GCash / Maya, then accepts
+    // Paid by scanning the shop's QR when ordering online; staff checks their GCash / GoTyme, then accepts
     qrPay: { method: String, ref: String, at: Date, verified: Boolean, verifiedBy: String, shot: Boolean, shotHash: String, shotPrint: String, // shot: customer attached a receipt screenshot (hash of the picture + of the original file)
       shotReused: { no: Number, date: String, code: String, same: Boolean }, // set when this screenshot was already used for another order
       paidAt: Date, timeOld: Number,
@@ -55,7 +55,7 @@ const saleSchema = new mongoose.Schema(
     noShow: { type: Boolean, default: false }, // cancelled because the customer never picked it up
     onlineFee: { type: Number, default: 0 }, // PayMongo fee the customer paid on top of the total (the shop still receives the total)
     refundDue: { type: Boolean, default: false }, // paid, then cancelled: the money still has to go back to the customer
-    // The refund staff sent (GCash / Maya from the shop's app, or in the PayMongo dashboard), with proof for the customer
+    // The refund staff sent (GCash / GoTyme from the shop's app, or in the PayMongo dashboard), with proof for the customer
     refund: { amount: Number, method: String, to: String, ref: String, note: String, by: String, at: Date, date: String, shot: Boolean },
     lines: [lineSchema],
     subtotal: Number,
@@ -65,7 +65,7 @@ const saleSchema = new mongoose.Schema(
     vat: Number,
     vatExempt: Number,
     pay: {
-      method: { type: String, enum: ['cash', 'gcash', 'maya', 'online', 'unpaid', 'staff'], required: true },
+      method: { type: String, enum: ['cash', 'gcash', 'gotyme', 'maya', 'online', 'unpaid', 'staff'], required: true },
       tendered: Number,
       change: Number,
       ref: { type: String, default: '' },

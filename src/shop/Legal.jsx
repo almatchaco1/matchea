@@ -28,7 +28,7 @@ export function Privacy({ shop }) {
       <p>We do <b>not</b> sell or rent your information, and we don’t use it for ads.</p>
 
       <h2>Who else sees it</h2>
-      <p>Only our staff, and only what they need to prepare your order. We use trusted services to run the site: our database host (MongoDB Atlas), Google (sign-in and sending code emails), Facebook (sign-in), and PayMongo, GCash or Maya when you pay online. They handle your data only to provide those services.</p>
+      <p>Only our staff, and only what they need to prepare your order. We use trusted services to run the site: our database host (MongoDB Atlas), Google (sign-in and sending code emails), Facebook (sign-in), and PayMongo, GCash or GoTyme when you pay online. They handle your data only to provide those services.</p>
 
       <h2>How long we keep it</h2>
       <p>We keep your account and order history while your account is active, and our sales records as long as the law requires for business records. You can ask us to delete your account at any time.</p>
@@ -74,7 +74,7 @@ export function Terms({ shop }) {
 
       <h2>Payment</h2>
       <ul>
-        <li>You can pay at the counter, or pay online with GCash, Maya or QR when available. We don’t accept card payments.</li>
+        <li>You can pay at the counter, or pay online with GCash, GoTyme or QR when available. We don’t accept card payments.</li>
         <li>If you pay by scanning our QR, enter the correct reference number. We check each payment before preparing your order.</li>
       </ul>
 

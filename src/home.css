@@ -94,7 +94,7 @@
 
 .hm-split{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:3px;margin-bottom:12px}
 .hm-split i{min-width:6px}
-.m-cash{background:#5E7A44}.m-gcash{background:#2D6BD8}.m-maya{background:#18A957}.m-card{background:#8A6BC9}
+.m-cash{background:#5E7A44}.m-gcash{background:#2D6BD8}.m-gotyme{background:#12A9C2}.m-maya{background:#18A957}.m-card{background:#8A6BC9}
 .hm-pay ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .hm-pay li{display:flex;align-items:center;gap:10px;font-weight:700}
 .hm-pay li .num{margin-left:auto}

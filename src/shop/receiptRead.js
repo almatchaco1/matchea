@@ -1,4 +1,4 @@
-// Reads a GCash / Maya receipt screenshot in the browser (Tesseract OCR, files served by this site from /vendor/tesseract).
+// Reads a GCash / GoTyme receipt screenshot in the browser (Tesseract OCR, files served by this site from /vendor/tesseract).
 // Returns what it found: { ref, amount, time ("HH:MM", 24 h), text }. Any of them can be missing if the picture is unclear.
 import { loadScript } from './api';
 
@@ -55,10 +55,10 @@ export function parseReceipt(raw, method) {
   const out = { ref: '', amount: null, time: '', date: '' };
 
   // Reference
-  if (method === 'maya') {
+  if (method !== 'gcash') { // GoTyme: letters and numbers
     for (const l of text.split(/\n+/)) {
       const m = /(?:reference|ref\.?)\s*(?:id|no\.?|number)?\s*[:#]?\s*([A-Z0-9][A-Z0-9 ]{5,30})\s*$/i.exec(l.trim());
-      if (m) { out.ref = m[1].replace(/\s+/g, '').toUpperCase().slice(0, 20); break; }
+      if (m) { out.ref = m[1].replace(/\s+/g, '').toUpperCase().slice(0, 30); break; }
     }
   } else {
     const m = /ref(?:erence)?\.?\s*(?:no\.?|number|#)?\s*[:.]?\s*((?:\d[\s.]?){13})/i.exec(flat);
@@ -101,7 +101,7 @@ export async function readReceipt(file, method) {
   let text = data?.text || '';
   const out = parseReceipt(text, method);
   if (out.amount == null || !out.ref || !out.time) {
-    // second try for what's missing: sparse-text mode finds lone big lines (like the amount on Maya)
+    // second try for what's missing: sparse-text mode finds lone big lines (like a big amount line)
     await w.setParameters({ tessedit_pageseg_mode: '11' });
     try {
       const again = (await w.recognize(canvas)).data?.text || '';

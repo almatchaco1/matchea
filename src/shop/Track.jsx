@@ -129,7 +129,7 @@ export default function Track({ code, go, onChange, signedIn, mine, onReorder, m
           This order was cancelled{o.cancelReason ? `: ${o.cancelReason}${/[.!?]$/.test(o.cancelReason) ? '' : '.'}` : '.'}{' '}
           {o.refund ? '' : o.paidOnline || o.refundDue ? `Your ${qr || payLabel} payment of ${peso(o.total + (o.onlineFee || 0))} will be refunded.` : o.qrPay ? '' : 'You were not charged.'}
         </div>
-        {(o.refundDue || o.refund) && <RefundBox o={o} code={code} label={o.refund ? { gcash: 'GCash', maya: 'Maya', paymongo: payLabel }[o.refund.method] || o.refund.method : qr || payLabel} />}
+        {(o.refundDue || o.refund) && <RefundBox o={o} code={code} label={o.refund ? { gcash: 'GCash', gotyme: 'GoTyme', maya: 'Maya', paymongo: payLabel }[o.refund.method] || o.refund.method : qr || payLabel} />}
         <ContactShop shop={menu?.shop} no={o.no} qr={o.qrPay ? qr : ''} refund={o.refundDue || !!o.refund} chat={signedIn ? <HelpButton go={go} order={code} /> : null} />
       </>) : (<>
         {o.pickupCode && (

@@ -19,7 +19,7 @@ import './pay3.css';
 // Payment option icons (same look as the POS)
 const PAY_ICON = {
   gcash: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0A6DFF" /><path d="M15.6 9.2A4.4 4.4 0 1 0 16.4 12h-4" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></svg>,
-  maya: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#00A86B" /><path d="M7.5 15.5v-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2-5.2c0-1 .8-1.8 1.8-1.8s1.8.8 1.8 1.8v5.2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" /></svg>,
+  gotyme: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0B3954" /><circle cx="12" cy="12" r="8.2" fill="none" stroke="#3FDCEC" strokeWidth="1.2" opacity=".55" /><text x="12" y="15.2" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontSize="8.6" fontWeight="800" letterSpacing="-.2" fill="#3FDCEC">GT</text></svg>,
   pickup: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9.5 5.6 4h12.8L20 9.5M5 9.5V20h14V9.5" /><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0M10 20v-5h4v5" /></svg>,
 };
 
@@ -43,7 +43,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const quote = area ? quoteFor(area, drinkCount, dcfg) : null;
   const deliveryCharge = quote ? quote.charge : 0;
   const pickupOk = menu?.shop?.payAtPickup !== false && !noShowRule && !bigOrder && !delivering;
-  // How to pay: 'gcash' | 'maya' (scan the shop's QR) | 'pm:gcash' | 'pm:paymaya' (PayMongo, opens the app) | 'pickup'
+  // How to pay: 'gcash' | 'gotyme' (scan the shop's QR) | 'pm:gcash' (PayMongo, opens the app) | 'pickup'
   const pmTypes = payOnline ? (menu?.shop?.payTypes || []).filter((t) => ONLINE_FEE_PCT[t]) : [];
   const options = [...Object.keys(qrs), ...pmTypes.map((t) => 'pm:' + t), ...(pickupOk ? ['pickup'] : [])];
   const [chosen, setMethod] = useState(null); // null = the first option (the menu may still be loading)
@@ -65,11 +65,11 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
   const total = Math.round((itemsTotal + deliveryCharge) * 100) / 100; // what the customer pays (with delivery)
   const payable = payOnline && payNow && total > 0;
   const fee = payable ? withOnlineFee(total, payType) : { total, fee: 0 }; // PayMongo's fee, paid by the customer
-  const PM_NAME = { gcash: 'GCash', paymaya: 'Maya' };
+  const PM_NAME = { gcash: 'GCash' };
   const needQr = !!qrMethod && total > 0;
   const qrImg = useAmountQr(qrMethod ? qrs[qrMethod] : null, total, menu?.shop?.name);
   const phone = isPhone();
-  const appName = qrMethod === 'maya' ? 'Maya' : 'GCash';
+  const appName = qrMethod === 'gotyme' ? 'GoTyme' : 'GCash';
   useEffect(() => { if (needQr) warmReader(); }, [needQr]); // start loading the receipt reader early
   // What's wrong with the receipt, if anything (checked again whenever the total changes)
   const readRef = read?.ref && !checkQrRef(qrMethod, read.ref) ? read.ref : '';
@@ -228,19 +228,19 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
             <span><b>Use my free drink</b><small>{freeItem ? `${freeItem.name}, regular size: −${peso(freeValue)}` : ''}. Upsize and add-ons are still charged.</small></span>
           </label>
         )}
-        {bigOrder && !noShowRule && total > 0 && <div className="note-box">For big orders (over {peso(ONLINE.payFirstOver)} or more than {ONLINE.payFirstDrinks} drinks), please pay first with {Object.keys(qrs).map((k) => (k === 'gcash' ? 'GCash' : 'Maya')).join(' or ') || 'online payment'}. Thank you!</div>}
-        {noShowRule && total > 0 && <div className="note-box">Because 2 recent orders weren’t picked up, please pay first for this order (GCash, Maya or online). Pay at pickup will be back after a while.</div>}
+        {bigOrder && !noShowRule && total > 0 && <div className="note-box">For big orders (over {peso(ONLINE.payFirstOver)} or more than {ONLINE.payFirstDrinks} drinks), please pay first with {Object.keys(qrs).map((k) => (k === 'gcash' ? 'GCash' : 'GoTyme')).join(' or ') || 'online payment'}. Thank you!</div>}
+        {noShowRule && total > 0 && <div className="note-box">Because 2 recent orders weren’t picked up, please pay first for this order (GCash, GoTyme or online). Pay at pickup will be back after a while.</div>}
         {total > 0 && options.length > 0 && (
           <fieldset className={`pay pay2 pay3 n-${options.length}`}>
             <legend><span>Payment</span><em>Total <b className="num">{peso(total)}</b></em></legend>
             {options.map((k) => (
               <label key={k} className={`${method === k ? 'on' : ''} pk-${k.replace(':', '-')}`}>
                 <input type="radio" name="pay" checked={method === k} onChange={() => { setMethod(k); clearShot(); }} />
-                <i className="pay2-ico" aria-hidden="true">{PAY_ICON[k.startsWith('pm:') ? (k.endsWith('gcash') ? 'gcash' : 'maya') : k] || PAY_ICON.pickup}</i>
+                <i className="pay2-ico" aria-hidden="true">{PAY_ICON[k.startsWith('pm:') ? 'gcash' : k] || PAY_ICON.pickup}</i>
                 <span>{k === 'gcash' ? <><b>Pay now with GCash</b><small>Scan our QR, then upload your receipt</small></>
-                  : k === 'maya' ? <><b>Pay now with Maya</b><small>Scan our QR, then upload your receipt</small></>
+                  : k === 'gotyme' ? <><b>Pay now with GoTyme</b><small>Scan our QR, then upload your receipt</small></>
                   : k.startsWith('pm:') ? <><b>Pay in the {PM_NAME[k.slice(3)]} app</b><small>Log in and pay, confirmed right away</small></>
-                  : <><b>Pay at pickup</b><small>Cash, GCash or Maya at the counter</small></>}</span>
+                  : <><b>Pay at pickup</b><small>Cash, GCash or GoTyme at the counter</small></>}</span>
                 <em className="pay3-badge">{k === 'pickup' ? 'Pay later' : k.startsWith('pm:') ? `+${peso(withOnlineFee(total, k.slice(3)).fee)} fee` : 'No fee'}</em>
                 <i className="pay2-tick" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg></i>
               </label>
@@ -274,7 +274,7 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
                 <ol className="qrpay-steps">
                   {phone ? <>
                     <li>Tap <b>Save QR</b>{saved === 'shared' ? '' : ' to keep it in your photos'}.</li>
-                    <li>{qrMethod === 'gcash' ? <>In GCash: <b>QR</b> → <b>Upload QR</b>, pick the picture.</> : <>In Maya: <b>Scan</b> → <b>Upload QR</b>, pick the picture.</>}</li>
+                    <li>{qrMethod === 'gcash' ? <>In GCash: <b>QR</b> → <b>Upload QR</b>, pick the picture.</> : <>In GoTyme: <b>Scan QR</b> → upload from your gallery, pick the picture.</>}</li>
                     <li>{qrImg ? <>Pay the <b>{peso(total)}</b> that fills in.</> : <>Type exactly <b>{peso(total)}</b> and pay.</>}</li>
                   </> : <>
                     <li>Scan this QR with {appName} on your phone.</li>
@@ -344,14 +344,14 @@ export default function CartPage({ menu, me, payFirst, cart, setCart, priced, to
         <button className="sh-btn big" disabled={busy || !menu.shop.open} onClick={place}>
           {busy ? (payable ? 'Opening secure payment…' : 'Placing order…') : payable ? `Pay ${peso(fee.total)} with ${PM_NAME[payType]}` : needQr ? `I’ve paid · Place order` : `Place order · ${peso(total)}`}
         </button>
-        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your receipt screenshot.' : 'Pay at the counter by cash, GCash or Maya.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
+        <p className="muted center small">{total <= 0 ? 'Nothing to pay. Enjoy your free drink!' : payable ? `You’ll log in to ${PM_NAME[payType]} on PayMongo’s secure page, pay, then come back here to track your order.` : needQr ? 'Your order is sent with your receipt screenshot.' : 'Pay at the counter by cash, GCash or GoTyme.'} {delivering ? 'Delivered by Lalamove: you can follow the rider on your order page.' : canDeliver ? '' : 'Pickup only.'}</p>
         </aside>
       </div>
     </div>
   );
 }
 
-/** GCash refs are digits shown as 1011 234 567890; Maya refs keep letters and numbers. */
+/** GCash refs are digits shown as 1011 234 567890; GoTyme refs keep letters and numbers. */
 function fmtDate(ymd) {
   const [Y, M, D] = String(ymd).split('-').map(Number);
   return new Date(Date.UTC(Y, M - 1, D)).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', timeZone: 'UTC' });

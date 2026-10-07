@@ -1,4 +1,4 @@
-// Online tab: paid orders that were cancelled. Staff send the money back from the shop's GCash / Maya
+// Online tab: paid orders that were cancelled. Staff send the money back from the shop's GCash / GoTyme
 // (or in PayMongo), then record the reference and a screenshot here so the customer sees proof.
 import { useCallback, useEffect, useState } from 'react';
 import { api, getToken } from '../lib/api';
@@ -7,7 +7,7 @@ import { shrinkImage } from '../lib/shrinkImage';
 import Modal from './Modal';
 import '../refunds.css';
 
-const LABEL = { gcash: 'GCash', maya: 'Maya', paymongo: 'PayMongo' };
+const LABEL = { gcash: 'GCash', gotyme: 'GoTyme', maya: 'Maya', paymongo: 'PayMongo' };
 const fmtNum = (n) => String(n || '').replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3');
 const when = (d) => new Date(d).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
 
@@ -72,7 +72,7 @@ export default function Refunds({ toast, count = 0, onChange }) {
 }
 
 function SendRefund({ order, toast, onClose, onDone }) {
-  const qr = order.method === 'gcash' || order.method === 'maya';
+  const qr = ['gcash', 'gotyme', 'maya'].includes(order.method);
   const app = LABEL[order.method] || order.method;
   const [to, setTo] = useState(fmtNum(order.phone));
   const [ref, setRef] = useState('');

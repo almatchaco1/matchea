@@ -15,7 +15,7 @@ export default function DeliverySettings({ f, setF, errs = {} }) {
     <div className="opt-group dl-set">
       <h4>Delivery <span className="muted" style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· you book Lalamove in the Lalamove app</span></h4>
       <label className={`check ${d.enabled ? 'on' : ''}`}>
-        <input type="checkbox" checked={!!d.enabled} onChange={(e) => set({ enabled: e.target.checked })} /> <span>Customers can choose delivery (paid first by GCash or Maya)</span>
+        <input type="checkbox" checked={!!d.enabled} onChange={(e) => set({ enabled: e.target.checked })} /> <span>Customers can choose delivery (paid first by GCash or GoTyme)</span>
       </label>
 
       <div className="dl-areas">

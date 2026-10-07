@@ -1,4 +1,4 @@
-// QR Ph (EMVCo) payment codes, like the one GCash / Maya give you under "Receive".
+// QR Ph (EMVCo) payment codes, like the one GCash / GoTyme give you under "Receive".
 // A plain QR asks the customer to type the amount. Putting the amount inside the code
 // (tag 54) and marking it one-time (tag 01 = 12) makes the app fill the amount in by itself.
 

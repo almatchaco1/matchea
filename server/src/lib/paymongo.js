@@ -1,4 +1,4 @@
-// PayMongo hosted checkout (GCash, Maya, QR Ph). Cards are not accepted.
+// PayMongo hosted checkout (GCash, QR Ph). Cards are not accepted.
 // Docs: https://docs.paymongo.com/reference/create_checkout_sessions
 //       https://docs.paymongo.com/docs/developer-tools-webhook-setup-management
 import crypto from 'node:crypto';
@@ -8,7 +8,7 @@ const secret = () => process.env.PAYMONGO_SECRET_KEY || '';
 
 export const paymongoEnabled = () => /^sk_(test|live)_/.test(secret());
 export const paymongoMode = () => (secret().startsWith('sk_live_') ? 'live' : secret().startsWith('sk_test_') ? 'test' : 'off');
-export const methodTypes = () => (process.env.PAYMONGO_METHODS || 'gcash,paymaya,qrph').split(',').map((s) => s.trim()).filter((m) => m && m !== 'card');
+export const methodTypes = () => (process.env.PAYMONGO_METHODS || 'gcash,qrph').split(',').map((s) => s.trim()).filter((m) => m && m !== 'card');
 
 async function pm(method, path, body) {
   let res;

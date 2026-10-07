@@ -102,9 +102,9 @@ r.get('/menu', ah(async (_req, res) => {
   });
 }));
 
-// The shop's GCash / Maya QR picture (?v=version so it can be cached)
+// The shop's GCash / GoTyme QR picture (?v=version so it can be cached)
 r.get('/qr/:kind', ah(async (req, res) => {
-  if (!['gcash', 'maya'].includes(req.params.kind)) throw new HttpError(404, 'Not found.');
+  if (!['gcash', 'gotyme'].includes(req.params.kind)) throw new HttpError(404, 'Not found.');
   const a = await Asset.findOne({ key: `qr-${req.params.kind}` }).lean();
   if (!a) throw new HttpError(404, 'No QR code uploaded yet.');
   res.set('Cache-Control', req.query.v ? 'public, max-age=31536000, immutable' : 'no-cache');
@@ -205,7 +205,7 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
   }
   const useReward = b.useReward === true;
   if (payNow && !paymongoEnabled()) throw new HttpError(409, 'Online payment is not available right now. Please choose pay at pickup.');
-  if (payNow && !payTypes().includes(payType)) throw new HttpError(400, 'Choose GCash or Maya to pay online.', { pay: 'Choose GCash or Maya.' });
+  if (payNow && !payTypes().includes(payType)) throw new HttpError(400, 'Choose GCash or GoTyme to pay online.', { pay: 'Choose GCash or GoTyme.' });
   const open = await Sale.countDocuments({ customerId: cust._id, source: 'online', status: { $in: ['awaiting_payment', 'new', 'preparing', 'ready'] } });
   if (open >= ONLINE.openOrdersPerPhone) throw new HttpError(429, 'You already have orders waiting. Please pick those up first, or ask at the counter.');
 
@@ -218,17 +218,17 @@ r.post('/orders', rateLimit(5, 10 * 60 * 1000), requireCustomer, ah(async (req, 
     const q = quoteFor(findArea(delivery.cfg, delivery.area), drinkCount, delivery.cfg);
     Object.assign(delivery, { fee: q.fee, free: q.free, charge: q.charge });
     t.total = Math.round((t.total + q.charge) * 100) / 100;
-    if (t.total > 0 && !payNow && !qrPay) throw new HttpError(400, 'Delivery orders are paid first. Choose GCash or Maya.', { pay: 'Please pay first for delivery.' });
+    if (t.total > 0 && !payNow && !qrPay) throw new HttpError(400, 'Delivery orders are paid first. Choose GCash or GoTyme.', { pay: 'Please pay first for delivery.' });
   }
   if (t.total <= 0) { payNow = false; qrPay = null; } // nothing to pay online
   const anyPayFirst = paymongoEnabled() || Object.keys(qrInfo(settings)).length > 0;
   const pickupOk = settings.payAtPickup !== false || !anyPayFirst;
-  if (t.total > 0 && !payNow && !qrPay && !pickupOk) throw new HttpError(400, 'Please pay first with GCash or Maya, then place your order.');
+  if (t.total > 0 && !payNow && !qrPay && !pickupOk) throw new HttpError(400, 'Please pay first with GCash or GoTyme, then place your order.');
   const drinks = priced.reduce((a, l) => a + (+l.qty || 0), 0);
   if (t.total > 0 && !payNow && !qrPay && anyPayFirst && (t.total > ONLINE.payFirstOver || drinks > ONLINE.payFirstDrinks))
-    throw new HttpError(403, `Big orders (over ₱${ONLINE.payFirstOver.toLocaleString('en-PH')} or more than ${ONLINE.payFirstDrinks} drinks) need to be paid first with GCash or Maya.`, { pay: 'Please pay first.' });
+    throw new HttpError(403, `Big orders (over ₱${ONLINE.payFirstOver.toLocaleString('en-PH')} or more than ${ONLINE.payFirstDrinks} drinks) need to be paid first with GCash or GoTyme.`, { pay: 'Please pay first.' });
   if (t.total > 0 && !payNow && !qrPay && anyPayFirst && (await mustPayFirst(cust._id)))
-    throw new HttpError(403, 'Because 2 recent orders weren’t picked up, please pay first with GCash or Maya for this order.', { pay: 'Please pay first.' });
+    throw new HttpError(403, 'Because 2 recent orders weren’t picked up, please pay first with GCash or GoTyme for this order.', { pay: 'Please pay first.' });
   if (useReward) await redeemReward(cust._id);
   const { date, hour, no } = await nextOrderNo();
   let sale;
@@ -339,14 +339,14 @@ r.post('/paymongo/webhook', ah(async (req, res) => {
   res.json({ received: true }); // always 200 for events we don't handle, so PayMongo doesn't retry
 }));
 
-/** PayMongo methods offered as separate choices (each with its own fee): 'gcash', 'paymaya' */
+/** PayMongo methods offered as separate choices (each with its own fee): 'gcash' */
 const payTypes = () => methodTypes().filter((m) => ONLINE_FEE_PCT[m]);
 
 /** QR payment options customers can use online: { gcash: { v, name, number }, … } */
 function qrInfo(s) {
   const out = {};
   if (s.qrOnline === false) return out;
-  for (const k of ['gcash', 'maya']) { const q = s.qr?.[k]; if (q?.v) out[k] = { v: q.v, name: q.name || '', number: q.number || '', payload: q.payload || '' }; }
+  for (const k of ['gcash', 'gotyme']) { const q = s.qr?.[k]; if (q?.v) out[k] = { v: q.v, name: q.name || '', number: q.number || '', payload: q.payload || '' }; }
   return out;
 }
 const publicView = (s) => ({

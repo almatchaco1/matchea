@@ -35,7 +35,7 @@ export const PACK_NAMES = ['carton', 'pack', 'bottle', 'bag', 'box', 'can', 'tub
 /** ₱ per unit from a pack price: ₱150 for 1000 ml → 0.15 */
 export const unitCostOf = (packCost, packSize) => Math.round(((+packCost || 0) / (+packSize || 1)) * 10000) / 10000;
 export const DISCOUNTS = ['none', 'pct', 'scpwd'];
-export const METHODS = ['cash', 'gcash', 'maya'];
+export const METHODS = ['cash', 'gcash', 'gotyme'];
 export const ROLES = ['admin', 'cashier'];
 
 const str = (v) => (v == null ? '' : String(v)).trim();
@@ -246,7 +246,7 @@ export function checkCheckout({ lineCount, total, discount = {}, pay = {}, custo
     const ref = String(pay.ref || '').replace(/[\s-]/g, '');
     if (ref.length > LIMITS.ref) e.ref = `At most ${LIMITS.ref} characters.`;
     else if (ref && pay.method === 'gcash' && !/^\d{13}$/.test(ref)) e.ref = /\D/.test(ref) ? 'A GCash reference no. has numbers only.' : `A GCash reference no. has 13 digits (this has ${ref.length}).`;
-    else if (ref && pay.method === 'maya' && !/^[A-Za-z0-9]{6,20}$/.test(ref)) e.ref = 'A Maya reference ID has 6 to 20 letters or numbers.';
+    else if (ref && pay.method === 'gotyme' && !/^[A-Za-z0-9]{6,30}$/.test(ref)) e.ref = 'A GoTyme reference no. has 6 to 30 letters or numbers.';
   }
   return e;
 }
@@ -255,8 +255,8 @@ export function checkCheckout({ lineCount, total, discount = {}, pay = {}, custo
 export const ONLINE = { lines: 20, lineQty: 10, name: 40, pickupNote: 120, openOrdersPerPhone: 3,
   payFirstOver: 3000, payFirstDrinks: 10, // big orders (over ₱3,000 or more than 10 drinks) must be paid first
   payTimeOld: 30, payTimeAhead: 5 }; // receipt time more than 30 min before the order is flagged; up to 5 min ahead is allowed (phone clocks differ)
-/** PayMongo's cut for online GCash / Maya payments (%). The customer pays it, so the shop still gets the full price. */
-export const ONLINE_FEE_PCT = { gcash: 2.23, paymaya: 1.79 };
+/** PayMongo's cut for online GCash payments (%). The customer pays it, so the shop still gets the full price. */
+export const ONLINE_FEE_PCT = { gcash: 2.23 };
 /** ₱250 by GCash → { total: 255.7, fee: 5.7 }: after PayMongo takes its % of the total, the shop receives ₱250. */
 export function withOnlineFee(amount, type) {
   const pct = ONLINE_FEE_PCT[type], a = Number(amount) || 0;
@@ -407,21 +407,21 @@ export function checkStoreInfo(b = {}) {
   return e;
 }
 
-/** Checks a GCash / Maya reference number. GCash: 13 digits. Maya: 6–20 letters or numbers. Returns an error or ''. */
+/** Checks a GCash / GoTyme reference number. GCash: 13 digits. GoTyme: 6–30 letters or numbers. Returns an error or ''. */
 export function checkQrRef(method, raw) {
   const ref = String(raw || '').replace(/[\s-]/g, '').toUpperCase();
   if (!ref) return 'Type the reference number from your payment receipt.';
   if (method === 'gcash') {
     if (!/^\d+$/.test(ref)) return 'A GCash reference number has numbers only.';
     if (ref.length !== 13) return `A GCash reference number has 13 digits (you typed ${ref.length}).`;
-  } else if (!/^[A-Z0-9]{6,20}$/.test(ref)) return 'Type the reference ID exactly as it shows on your Maya receipt (letters and numbers).';
+  } else if (!/^[A-Z0-9]{6,30}$/.test(ref)) return `Type the reference number exactly as it shows on your ${method === 'maya' ? 'Maya' : 'GoTyme'} receipt (letters and numbers).`;
   const digits = ref.replace(/\D/g, '');
   if (new Set(ref).size <= 2 || (digits.length >= 8 && ('01234567890123456789'.includes(digits) || '98765432109876543210'.includes(digits))))
     return 'That reference number doesn’t look right. Please copy it from your receipt.';
   return '';
 }
 /**
- * The time on the customer's GCash / Maya receipt ("HH:MM", 24-hour, Philippine time).
+ * The time on the customer's GCash / GoTyme receipt ("HH:MM", 24-hour, Philippine time).
  * Returns { err } or { paidAt, mins } where mins = how long before `now` the payment was made.
  * A time a little later than now is allowed (phone clocks differ); just after midnight a late-evening time counts as yesterday.
  */

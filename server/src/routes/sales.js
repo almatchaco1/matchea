@@ -47,7 +47,7 @@ r.post('/', ah(async (req, res) => {
   }
   if (discount.type === 'scpwd') Object.assign(t.discount, { idNo: String(discount.idNo).trim().toUpperCase(), idName: String(discount.idName).trim().replace(/\s+/g, ' ') });
   if (approvedBy) t.discount.approvedBy = approvedBy;
-  // GCash / Maya reference: stored without spaces; one receipt can't pay for two sales
+  // GCash / GoTyme reference: stored without spaces; one receipt can't pay for two sales
   const payRef = method === 'cash' ? '' : String(b.pay.ref || '').replace(/[\s-]/g, '').toUpperCase().slice(0, 60);
   if (payRef) {
     const used = await Sale.findOne({ $or: [{ 'pay.ref': payRef }, { 'qrPay.ref': payRef }], status: { $nin: ['void', 'cancelled'] } }, 'no date');

@@ -82,6 +82,6 @@ export function computeTotals(subtotal, discount, vatRate) {
   return { subtotal: sub, total, vat, vatExempt, discount: { type, pct, amount } };
 }
 
-export const PAY_METHODS = { cash: 'Cash', gcash: 'GCash', maya: 'Maya' }; // card payments removed
+export const PAY_METHODS = { cash: 'Cash', gcash: 'GCash', gotyme: 'GoTyme' }; // card payments removed
 // Labels for every stored method (online orders can also be paid by QR Ph etc. through PayMongo)
-export const PAY_LABELS = { ...PAY_METHODS, online: 'Online', unpaid: 'Unpaid', staff: 'Staff drink' };
+export const PAY_LABELS = { ...PAY_METHODS, maya: 'Maya', online: 'Online', unpaid: 'Unpaid', staff: 'Staff drink' };

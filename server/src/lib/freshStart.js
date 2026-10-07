@@ -1,5 +1,5 @@
 // Start fresh: clears sales and everything in Reports so the shop looks brand new.
-// Always kept: the menu, recipes, prices, the ingredient list, settings and the GCash / Maya QR.
+// Always kept: the menu, recipes, prices, the ingredient list, settings and the GCash / GoTyme QR.
 // Options (written as JSON inside server/fresh-start.request, or passed by hand):
 //   stock: 'zero'  → every ingredient's amount on hand becomes 0 (the list, units, costs and low-stock levels stay)
 //   staff: true    → remove every staff account except Owner (the super admin), and the staff activity log

@@ -47,8 +47,8 @@ r.post('/:id/accept', ah(async (req, res) => {
   const cur = await Sale.findOne({ _id: req.params.id, source: 'online' }, 'qrPay total');
   const extra = {};
   if (cur?.qrPay?.method && !cur.qrPay.verified) {
-    // Paid by QR: staff confirms they saw the money in their GCash / Maya first
-    if (req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash / Maya for this payment first, then tap “Payment received”.');
+    // Paid by QR: staff confirms they saw the money in their GCash / GoTyme first
+    if (req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash / GoTyme for this payment first, then tap “Payment received”.');
     Object.assign(extra, { 'qrPay.verified': true, 'qrPay.verifiedBy': req.user.name, paidAt: new Date(), pay: { method: cur.qrPay.method, tendered: cur.total, change: 0, ref: cur.qrPay.ref } });
   }
   const sale = await move(req.params.id, ['new'], { status: 'preparing', acceptedAt: new Date(), cashier: req.user._id, cashierName: req.user.name, stockDeducted: true, ...extra });
@@ -184,7 +184,7 @@ r.post('/:id/cancel', ah(async (req, res) => {
   const paid = !!prev?.paidOnline || !!prev?.qrPay?.verified || !!prev?.qrPay?.method;
   // "Did not pick up" on an unpaid order counts as a no-show (2 in 60 days → that customer pays first next time)
   const noShow = !paid && (req.body?.noShow === true || /did not pick up|didn.t pick up|no.?show/i.test(reason));
-  // A GCash / Maya order not checked yet: staff say whether the money arrived (then it has to go back)
+  // A GCash / GoTyme order not checked yet: staff say whether the money arrived (then it has to go back)
   const qrReceived = !!prev?.qrPay?.method && !prev.qrPay.verified && req.body?.paymentReceived === true;
   const sale = await move(req.params.id, ['new', 'preparing', 'ready'], { status: 'cancelled', cancelledAt: new Date(), cancelReason: reason, noShow,
     refundDue: !!prev?.paidOnline || !!prev?.qrPay?.verified || qrReceived, ...(qrReceived ? { 'qrPay.verified': true, 'qrPay.verifiedBy': req.user.name } : {}) });
@@ -224,11 +224,11 @@ r.post('/:id/refund', ah(async (req, res) => {
   const to = String(b.to || '').replace(/[^\d+]/g, '');
   if (method !== 'paymongo' && !/^(09\d{9}|\+639\d{9})$/.test(to)) errs.to = 'Enter the 11-digit mobile number you sent the money to, like 0917 123 4567.';
   let ref = String(b.ref || '').replace(/[\s-]/g, '').toUpperCase();
-  if (method === 'gcash' || method === 'maya') { const e = checkQrRef(method, ref); if (e) errs.ref = e.replace('your payment receipt', 'the GCash / Maya receipt').replace('your receipt', 'the receipt').replace('your Maya receipt', 'the Maya receipt'); }
+  if (['gcash', 'gotyme', 'maya'].includes(method)) { const e = checkQrRef(method, ref); if (e) errs.ref = e.replace('your payment receipt', 'the refund receipt').replace(/your (GoTyme |Maya )?receipt/, 'the $1receipt'); }
   else if (ref && !/^[A-Z0-9_]{4,60}$/.test(ref)) errs.ref = 'Letters and numbers only.';
   const shot = typeof b.shot === 'string' ? b.shot : '';
   if (shot && (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(shot) || shot.length > 700000)) errs.shot = 'That picture couldn’t be used. Try another screenshot.';
-  if ((method === 'gcash' || method === 'maya') && !shot) errs.shot = 'Attach the screenshot of the refund from your GCash / Maya app. The customer sees it as proof.';
+  if (['gcash', 'gotyme', 'maya'].includes(method) && !shot) errs.shot = 'Attach the screenshot of the refund from your GCash / GoTyme app. The customer sees it as proof.';
   if (Object.keys(errs).length) throw new HttpError(400, Object.values(errs)[0], errs);
   const note = String(b.note || '').trim().slice(0, 200);
   const amount = refundAmount(cur);
@@ -240,7 +240,7 @@ r.post('/:id/refund', ah(async (req, res) => {
     const m = /^data:(image\/\w+);base64,(.+)$/.exec(shot);
     await Asset.findOneAndUpdate({ key: `refund-${sale._id}` }, { type: m[1], data: Buffer.from(m[2], 'base64') }, { upsert: true });
   }
-  const label = { gcash: 'GCash', maya: 'Maya', paymongo: 'your original payment method' }[method] || method;
+  const label = { gcash: 'GCash', gotyme: 'GoTyme', maya: 'Maya', paymongo: 'your original payment method' }[method] || method;
   const where = method === 'paymongo' ? 'to your original payment method (it can take 5–10 banking days to show)' : `to your ${label} ${to.replace(/^(\d{4})(\d{3})(\d{4})$/, '$1 $2 $3')}`;
   await postToCustomer(sale.customerId, { text: `We’ve sent your refund of ₱${amount.toFixed(2)} for order #${String(sale.no).padStart(3, '0')} ${where}.${ref ? ` Reference: ${ref}.` : ''} You can see the proof on your order page. Sorry again!`, staffName: req.user.name, orderNo: sale.no, orderCode: sale.trackCode || '' })
     .catch((e) => console.error('Chat message failed:', e.message));
@@ -265,7 +265,7 @@ r.post('/:id/restore', ah(async (req, res) => {
   if (!cur.cancelledAt || Date.now() - cur.cancelledAt > RESTORE_DAYS * 864e5) throw new HttpError(409, `This order was cancelled more than ${RESTORE_DAYS} days ago. Ask the customer to order again instead.`);
   if (cur.refund?.at) throw new HttpError(409, 'The money for this order was already refunded. Ask the customer to order again instead.');
   const qrUnchecked = cur.qrPay?.method && !cur.qrPay.verified;
-  if (qrUnchecked && req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash / Maya for this payment first, then tick “I found the payment”.', { paymentOk: 'Tick this after checking.' });
+  if (qrUnchecked && req.body?.paymentOk !== true) throw new HttpError(400, 'Check your GCash / GoTyme for this payment first, then tick “I found the payment”.', { paymentOk: 'Tick this after checking.' });
   // A free drink that was given back on cancel is used again
   if (cur.stampsUsed > 0 && cur.stampsReturned) {
     if (!cur.customerId) throw new HttpError(409, 'This order used a free drink that can’t be taken again.');
@@ -281,7 +281,7 @@ r.post('/:id/restore', ah(async (req, res) => {
   if (!sale) throw new HttpError(409, 'This order just changed. The list will refresh.');
   await applyUsage(usageMap(sale.usage), -1, { reason: 'sale', by: req.user.name, sale: sale._id, note: 'Online order restored' });
   const no = String(sale.no).padStart(3, '0');
-  const paidBy = sale.qrPay?.method ? { gcash: 'GCash', maya: 'Maya' }[sale.qrPay.method] || 'online' : '';
+  const paidBy = sale.qrPay?.method ? { gcash: 'GCash', gotyme: 'GoTyme', maya: 'Maya' }[sale.qrPay.method] || 'online' : '';
   const text = String(req.body?.message || '').trim().slice(0, 500)
     || `Good news! ${paidBy && qrUnchecked ? `We found your ${paidBy} payment. ` : ''}Order #${no} is back on and we’re making it now. Sorry for the trouble!`;
   await postToCustomer(sale.customerId, { text, staffName: req.user.name, orderNo: sale.no, orderCode: sale.trackCode || '', solve: req.body?.solve !== false })
