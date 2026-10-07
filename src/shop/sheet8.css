@@ -1,0 +1,102 @@
+/* ===== Drink customizer v8: a calm "drink studio" ===== */
+.shop .sheet7{--ease:cubic-bezier(.22,1,.36,1)}
+
+/* --- stage: the drink on a slowly turning halo, follows the mouse a little --- */
+.shop .s8-stage{--px:0;--py:0;background-position:calc(50% + var(--px) * 14px) calc(50% + var(--py) * 10px)!important;transition:background-position .6s var(--ease)}
+.shop .s8-stage img,.shop .s8-stage .hfx-tint{translate:calc(var(--px) * -9px) calc(var(--py) * -6px);transition:transform .9s cubic-bezier(.22,1.15,.36,1),translate .6s var(--ease)}
+.shop .s8-halo{position:absolute;left:50%;top:50%;width:min(78%,420px);aspect-ratio:1;translate:-50% -54%;border-radius:50%;pointer-events:none;
+  background:conic-gradient(from 0deg,rgba(255,255,255,0),rgba(255,255,255,.55) 12%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 50%,rgba(255,255,255,.4) 62%,rgba(255,255,255,0) 76%);
+  -webkit-mask:radial-gradient(circle,transparent 63%,#000 64% 65.5%,transparent 66.5%);mask:radial-gradient(circle,transparent 63%,#000 64% 65.5%,transparent 66.5%);
+  animation:s8Spin 18s linear infinite}
+@keyframes s8Spin{to{rotate:360deg}}
+.shop .s8-floor{position:absolute;left:50%;bottom:6%;width:46%;height:7%;translate:-50% 0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(30,40,20,.28),rgba(30,40,20,0));filter:blur(2px);transition:width .9s cubic-bezier(.22,1.15,.36,1),opacity .6s}
+.shop .s8-stage.size-0 .s8-floor{width:40%}.shop .s8-stage.size-2 .s8-floor{width:52%}
+
+/* --- recipe strip along the bottom of the photo --- */
+.shop .s8-recipe{position:absolute;left:14px;right:14px;bottom:14px;z-index:4;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.shop .s8-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px 7px 9px;border-radius:999px;font-size:.8rem;font-weight:800;color:#22340F;
+  background:rgba(255,251,242,.86);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);box-shadow:0 0 0 1px rgba(46,66,32,.1),0 10px 20px -14px rgba(30,40,20,.6);
+  animation:s8Chip .6s var(--ease) both}
+.shop .s8-chip svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.shop .s8-chip.add{background:#22340F;color:#FFF8E8}
+.shop .s8-mini{position:relative;width:10px;height:15px;border-radius:2px 2px 4px 4px;box-shadow:inset 0 0 0 1.5px #22340F;overflow:hidden}
+.shop .s8-mini::after{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(var(--lv) * 100%);background:linear-gradient(180deg,#F1C35A,#D9962E)}
+@keyframes s8Chip{from{opacity:0;transform:translateY(10px) scale(.92);filter:blur(4px)}}
+
+/* --- size: two cards with a highlight that glides between them --- */
+.shop .s8-sizes{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(var(--n),1fr);gap:10px;padding:6px;border-radius:24px;background:color-mix(in srgb,var(--green) 6%,var(--card));box-shadow:inset 0 0 0 1px var(--line)}
+.shop .s8-glide{position:absolute;z-index:-1;top:6px;bottom:6px;left:6px;width:calc((100% - 12px - (var(--n) - 1) * 10px) / var(--n));border-radius:18px;background:var(--card);
+  box-shadow:0 0 0 2px var(--green),0 14px 26px -16px rgba(22,51,15,.7);transform:translateX(calc(var(--at) * (100% + 10px)));transition:transform .55s var(--ease)}
+.shop .s8-sizes>.s8-size{min-height:96px;display:flex;flex-direction:row;align-items:flex-end;justify-content:center;gap:14px;padding:14px 12px;background:transparent!important;box-shadow:none!important;border-radius:18px}
+.shop .s8-sil{display:flex;align-items:flex-end;height:46px}
+.shop .s8-sil svg{width:calc(var(--h) * .8);height:var(--h);fill:color-mix(in srgb,var(--green) 10%,transparent);stroke:var(--ink-2);stroke-width:1.6;stroke-linejoin:round;transition:fill .4s,stroke .3s,transform .55s var(--ease);transform-origin:50% 100%}
+.shop .s8-size.on .s8-sil svg{fill:color-mix(in srgb,var(--green) 22%,transparent);stroke:var(--green);transform:scale(1.06)}
+.shop .s8-size-t{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.shop .s8-size-t b{font-size:1rem}
+.shop .s8-size-t small{font-size:.8rem;color:var(--ink-2);font-weight:700}
+.shop .s8-size.on .s8-size-t small{color:var(--green)}
+.shop .s8-size.on svg{animation:none}
+
+/* --- sweetness: a honey slider --- */
+.shop .s8-sweet{padding:4px 2px 0}
+.shop .s8-track{position:relative;height:44px;margin:0 14px;cursor:pointer;touch-action:none}
+.shop .s8-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:999px;background:color-mix(in srgb,var(--green) 8%,var(--card));box-shadow:inset 0 0 0 1px var(--line)}
+.shop .s8-fill{position:absolute;left:0;top:50%;height:10px;margin-top:-5px;width:calc(var(--p) * 100%);border-radius:999px;
+  background:linear-gradient(90deg,#F7DD98,#EDB54A 60%,#D58C22);box-shadow:0 0 14px rgba(237,181,74,.45);transition:width .55s var(--ease)}
+.shop .s8-tick{position:absolute;top:50%;left:calc(var(--k) * 100%);width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 2px var(--line);transition:box-shadow .3s,background .3s}
+.shop .s8-tick.on{background:#FFF6DC;box-shadow:inset 0 0 0 2px #D58C22}
+.shop .s8-thumb{position:absolute;top:50%;left:calc(var(--p) * 100%);width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50% 50% 50% 0;rotate:-45deg;
+  background:radial-gradient(circle at 35% 35%,#FFF2C8,#F1BE55 45%,#CE8420);box-shadow:0 10px 18px -8px rgba(160,95,10,.7),inset 0 -3px 6px rgba(150,80,0,.25);
+  transition:left .55s var(--ease),transform .2s;display:grid;place-items:center}
+.shop .s8-thumb b{rotate:45deg;font-size:.64rem;font-weight:900;color:#5A3508;animation:s8Num .45s var(--ease)}
+@keyframes s8Num{from{opacity:0;transform:translateY(4px) scale(.8)}}
+.shop .s8-track:active .s8-thumb{transform:scale(1.12)}
+.shop .s8-stops{display:block!important;position:relative;height:32px;margin:2px 14px 0}
+.shop .s8-stops>.s7-sw{position:absolute;top:0;left:calc(var(--k) * 100%);translate:-50% 0;width:auto!important;min-width:46px;padding:6px 4px!important;border-radius:10px!important;background:transparent!important;box-shadow:none!important;
+  font-size:.82rem;font-weight:800;color:var(--ink-2)}
+.shop .s8-stops>.s7-sw.on{color:#B36F12}
+.shop .s8-stops>.s7-sw:hover{color:var(--ink)}
+
+/* --- add-ons: a card with a switch --- */
+.shop .s8-addon{grid-template-columns:auto 1fr auto!important;padding:12px 14px!important;border-radius:20px!important}
+.shop .s8-ad-ico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--green) 10%,var(--card));transition:background .3s,transform .5s var(--ease)}
+.shop .s8-ad-ico svg{width:22px;height:22px;fill:none;stroke:var(--green);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.shop .s8-addon.on .s8-ad-ico{background:var(--green);transform:rotate(-12deg)}
+.shop .s8-addon.on .s8-ad-ico svg{stroke:#FFF8E8}
+.shop .s8-ad-t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.shop .s8-switch{width:46px!important;height:28px!important;border-radius:999px!important;position:relative;background:color-mix(in srgb,var(--ink) 12%,transparent)!important;box-shadow:none!important;transition:background .35s var(--ease)!important;animation:none!important}
+.shop .s8-switch i{position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .45s var(--ease)}
+.shop .s8-addon.on .s8-switch{background:var(--green)!important}
+.shop .s8-addon.on .s8-switch i{transform:translateX(18px)}
+
+/* --- dark mode --- */
+@media (prefers-color-scheme:dark){
+  .shop .s8-chip{background:rgba(20,26,16,.82);color:#E8F1E0;box-shadow:0 0 0 1px rgba(255,255,255,.1)}
+  .shop .s8-chip.add{background:#9CCB7A;color:#10200B}
+  .shop .s8-mini{box-shadow:inset 0 0 0 1.5px #E8F1E0}
+  .shop .s8-sizes{background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .shop .s8-glide{background:rgba(156,203,122,.12);box-shadow:0 0 0 2px #9CCB7A}
+  .shop .s8-size.on .s8-sil svg{stroke:#9CCB7A}
+  .shop .s8-size.on .s8-size-t small{color:#C9E3B0}
+  .shop .s8-track::before{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .shop .s8-tick{background:#1A2114;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+  .shop .s8-stops>.s7-sw.on{color:#F1C35A}
+  .shop .s8-ad-ico{background:rgba(156,203,122,.12)}
+  .shop .s8-ad-ico svg{stroke:#C9E3B0}
+  .shop .s8-addon.on .s8-ad-ico{background:#9CCB7A}
+  .shop .s8-addon.on .s8-ad-ico svg{stroke:#10200B}
+  .shop .s8-switch{background:rgba(255,255,255,.14)!important}
+  .shop .s8-addon.on .s8-switch{background:#9CCB7A!important}
+  .shop .s8-floor{background:radial-gradient(closest-side,rgba(0,0,0,.45),rgba(0,0,0,0))}
+}
+@media (max-width:560px){
+  .shop .s8-recipe{left:10px;right:10px;bottom:10px}
+  .shop .s8-chip{font-size:.74rem;padding:6px 10px 6px 8px}
+  .shop .s8-sizes>.s8-size{min-height:84px;gap:10px}
+  .shop .s8-stops>.s7-sw{min-width:40px;font-size:.78rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .shop .s8-halo{animation:none}
+  .shop .s8-glide,.shop .s8-fill,.shop .s8-thumb,.shop .s8-switch i{transition:none}
+}

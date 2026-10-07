@@ -6,9 +6,10 @@ import StampCard from './StampCard';
 import { CountUp, photoFrom, morphIn, morphOut, useScrollIn, calm } from './fx';
 import { TabInk } from '../lib/motion';
 import { sceneVar, sceneBg } from '../lib/drinkImages';
-import { Doodle, LiveCup, HeroFx, CupTint, HoneyLevel } from './art';
+import { Doodle, HeroFx, CupTint, HoneyLevel } from './art';
 import { ShareDrink } from './share';
 import './sheetfx.css';
+import './sheet8.css';
 
 // Keep the picked category chip in view (centered) on phones
 const slideInto = (b) => { const nav = b.parentElement; nav.scrollTo?.({ left: b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); };
@@ -234,6 +235,28 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
   // Where the cup sits on the photo (for the honey level); measured again if the window changes size
   const [spot0, setSpot0] = useState(null);
   useLayoutEffect(() => { const f = () => setSpot0(cupSpot(0)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // The photo follows the mouse a little (depth), and settles back when the mouse leaves
+  const stage = useRef(null);
+  const tilt = (e) => {
+    if (e.pointerType !== 'mouse' || calm() || !stage.current) return;
+    const r = stage.current.getBoundingClientRect();
+    stage.current.style.setProperty('--px', (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
+    stage.current.style.setProperty('--py', (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
+  };
+  const untilt = () => { stage.current?.style.setProperty('--px', 0); stage.current?.style.setProperty('--py', 0); };
+  // Sweetness slider: tap a stop, or drag the honey drop along the track
+  const track = useRef(null);
+  const swAt = Math.max(0, menu.sweetness.indexOf(L.sweet));
+  const dragging = useRef(false);
+  const pick = (e) => {
+    const r = track.current?.getBoundingClientRect();
+    if (!r) return;
+    const k = Math.round(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (menu.sweetness.length - 1));
+    if (menu.sweetness[k] !== L.sweet) set({ sweet: menu.sweetness[k] });
+  };
+  const dragStart = (e) => { dragging.current = true; e.currentTarget.setPointerCapture?.(e.pointerId); pick(e); };
+  const dragMove = (e) => { if (dragging.current) pick(e); };
+  const dragEnd = () => { dragging.current = false; };
   const close = () => { morphOut(hero.current); onClose(); }; // …and shrinks back when it closes
   useEffect(() => { if (sharing) return undefined; const k = (e) => e.key === 'Escape' && close(); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, [onClose, sharing]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -244,14 +267,18 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
     <div className="shop-scrim" onMouseDown={(e) => !sharing && e.target === e.currentTarget && close()}>
       <div className="sheet sheet7" role="dialog" aria-modal="true" aria-label={item.name}>
         <button className="sheet-x" onClick={close} aria-label="Close">×</button>
-        <div className={`sheet-hero size-${sizeAt} ${sceneVar(item.image) ? 'has-scene' : ''}`} style={sceneVar(item.image)}>
+        <div ref={stage} className={`sheet-hero s8-stage size-${sizeAt} ${sceneVar(item.image) ? 'has-scene' : ''}`} style={sceneVar(item.image)} onPointerMove={tilt} onPointerLeave={untilt}>
+          <span className="s8-halo" aria-hidden="true" />
+          <span className="s8-floor" aria-hidden="true" />
           {item.image && <img ref={hero} src={item.image} alt="" />}
-          {item.hasSizes && menu.sizes.length > 1 && <span className="sh-size" key={x.sizeId}>{menu.sizes[sizeAt]?.label}</span>}
-          <span className="sh-tags">{picked.map((a) => <i key={a._id}>+ {a.label}</i>)}</span>
           {item.sweet && <HoneyLevel img={hero} level={sweetPct(L.sweet)} spot={spot0} />}
           {fx && <CupTint key={`t${fx.n}`} fx={fx} img={hero} />}
           {fx && <HeroFx key={fx.n} {...fx} />}
-          <LiveCup name={item.name} sweet={item.sweet ? L.sweet : null} sizeAt={item.hasSizes ? sizeAt : 0} sizes={item.hasSizes ? menu.sizes.length : 1} sizeLabel={menu.sizes[sizeAt]?.label || ''} addons={picked} pulse={fx?.n || 0} />
+          <div className="s8-recipe" aria-label="Your drink">
+            {item.hasSizes && menu.sizes.length > 1 && <span className="s8-chip" key={`s${sizeAt}`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={CUP_ICON} /></svg>{menu.sizes[sizeAt]?.label}</span>}
+            {item.sweet && <span className="s8-chip sw" key={`w${L.sweet}`}><i className="s8-mini" style={{ '--lv': sweetPct(L.sweet) / 100 }} aria-hidden="true" />{L.sweet} sweet</span>}
+            {picked.map((a) => <span className="s8-chip add" key={a._id}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>{a.label}</span>)}
+          </div>
         </div>
         <div className="sheet-b">
           <div className="s7-title">
@@ -278,14 +305,14 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
           {item.hasSizes && menu.sizes.length > 1 && (
             <div className="grp s7-grp">
               <h4>Size</h4>
-              <div className="s7-sizes" role="radiogroup" aria-label="Size">
+              <div className="s7-sizes s8-sizes" role="radiogroup" aria-label="Size" style={{ '--n': menu.sizes.length, '--at': sizeAt }}>
+                <span className="s8-glide" aria-hidden="true" />
                 {menu.sizes.map((sz, k) => {
                   const on = x.sizeId === sz._id;
                   return (
-                    <button key={sz._id} role="radio" aria-checked={on} className={`s7-size ${on ? 'on' : ''}`} onClick={() => set({ sizeId: sz._id })}>
-                      <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 22 + k * 7, height: 22 + k * 7 }}><path d={CUP_ICON} /></svg>
-                      <b>{sz.label}</b>
-                      <small>{+sz.price ? `+${peso(sz.price)}` : 'Included'}</small>
+                    <button key={sz._id} role="radio" aria-checked={on} className={`s7-size s8-size ${on ? 'on' : ''}`} onClick={() => set({ sizeId: sz._id })}>
+                      <span className="s8-sil" style={{ '--h': `${34 + k * 12}px` }} aria-hidden="true"><svg viewBox="0 0 24 30" preserveAspectRatio="none"><path d="M3 4h18l-2.2 23a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8L3 4Z" /><path d="M2 4h20" /></svg></span>
+                      <span className="s8-size-t"><b>{sz.label}</b><small>{+sz.price ? `+${peso(sz.price)}` : 'Included'}</small></span>
                     </button>
                   );
                 })}
@@ -296,16 +323,18 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
           {item.sweet && (
             <div className="grp s7-grp">
               <h4>Sweetness <i>{sweetWord(L.sweet)}</i></h4>
-              <div className="s7-sweet" role="radiogroup" aria-label="Sweetness">
-                {menu.sweetness.map((sw) => {
-                  const on = L.sweet === sw;
-                  return (
-                    <button key={sw} role="radio" aria-checked={on} className={`s7-sw ${on ? 'on' : ''}`} onClick={() => set({ sweet: sw })} style={{ '--fill': `${sweetPct(sw)}%` }}>
-                      <span className="s7-sw-cup" aria-hidden="true"><i /></span>
-                      <b>{sw}</b>
-                    </button>
-                  );
-                })}
+              <div className="s8-sweet" style={{ '--p': swAt / Math.max(1, menu.sweetness.length - 1), '--lv': sweetPct(L.sweet) / 100 }}>
+                <div className="s8-track" ref={track} onPointerDown={dragStart} onPointerMove={dragMove} onPointerUp={dragEnd} onPointerCancel={dragEnd} aria-hidden="true">
+                  <i className="s8-fill" />
+                  {menu.sweetness.map((sw, k) => <i key={sw} className={`s8-tick ${k <= swAt ? 'on' : ''}`} style={{ '--k': k / Math.max(1, menu.sweetness.length - 1) }} />)}
+                  <span className="s8-thumb"><b key={L.sweet}>{sweetPct(L.sweet)}%</b></span>
+                </div>
+                <div className="s7-sweet s8-stops" role="radiogroup" aria-label="Sweetness">
+                  {menu.sweetness.map((sw, k) => {
+                    const on = L.sweet === sw;
+                    return <button key={sw} role="radio" aria-checked={on} className={`s7-sw ${on ? 'on' : ''}`} style={{ '--k': k / Math.max(1, menu.sweetness.length - 1) }} onClick={() => set({ sweet: sw })}>{sw}</button>;
+                  })}
+                </div>
               </div>
             </div>
           )}
@@ -317,10 +346,10 @@ export function ItemSheet({ item, menu, initial, onClose, onSave, onFavorite, wh
                 {addons.map((a) => {
                   const on = L.addonIds.includes(a._id);
                   return (
-                    <button key={a._id} aria-pressed={on} className={`s7-addon ${on ? 'on' : ''}`} onClick={() => set({ addonIds: on ? L.addonIds.filter((i) => i !== a._id) : [...L.addonIds, a._id] })}>
-                      <span className="s7-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg></span>
-                      <b>{a.label}</b>
-                      <small>+{peso(a.price)}</small>
+                    <button key={a._id} aria-pressed={on} className={`s7-addon s8-addon ${on ? 'on' : ''}`} onClick={() => set({ addonIds: on ? L.addonIds.filter((i) => i !== a._id) : [...L.addonIds, a._id] })}>
+                      <span className="s8-ad-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v8M12 10c-4.5 1.6-5.5 7.5-3 11.5M12 10c-2.2 2-2.5 7.5-1 11.5M12 10v11.5M12 10c2.2 2 2.5 7.5 1 11.5M12 10c4.5 1.6 5.5 7.5 3 11.5" /></svg></span>
+                      <span className="s8-ad-t"><b>{a.label}</b><small>+{peso(a.price)}</small></span>
+                      <span className="s7-check s8-switch" aria-hidden="true"><i /></span>
                     </button>
                   );
                 })}
