@@ -5,6 +5,7 @@ import { calm } from './fx';
 import { greetIcon } from '../lib/decor';
 import { peso } from '../lib/format';
 import { call } from './api';
+import './landing9.css';
 
 // Logos for the "Pay your way" band
 const PAY_LOGO = {
@@ -24,11 +25,12 @@ export default function Landing({ menu, err, go, me }) {
   const dlv = menu?.shop?.delivery; // set only when the shop has delivery turned on
   const freeFrom = +dlv?.freeDrinks || 0;
   const priceOf = (it) => it.price + (it.hasSizes ? +menu.sizes[0]?.price || 0 : 0);
+  const minPrice = items.length ? Math.min(...items.map(priceOf)) : 0;
 
   return (
-    <div className="ld ld8">
-      <section className="ld-hero">
-        <div className="ld-copy">
+    <div className="ld ld8 ld9">
+      <section className="ld-hero hx">
+        <div className="ld-copy hx-copy">
           {menu?.shop?.greeting && <p className={`ld-season s-${greetIcon(menu.shop.decor)}`}><i aria-hidden="true" />{menu.shop.greeting}</p>}
           <div className="ld8-top">
             <p className="ld-eyebrow"><span className="ld-leaf" aria-hidden="true" />{menu?.shop?.name || 'Matchéa'} · Order ahead</p>
@@ -36,32 +38,44 @@ export default function Landing({ menu, err, go, me }) {
           </div>
           <h1><span className="ld-line"><span>Good matcha,</span></span><br /><span className="ld-line"><em>good mood.</em></span></h1>
           <p className="ld-lede">Whisked-to-order matcha lattes, from classic to Putobumbong. {dlv ? 'Order on your phone, then pick it up at the counter or have it delivered to your door by Lalamove.' : 'Order on your phone, pay online or at the counter, and skip the line at pickup.'}</p>
-          <div className="ld-ctas">
-            <a href={start} className="sh-btn" onClick={nav(go, start)}>{me ? 'Start your order' : 'Create an account'}</a>
+          <div className="ld-ctas hx-ctas">
+            <a href={start} className="sh-btn hx-go" onClick={nav(go, start)}>{me ? 'Start your order' : 'Create an account'}<span className="hx-go-i" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span></a>
             {!me && <a href="/signin" className="sh-btn ghost" onClick={nav(go, '/signin')}>I already have one</a>}
           </div>
-          <ul className="ld-perks">
-            {dlv
-              ? <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg><span><b>Pickup or delivery</b>{freeFrom ? `Free delivery from ${freeFrom} drinks` : 'Delivered by Lalamove'}</span></li>
-              : <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8Z M9 8a3 3 0 0 1 6 0" /></svg><span><b>Pickup only</b>Skip the line</span></li>}
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 5 6.5 5 10a5 5 0 0 1-10 0c0-3.5 2-6 5-10Z" /></svg><span><b>Oatside milk</b>In every latte</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.3 6L12 16.4 6.6 19.4l1.3-6L3.4 9.3l6-.7Z" /></svg><span><b>10th drink free</b>With your stamp card</span></li>
-          </ul>
-          {rating?.avg != null && (
-            <p className="ld-rating" aria-label={`Rated ${rating.avg} out of 5 by ${rating.count} customers`}>
-              <span className="ld-rating-stars" aria-hidden="true"><i style={{ width: `${(rating.avg / 5) * 100}%` }}>★★★★★</i>★★★★★</span>
-              <b>{rating.avg.toFixed(1)}</b> from {rating.count.toLocaleString('en-PH')} customer ratings
-            </p>
+          {items.length > 0 && (
+            <div className="hx-proof">
+              <span className="hx-stack" aria-hidden="true">{strip.filter((x) => x.image).slice(0, 4).map((x) => <img key={x._id} src={x.image} alt="" />)}</span>
+              <span className="hx-proof-t">
+                <span><b>{items.length} drinks</b> from {peso(minPrice)}</span>
+                {rating?.avg != null
+                  ? <small aria-label={`Rated ${rating.avg} out of 5 by ${rating.count} customers`}><span className="ld-rating-stars" aria-hidden="true"><i style={{ width: `${(rating.avg / 5) * 100}%` }}>★★★★★</i>★★★★★</span> {rating.avg.toFixed(1)} · {rating.count.toLocaleString('en-PH')} ratings</small>
+                  : <small>Made fresh for every order</small>}
+              </span>
+            </div>
           )}
+          <ul className="hx-perks">
+            {dlv
+              ? <li><span className="hx-perk-i"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M9 17h6l-2-7H9M13 10h4l2 4M15 6h3" /></svg></span><b>Pickup or delivery</b><small>{freeFrom ? `Free delivery from ${freeFrom} drinks` : 'Delivered by Lalamove'}</small></li>
+              : <li><span className="hx-perk-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1.2 11.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8Z M9 8a3 3 0 0 1 6 0" /></svg></span><b>Pickup only</b><small>Skip the line</small></li>}
+            <li><span className="hx-perk-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 5 6.5 5 10a5 5 0 0 1-10 0c0-3.5 2-6 5-10Z" /></svg></span><b>Oatside milk</b><small>In every latte</small></li>
+            <li><span className="hx-perk-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.3 6L12 16.4 6.6 19.4l1.3-6L3.4 9.3l6-.7Z" /></svg></span><b>10th drink free</b><small>With your stamp card</small></li>
+          </ul>
           {menu && !menu.shop.open && <p className="ld-closed">{menu.shop.message || 'Online ordering is closed right now. You can still browse and sign up.'}</p>}
         </div>
         <Showcase items={items} priceOf={priceOf} start={start} go={go} count={items.length} />
       </section>
 
       {items.length > 0 && (
-        <div className="ld-marquee" aria-hidden="true">
-          <div className="ld-track">
-            {[0, 1].map((k) => <span key={k}>{items.map((it) => <em key={it._id + k}>{it.name.replace(/ Matcha Latte$/, '')}<i>✦</i></em>)}</span>)}
+        <div className="hx-ribbons" aria-hidden="true">
+          <div className="hx-rib hx-rib2">
+            <div className="ld-track">
+              {[0, 1].map((k) => <span key={k}>{[0, 1].flatMap((j) => ['Whisked to order', 'Oatside milk', 'Order ahead', '10th drink free', dlv ? 'Pickup or delivery' : 'Skip the line'].map((t) => <em key={t + j + k}>{t}<i>✦</i></em>))}</span>)}
+            </div>
+          </div>
+          <div className="hx-rib hx-rib1">
+            <div className="ld-track">
+              {[0, 1].map((k) => <span key={k}>{items.map((it) => <em key={it._id + k}>{it.name.replace(/ Matcha Latte$/, '')}<i>✦</i></em>)}</span>)}
+            </div>
           </div>
         </div>
       )}
@@ -164,21 +178,22 @@ export default function Landing({ menu, err, go, me }) {
   );
 }
 
-/** Home hero: drinks stand in a row in front of a matcha arch; the middle one is featured and they take turns. */
+/** Home hero: a deep-green stage; the featured drink stands in the middle and they take turns. */
 function Showcase({ items, priceOf, start, go, count }) {
   const list = items.filter((i) => i.image);
   const n = list.length;
   const first = Math.max(0, list.findIndex((i) => /putobumbong/i.test(i.name)));
   const [cur, setCur] = useState(null);
   const [paused, setPaused] = useState(false);
+  const still = calm();
   const at = cur ?? first;
   useEffect(() => {
-    if (n < 2 || paused || calm()) return undefined;
+    if (n < 2 || paused || still) return undefined;
     const t = setTimeout(() => setCur((c) => ((c ?? first) + 1) % n), 4200);
     return () => clearTimeout(t);
-  }, [at, n, paused, first]);
+  }, [at, n, paused, first, still]);
   const swipe = useRef(null);
-  if (!n) return <div className="ld-show"><div className="ld-stage"><div className="ld-arch"><i /></div><div className="ld-floor" /></div></div>;
+  if (!n) return <div className="hx-show"><div className="hx-panel" /></div>;
   const pos = (i) => { const d = (((i - at) % n) + n) % n; return d === 0 ? 'c' : d === 1 ? 'r' : d === n - 1 ? 'l' : 'h'; };
   const move = (k) => setCur((((at + k) % n) + n) % n);
   const it = list[at];
@@ -192,33 +207,38 @@ function Showcase({ items, priceOf, start, go, count }) {
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - s0.t < 800) { setPaused(true); move(dx < 0 ? 1 : -1); }
   };
   return (
-    <div className="ld-show" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="ld-stage" onPointerDown={down} onPointerUp={up} onPointerCancel={() => { swipe.current = null; }}>
-        <div className="ld-arch" aria-hidden="true"><i /></div>
-        <span className="ld-kanji" lang="ja" aria-hidden="true">抹茶</span>
-        <div className="ld-floor" aria-hidden="true" />
+    <div className="hx-show" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className={`hx-panel ${paused || still ? 'paused' : ''}`} onPointerDown={down} onPointerUp={up} onPointerCancel={() => { swipe.current = null; }}>
+        <span className="hx-rings" aria-hidden="true"><i /><i /><i /></span>
+        <span className="hx-kanji" lang="ja" aria-hidden="true">抹茶</span>
+        <span className="hx-floor" aria-hidden="true" />
         {list.map((x, i) => {
           const p = pos(i);
           return (
-            <button key={x._id} type="button" className={`ld-cup pos-${p}`} tabIndex={-1} aria-hidden="true"
+            <button key={x._id} type="button" className={`hx-cup pos-${p}`} tabIndex={-1} aria-hidden="true"
               onClick={() => { if (p === 'l') move(-1); else if (p === 'r') move(1); }}>
               <img src={x.image} alt="" loading={p === 'h' ? 'lazy' : 'eager'} />
             </button>
           );
         })}
-        <span className="ld-spark s1" aria-hidden="true">✦</span><span className="ld-spark s2" aria-hidden="true">✦</span><span className="ld-spark s3" aria-hidden="true">✧</span>
-        <span className="ld-badge" aria-hidden="true"><b>{count}</b> drinks<br />on the menu</span>
+        <span className="hx-spark s1" aria-hidden="true">✦</span><span className="hx-spark s2" aria-hidden="true">✧</span><span className="hx-spark s3" aria-hidden="true">✦</span>
+        <div className="hx-cap">
+          <a key={it._id} href={start} className="hx-cap-t" onClick={(e) => { e.preventDefault(); go(start); }} aria-live="polite">
+            <small>{it.bestSeller ? '★ Best seller' : 'Featured'}</small>
+            <b>{name}</b>
+          </a>
+          <span key={`p${it._id}`} className="hx-price">{peso(priceOf(it))}</span>
+          <span className="hx-navs">
+            <button type="button" onClick={() => move(-1)} aria-label="Previous drink"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
+            <button type="button" onClick={() => move(1)} aria-label="Next drink"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
+          </span>
+          <span className="hx-prog" aria-hidden="true">{list.map((x, i) => <i key={x._id} className={i === at ? 'on' : ''}>{i === at && <b key={`f${at}`} />}</i>)}</span>
+        </div>
       </div>
-      <div className="ld-feat">
-        <button type="button" className="ld-nav" onClick={() => move(-1)} aria-label="Previous drink">‹</button>
-        <a key={it._id} href={start} className="ld-cap" onClick={(e) => { e.preventDefault(); go(start); }} aria-live="polite">
-          <small>{it.bestSeller ? '★ Best seller' : 'Featured'}</small>
-          <b>{name}</b>
-          <span>{peso(priceOf(it))}</span>
-        </a>
-        <button type="button" className="ld-nav" onClick={() => move(1)} aria-label="Next drink">›</button>
-      </div>
-      <div className="ld-dots" aria-hidden="true">{list.map((x, i) => <i key={x._id} className={i === at ? 'on' : ''} />)}</div>
+      <span className="hx-seal" aria-hidden="true">
+        <svg viewBox="0 0 120 120"><defs><path id="hxRing" d="M60 60m-45 0a45 45 0 1 1 90 0a45 45 0 1 1-90 0" /></defs><text><textPath href="#hxRing">WHISKED TO ORDER · ORDER AHEAD · </textPath></text></svg>
+        <span><b>{count}</b>drinks</span>
+      </span>
     </div>
   );
 }
