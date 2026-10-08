@@ -382,3 +382,5 @@ body:has(.scrim) .sb-handle{z-index:40}
 .hm-bar:hover i{filter:brightness(1.12)}
 .cu10-free{justify-content:center}
 .cu-table td[data-l="Mobile no."],.cu-table td[data-l="Joined"]{white-space:nowrap}
+/* drink pop-up: the shared drink stage (same animations as the customer site) */
+.im10-hero .dfx{inset:5% 3% 15%}

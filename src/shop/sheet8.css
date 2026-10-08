@@ -100,3 +100,9 @@
   .shop .s8-halo{animation:none}
   .shop .s8-glide,.shop .s8-fill,.shop .s8-thumb,.shop .s8-switch i{transition:none}
 }
+
+/* v11: the shared drink stage lives in this photo area */
+.shop .sheet-hero.dfx-host .dfx{inset:6% 4% 12%}
+.shop .sheet-hero.dfx-host .dfx-body img{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;padding:0 !important;object-fit:contain !important;translate:none !important}
+.shop .sheet-hero.dfx-host .dfx-cup{translate:calc(var(--px,0) * -9px) calc(var(--py,0) * -6px);transition:transform .85s cubic-bezier(.34,1.5,.64,1),translate .6s cubic-bezier(.22,1,.36,1)}
+@media (min-width:900px){.shop .sheet7 .sheet-hero.dfx-host .dfx{inset:9% 6% 13%}}

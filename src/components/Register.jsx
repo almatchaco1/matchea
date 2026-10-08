@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import DrinkStage from '../lib/DrinkStage';
 import { api } from '../lib/api';
 import { peso, pad, toneFor } from '../lib/format';
 import { priceLine, computeTotals, r2, PAY_METHODS } from '../shared/pricing.mjs';
@@ -432,13 +433,24 @@ function ItemModal({ product: p, settings: s, initial, stock, otherUsage, onClos
   });
   const x = priceLine(L, p, s);
   const short = Object.keys(x.usage).filter((k) => stock[k] && stock[k].stock - (otherUsage[k] || 0) < x.usage[k]).map((k) => stock[k].name);
-  const cup = useRef(null);
-  const set = (patch) => { // the cup hops when a choice changes
+  // What just changed, so the drink can show it (same animations as the customer site)
+  const [fx, setFx] = useState(null);
+  const pct = (v) => { const n = parseInt(String(v), 10); return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 50; };
+  const sweetWord = (v) => { const n = pct(v); return n === 0 ? 'No sugar' : n <= 25 ? 'Barely sweet' : n <= 50 ? 'Just right' : n <= 75 ? 'Sweet' : 'Extra sweet'; };
+  const set = (patch) => {
     setL({ ...L, ...patch });
-    const el = cup.current;
-    if (el?.animate && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      el.animate([{ translate: '0 0', rotate: '0deg' }, { translate: '0 -10px', rotate: '-3deg', offset: 0.35 }, { translate: '0 2px', rotate: '1.5deg', offset: 0.7 }, { translate: '0 0', rotate: '0deg' }], { duration: 650, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    let f = null;
+    if (patch.sizeId !== undefined && patch.sizeId !== L.sizeId) {
+      const from = (s.sizes || []).findIndex((o) => o._id === (L.sizeId || s.sizes?.[0]?._id)), to = (s.sizes || []).findIndex((o) => o._id === patch.sizeId), sz = s.sizes[to];
+      f = { kind: 'size', up: to > from, label: `${sz?.label || 'Size'}${+sz?.price ? ` · +${peso(sz.price)}` : ''}` };
+    } else if (patch.sweet !== undefined && patch.sweet !== L.sweet) {
+      f = { kind: 'sweet', level: pct(patch.sweet), from: pct(L.sweet), label: `${patch.sweet} · ${sweetWord(patch.sweet)}` };
+    } else if (patch.addonIds) {
+      const added = patch.addonIds.find((id) => !L.addonIds.includes(id)), gone = L.addonIds.find((id) => !patch.addonIds.includes(id));
+      const a = addons.find((o) => o._id === (added || gone));
+      if (a) f = { kind: added ? 'add' : 'remove', matcha: /matcha|shot/i.test(a.label), label: `${added ? '+' : '−'} ${a.label}` };
     }
+    if (f) setFx((old) => ({ ...f, n: (old?.n || 0) + 1 }));
   };
   const sizeAt = Math.max(0, (s.sizes || []).findIndex((o) => o._id === x.sizeId));
 
@@ -451,8 +463,9 @@ function ItemModal({ product: p, settings: s, initial, stock, otherUsage, onClos
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={() => onSave({ ...L, note: L.note.trim() })}>{initial ? 'Update' : 'Add'} · {peso(x.total)}</button></>}>
       {imageOf(p) && (
         <div className={`im10-hero size-${sizeAt}`} style={sceneBg(imageOf(p))}>
-          <span className="im10-halo" aria-hidden="true" />
-          <img ref={cup} className="im10-cup" src={imageOf(p)} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          <DrinkStage image={imageOf(p)} sizeAt={sizeAt} sizeCount={p.hasSizes !== false ? (s.sizes || []).length : 1}
+            sweet={p.sweet !== false ? pct(L.sweet) : null} matcha={addons.some((a) => L.addonIds.includes(a._id) && /matcha|shot/i.test(a.label))} fx={fx}
+            onImgError={(e) => { e.currentTarget.style.display = 'none'; }} />
           <div className="im10-tags" aria-label="Your choices">
             {p.hasSizes !== false && s.sizes.length > 1 && <span>{s.sizes[sizeAt]?.label}</span>}
             {p.sweet !== false && L.sweet && <span>{L.sweet} sweet</span>}
