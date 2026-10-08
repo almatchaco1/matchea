@@ -82,3 +82,67 @@
   .shell .prod.fx-lit:not(:disabled){transform:none}
   .shell .sb .sb-item:hover .sb-ico svg{transform:none}
 }
+
+/* ===== Register: the drink pop-up — a big photo of the drink beside the choices ===== */
+.modal.im10.has-photo{width:min(920px,calc(100vw - 32px))}
+.modal.im10 .modal-h h3{font-size:26px;letter-spacing:-.02em}
+.modal.im10 .im10-price{font-family:var(--display,inherit);font-size:22px;font-weight:700;color:var(--ok);animation:imPrice .45s var(--v10-spring,ease) both}
+@keyframes imPrice{from{opacity:.3;transform:translateY(6px) scale(.92)}}
+.modal.im10.has-photo .modal-b{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);gap:0;padding:0;overflow:hidden}
+.modal.im10 .im10-opts{display:flex;flex-direction:column;gap:18px;padding:20px 24px;overflow:auto;max-height:calc(100vh - 230px)}
+.modal.im10:not(.has-photo) .im10-opts{padding:0}
+.modal.im10 .im10-desc{margin:0;font-size:15px;color:var(--muted)}
+
+/* photo side */
+.im10-hero{position:relative;overflow:hidden;min-height:420px;display:grid;place-items:center;isolation:isolate;
+  background-color:#E9EFD9;background-size:cover;background-position:center}
+.im10-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 50% at 50% 55%,rgba(255,255,255,.55),transparent 70%)}
+.im10-halo{position:absolute;left:50%;top:50%;width:78%;aspect-ratio:1;translate:-50% -52%;border-radius:50%;z-index:0;pointer-events:none;
+  background:conic-gradient(from 0deg,rgba(255,255,255,0),rgba(255,255,255,.6) 12%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 50%,rgba(255,255,255,.45) 62%,rgba(255,255,255,0) 76%);
+  -webkit-mask:radial-gradient(circle,transparent 63%,#000 64% 65.5%,transparent 66.5%);mask:radial-gradient(circle,transparent 63%,#000 64% 65.5%,transparent 66.5%);animation:imSpin 18s linear infinite}
+@keyframes imSpin{to{rotate:360deg}}
+.im10-cup{position:relative;z-index:1;width:118%;max-width:none;height:auto;aspect-ratio:1;object-fit:contain;margin:-6% 0 -2%;
+  filter:drop-shadow(0 22px 20px rgba(30,40,20,.32));transform-origin:50% 92%;transition:scale .7s cubic-bezier(.22,1.15,.36,1);animation:imCup .7s cubic-bezier(.22,1,.36,1) both}
+.im10-hero.size-0 .im10-cup{scale:.92}.im10-hero.size-1 .im10-cup{scale:1.04}.im10-hero.size-2 .im10-cup{scale:1.12}
+@keyframes imCup{from{opacity:0;transform:translateY(24px) scale(.9)}}
+.im10-tags{position:absolute;left:14px;right:14px;bottom:14px;z-index:2;display:flex;flex-wrap:wrap;gap:6px}
+.im10-tags span{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;color:#22340F;background:rgba(255,251,242,.88);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 0 0 1px rgba(46,66,32,.1),0 8px 16px -12px rgba(30,40,20,.6);animation:imTag .45s cubic-bezier(.22,1,.36,1) both}
+.im10-tags span.add{background:#22340F;color:#FFF8E8}
+@keyframes imTag{from{opacity:0;transform:translateY(8px) scale(.9)}}
+
+/* choices: bigger, easier to tap, clearer picked state */
+.modal.im10 .opt-group h4{font-size:12.5px;font-weight:800;letter-spacing:.12em;margin-bottom:8px}
+.modal.im10 .opts{gap:8px}
+.modal.im10 .opt{min-width:92px;min-height:56px;padding:10px 16px;border-radius:16px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);font-weight:700;font-size:15px;justify-content:center;
+  transition:box-shadow .25s,background .25s,transform .3s var(--v10-spring,ease)}
+.modal.im10 .opt:hover{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--matcha) 60%,var(--line));transform:translateY(-1px)}
+.modal.im10 .opt[aria-pressed="true"]{background:var(--ok-bg);box-shadow:inset 0 0 0 2px var(--ok),0 10px 20px -14px rgba(22,51,15,.6)}
+.modal.im10 .opt small{font-size:12px;font-weight:600}
+.modal.im10 .qty{border-radius:16px;border:0;box-shadow:inset 0 0 0 1.5px var(--line)}
+.modal.im10 .qty button{width:52px;height:52px;font-size:20px;background:transparent}
+.modal.im10 .qty .num{min-width:44px;text-align:center;font-size:18px;font-weight:800}
+.modal.im10 .modal-f .btn{min-height:52px;padding:0 24px;border-radius:16px;font-size:16px}
+.modal.im10 .modal-f .btn.primary{min-width:200px}
+
+/* tablets in portrait: photo on top */
+@media (max-width:760px){
+  .modal.im10.has-photo .modal-b{grid-template-columns:1fr;overflow:auto}
+  .im10-hero{min-height:260px}
+  .im10-cup{width:70%}
+  .modal.im10 .im10-opts{max-height:none;overflow:visible}
+}
+@media (prefers-color-scheme:dark){
+  .im10-hero{background-color:#1F2618}
+  .im10-tags span{background:rgba(20,26,16,.82);color:#E8F1E0;box-shadow:0 0 0 1px rgba(255,255,255,.1)}
+  .im10-tags span.add{background:#9CCB7A;color:#10200B}
+  .modal.im10 .opt[aria-pressed="true"]{box-shadow:inset 0 0 0 2px #9CCB7A}
+  .modal.im10 .im10-price{color:#C9E3B0}
+}
+@media (prefers-reduced-motion:reduce){.im10-halo,.im10-cup,.im10-tags span,.modal.im10 .im10-price{animation:none}}
+/* the sidebar's round collapse button stays under an open pop-up */
+body:has(.scrim) .sb-handle{z-index:40}
+/* drink pop-up: the cup fits its photo at every size; sweetness stays on one row */
+.im10-cup{width:100%;margin:0}
+.modal.im10 .opt-group:has(.opt:nth-child(5):last-child) .opts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.modal.im10 .opt-group:has(.opt:nth-child(5):last-child) .opt{min-width:0}

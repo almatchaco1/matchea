@@ -40,10 +40,12 @@
   transform-origin:50% 96%;transition:transform .9s cubic-bezier(.22,1.15,.36,1);mix-blend-mode:multiply}
 .shop .sheet-hero.size-0 .hfx-tint{transform:scale(.86)}.shop .sheet-hero.size-1 .hfx-tint{transform:scale(1.02)}.shop .sheet-hero.size-2 .hfx-tint{transform:scale(1.1)}
 .shop .hfx-tint i{position:absolute;left:0;right:0}
+/* tints stay inside the drink: not on the clear plastic walls (soft sides) */
+.shop .hfx-tint:not(.t-fade) i{left:50%;right:auto;width:calc(var(--cupw) * .98);translate:-50% 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
 /* honey that stays in the cup at the chosen sweetness and glides to a new level */
 .shop .hfx-tint.honey-level{z-index:1}
-.shop .hfx-tint.honey-level i{bottom:calc(100% - var(--base0));height:0;opacity:0;-webkit-mask-image:linear-gradient(180deg,transparent,#000 12px);mask-image:linear-gradient(180deg,transparent,#000 12px);
-  background:linear-gradient(0deg,rgba(214,120,10,.8),rgba(232,150,30,.62) 30%,rgba(240,170,50,.48) 80%,rgba(244,186,80,.36));
+.shop .hfx-tint.honey-level i{bottom:calc(100% - var(--base0));height:0;opacity:0;-webkit-mask-image:linear-gradient(180deg,transparent,#000 12px),linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(180deg,transparent,#000 12px),linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);-webkit-mask-composite:source-in;mask-composite:intersect;
+  background:linear-gradient(0deg,rgba(226,140,22,.62),rgba(240,170,48,.46) 30%,rgba(246,190,80,.34) 80%,rgba(250,204,110,.26));
   transition:height 1.6s cubic-bezier(.33,1,.68,1) .35s,opacity .5s ease .3s}
 /* the level matches the sweetness: 25% = a quarter of the drink, 100% = the whole drink up to the lid */
 .shop .hfx-tint.honey-level.on i{height:calc((var(--base0) - var(--top0)) * .8 * var(--lv));opacity:1}

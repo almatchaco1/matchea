@@ -432,21 +432,36 @@ function ItemModal({ product: p, settings: s, initial, stock, otherUsage, onClos
   });
   const x = priceLine(L, p, s);
   const short = Object.keys(x.usage).filter((k) => stock[k] && stock[k].stock - (otherUsage[k] || 0) < x.usage[k]).map((k) => stock[k].name);
-  const set = (patch) => setL({ ...L, ...patch });
+  const cup = useRef(null);
+  const set = (patch) => { // the cup hops when a choice changes
+    setL({ ...L, ...patch });
+    const el = cup.current;
+    if (el?.animate && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      el.animate([{ translate: '0 0', rotate: '0deg' }, { translate: '0 -10px', rotate: '-3deg', offset: 0.35 }, { translate: '0 2px', rotate: '1.5deg', offset: 0.7 }, { translate: '0 0', rotate: '0deg' }], { duration: 650, easing: 'cubic-bezier(.3,.7,.4,1)' });
+    }
+  };
+  const sizeAt = Math.max(0, (s.sizes || []).findIndex((o) => o._id === x.sizeId));
 
   const Opt = ({ on, label, price, onClick }) => (
     <button className="opt" aria-pressed={on} onClick={onClick}>{label}{price != null && <small>{+price ? '+' + peso(price) : '—'}</small>}</button>
   );
 
   return (
-    <Modal title={p.name} aside={<span className="num" style={{ fontFamily: 'var(--mono)' }}>{peso(x.unit)}</span>} onClose={onClose}
+    <Modal className={`im10 ${imageOf(p) ? 'has-photo' : ''}`} title={p.name} aside={<span className="num im10-price" key={x.unit}>{peso(x.unit)}</span>} onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" onClick={() => onSave({ ...L, note: L.note.trim() })}>{initial ? 'Update' : 'Add'} · {peso(x.total)}</button></>}>
-      {(imageOf(p) || p.desc) && (
-        <div className="item-head">
-          {imageOf(p) && <img src={imageOf(p)} alt="" className={sceneBg(imageOf(p)) ? 'scene-bg' : undefined} style={sceneBg(imageOf(p))} onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-          {p.desc && <p>{p.desc}</p>}
+      {imageOf(p) && (
+        <div className={`im10-hero size-${sizeAt}`} style={sceneBg(imageOf(p))}>
+          <span className="im10-halo" aria-hidden="true" />
+          <img ref={cup} className="im10-cup" src={imageOf(p)} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          <div className="im10-tags" aria-label="Your choices">
+            {p.hasSizes !== false && s.sizes.length > 1 && <span>{s.sizes[sizeAt]?.label}</span>}
+            {p.sweet !== false && L.sweet && <span>{L.sweet} sweet</span>}
+            {addons.filter((a) => L.addonIds.includes(a._id)).map((a) => <span key={a._id} className="add">+ {a.label}</span>)}
+          </div>
         </div>
       )}
+      <div className="im10-opts">
+      {p.desc && <p className="im10-desc">{p.desc}</p>}
       {p.hasSizes !== false && s.sizes.length > 1 && <div className="opt-group"><h4>Size</h4><div className="opts">
         {s.sizes.map((o) => <Opt key={o._id} on={x.sizeId === o._id} label={o.label} price={o.price} onClick={() => set({ sizeId: o._id })} />)}</div></div>}
       {p.milkQty > 0 && s.milks.length > 1 && <div className="opt-group"><h4>Milk</h4><div className="opts">
@@ -460,6 +475,7 @@ function ItemModal({ product: p, settings: s, initial, stock, otherUsage, onClos
           <button onClick={() => set({ qty: Math.max(1, L.qty - 1) })}>−</button><span className="num">{L.qty}</span><button onClick={() => set({ qty: Math.min(LIMITS.lineQty, L.qty + 1) })} disabled={L.qty >= LIMITS.lineQty}>+</button></div></div>
       </div>
       {short.length > 0 && <div className="warnbox">Stock count shows not enough {short.join(', ')}. You can still sell it, then correct the count in Inventory.</div>}
+      </div>
     </Modal>
   );
 }
