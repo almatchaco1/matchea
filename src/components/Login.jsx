@@ -20,6 +20,13 @@ export default function Login({ onLogin, notice, pending, onSignOut }) {
   const [step, setStep] = useState(pending ? 'current' : 'signin');
   const [who, setWho] = useState(pending || null); // the signed-in user who must set a new PIN
   const cur = useRef(''), next = useRef(''), tokenRef = useRef('');
+  // Keep the server awake while this screen is showing (free hosting sleeps after 15 minutes with no visits),
+  // so the next person to sign in doesn't wait for it to wake up. Only while the page is visible.
+  useEffect(() => {
+    const ping = () => { if (document.visibilityState === 'visible') fetch('/api/health', { cache: 'no-store' }).catch(() => {}); };
+    const t = setInterval(ping, 4 * 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     if (pending) { setLoaded(true); return; }
