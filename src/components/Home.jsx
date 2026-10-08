@@ -60,7 +60,10 @@ export default function Home({ data, user, go, counts, isAdmin }) {
   ].filter((x) => x.n > 0);
 
   const hours = today?.hours || [];
-  const shown = hours.map((v, h) => ({ h, v })).filter(({ h }) => h >= 7 && h <= 22);
+  // Opening hours, stretched to include any hour that had sales (early or late orders still show)
+  const sold = hours.map((v, h) => (v > 0 ? h : null)).filter((h) => h != null);
+  const lo = Math.min(7, ...sold), hi = Math.max(22, ...sold);
+  const shown = hours.map((v, h) => ({ h, v })).filter(({ h }) => h >= lo && h <= hi);
   const maxH = Math.max(1, ...shown.map((x) => x.v));
   const best = (today?.items || []).slice(0, 5);
   const maxB = Math.max(1, ...best.map((b) => b.qty));
@@ -135,7 +138,8 @@ export default function Home({ data, user, go, counts, isAdmin }) {
           {net > 0 ? (
             <div className="hm-bars" role="img" aria-label="Sales by hour today">
               {shown.map(({ h, v }) => (
-                <div key={h} className={`hm-bar ${h === hour ? 'now' : ''}`} title={`${hourLabel(h)}: ${peso(v)}`}>
+                <div key={h} className={`hm-bar ${h === hour ? 'now' : ''} ${v === maxH ? 'peak' : ''}`} title={`${hourLabel(h)}: ${peso(v)}`}>
+                  {v === maxH && <em className="num">{peso(v).replace(/\.00$/, '')}</em>}
                   <i style={{ height: `${Math.max(v ? 6 : 2, (v / maxH) * 100)}%` }} />
                   <span>{h % 3 === 1 ? hourLabel(h) : ''}</span>
                 </div>

@@ -11,6 +11,7 @@ const SORTS = [['joined', 'Newest'], ['orders', 'Most orders'], ['spent', 'Most 
 const FILTERS = [['all', 'All'], ['new', 'New this month'], ['regular', 'Came back (2+ orders)'], ['none', 'No orders yet'], ['reward', 'Free drink ready']];
 const phoneFmt = (p) => (/^09\d{9}$/.test(p) ? `${p.slice(0, 4)} ${p.slice(4, 7)} ${p.slice(7)}` : p || '');
 const day = (d) => new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+const hue = (n) => 30 + ([...String(n || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 997, 7) % 130); // a steady colour per person
 const initials = (n) => String(n || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
 export default function Customers({ toast }) {
@@ -58,12 +59,24 @@ export default function Customers({ toast }) {
         <span className="muted" style={{ fontSize: 13 }}>People who signed up on the ordering website</span>
       </div>
 
-      <div className="stat-row">
-        <div className="panel stat"><div className="k">Customers</div><div className="v">{s.total}</div><small className="muted">{s.newThisMonth ? `+${s.newThisMonth} this month` : 'No new sign-ups this month'}</small></div>
-        <div className="panel stat"><div className="k">Have ordered</div><div className="v">{s.ordered}</div><small className="muted">{pct(s.ordered)}% of customers</small></div>
-        <div className="panel stat"><div className="k">Came back</div><div className="v">{s.returning}</div><small className="muted">2 or more orders</small></div>
-        <div className="panel stat"><div className="k">Active</div><div className="v">{s.active30}</div><small className="muted">ordered in the last 30 days</small></div>
-        <div className="panel stat"><div className="k">Free drink ready</div><div className="v">{s.rewardReady}</div><small className="muted">{STAMPS_PER_REWARD}+ stamps</small></div>
+      <div className="cu10-top">
+        <div className="cu10-funnel" aria-label="From sign-up to regular">
+          <div className="cu10-fh"><b>From sign-up to regular</b><small>{s.newThisMonth ? `+${s.newThisMonth} new this month` : 'No new sign-ups this month'}</small></div>
+          {[['Signed up', s.total, 'all', 'All customers'], ['Ordered', s.ordered, 'none', `${pct(s.ordered)}% of sign-ups`], ['Came back', s.returning, 'regular', '2 or more orders'], ['Active', s.active30, null, 'ordered in the last 30 days']].map(([l, n, f, sub], k) => (
+            <button key={l} type="button" className={`cu10-step k${k}`} style={{ '--w': `${n ? Math.max(3, pct(n)) : 0}%` }} onClick={() => f && setFilter(f === 'none' ? 'all' : f)} disabled={!f}>
+              <span className="cu10-bar"><i /></span>
+              <span className="cu10-l">{l}</span>
+              <b className="num">{n}</b>
+              <small>{sub}</small>
+            </button>
+          ))}
+        </div>
+        <button type="button" className="cu10-free" onClick={() => setFilter('reward')}>
+          <span className="cu10-cup" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1.4 11.2a2 2 0 0 1-2 1.8H9.4a2 2 0 0 1-2-1.8L6 8Zm-1 0h14M9 8l1-4h4l1 4" /></svg></span>
+          <b className="num">{s.rewardReady}</b>
+          <span>{s.rewardReady === 1 ? 'customer has' : 'customers have'} a free drink ready</span>
+          <small>{STAMPS_PER_REWARD}+ stamps · tap to see them</small>
+        </button>
       </div>
 
       <div className="panel cu-panel">
@@ -88,11 +101,11 @@ export default function Customers({ toast }) {
               <tbody>
                 {shown.map((c) => (
                   <tr key={c._id} onClick={() => setOpen(c)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpen(c); }}>
-                    <td data-l="Customer"><div className="cu-who"><span className="cu-av" aria-hidden="true">{initials(c.name)}</span><span><b>{c.name}</b>{c.email && <small>{c.email}</small>}</span></div></td>
+                    <td data-l="Customer"><div className="cu-who"><span className="cu-av" aria-hidden="true" style={{ '--h': hue(c.name) }}>{initials(c.name)}</span><span><b>{c.name}</b>{c.email && <small>{c.email}</small>}</span></div></td>
                     <td data-l="Mobile no." className="num">{phoneFmt(c.phone) || <span className="muted">—</span>}</td>
                     <td data-l="Orders" className="r num">{c.orders}{c.orders >= 2 && <span className="pill ok cu-reg">Regular</span>}</td>
                     <td data-l="Spent" className="r num">{peso(c.spent)}</td>
-                    <td data-l="Last order">{c.lastOrder ? ago(c.lastOrder) : <span className="muted">No orders yet</span>}</td>
+                    <td data-l="Last order">{c.lastOrder ? <span className={`cu10-when ${Date.now() - new Date(c.lastOrder) < 7 * 864e5 ? 'fresh' : Date.now() - new Date(c.lastOrder) < 30 * 864e5 ? 'warm' : 'cold'}`}>{ago(c.lastOrder)}</span> : <span className="muted">No orders yet</span>}</td>
                     <td data-l="Favorite drink">{c.favorite ? c.favorite.name : <span className="muted">—</span>}</td>
                     <td data-l="Stamps"><Stamps n={c.stamps} />{c.rewardReady > 0 && <span className="pill best cu-free">Free drink</span>}</td>
                     <td data-l="Joined">{day(c.joined)}</td>

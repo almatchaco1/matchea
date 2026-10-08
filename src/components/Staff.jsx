@@ -29,6 +29,7 @@ export function ago(d) {
   const days = Math.floor(s / 86400);
   return days === 1 ? 'Yesterday' : days < 7 ? `${days} days ago` : new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
 }
+const hueOf = (n) => 30 + ([...String(n || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 997, 7) % 130); // a steady colour per person
 const when = (d) => new Date(d).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 export default function Staff({ toast, user: me, onMe }) {
@@ -36,6 +37,7 @@ export default function Staff({ toast, user: me, onMe }) {
   const [err, setErr] = useState('');
   const [modal, setModal] = useState(null); // { kind: 'lock'|'pin'|'activity', u }
   const [, tick] = useState(0);
+  const [who, setWho] = useState('all');
 
   const load = useCallback(() => api.get('/auth/users').then((u) => { setUsers(u); setErr(''); }).catch((e) => setErr(e.message)), []);
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function Staff({ toast, user: me, onMe }) {
   const wrong = users.reduce((a, u) => a + u.today.wrongPins, 0);
   const order = { online: 0, paused: 1, offline: 2, locked: 3 };
   const iAmSuper = !!users.find((x) => x._id === me._id)?.superAdmin;
+  const attn = (u) => u.status === 'locked' || u.status === 'paused' || u.needsNewPin || u.today.wrongPins > 0;
   const sorted = [...users].sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name));
 
   return (
@@ -75,14 +78,37 @@ export default function Staff({ toast, user: me, onMe }) {
         <div className={`panel stat ${wrong ? 'stat-warn' : ''}`}><div className="k">Wrong PINs today</div><div className="v">{wrong}</div></div>
       </div>
 
+      {(() => {
+        const sellers = users.filter((u) => u.today.total > 0).sort((a, b) => b.today.total - a.today.total).slice(0, 5);
+        const top = Math.max(1, ...sellers.map((u) => u.today.total));
+        return sellers.length > 0 && (
+          <section className="st10-board" aria-label="Sales by staff today">
+            <h3>Sales today by staff</h3>
+            <ol>{sellers.map((u, k) => (
+              <li key={u._id}>
+                <span className="st10-av" style={{ '--h': hueOf(u.name) }}>{u.name.slice(0, 1).toUpperCase()}</span>
+                <span className="st10-nm"><b>{u.name}</b><small>{u.today.sales} {u.today.sales === 1 ? 'sale' : 'sales'}</small></span>
+                <span className="st10-bar"><i style={{ width: `${(u.today.total / top) * 100}%`, animationDelay: `${k * 80}ms` }} /></span>
+                <b className="num">{peso(u.today.total)}</b>
+              </li>))}</ol>
+          </section>
+        );
+      })()}
+
+      <div className="st10-filter" role="group" aria-label="Show">
+        {[['all', 'Everyone', users.length], ['online', 'Online now', online], ['admin', 'Admins', users.filter((u) => u.role === 'admin').length], ['cashier', 'Cashiers', users.filter((u) => u.role !== 'admin').length], ['attn', 'Needs attention', users.filter(attn).length]].map(([k, l, n]) => (
+          <button key={k} type="button" aria-pressed={who === k} onClick={() => setWho(k)}>{l}<i>{n}</i></button>
+        ))}
+      </div>
+
       <div className="staff-grid">
-        {sorted.map((u) => {
+        {sorted.filter((u) => who === 'all' || (who === 'online' ? u.status === 'online' : who === 'admin' ? u.role === 'admin' : who === 'cashier' ? u.role !== 'admin' : attn(u))).map((u) => {
           const [tone, label] = STATUS[u.status];
           const isMe = u._id === me._id;
           return (
             <article key={u._id} className={`panel staff-card s-${u.status}`}>
               <header>
-                <div className="staff-av" aria-hidden="true">{u.name.slice(0, 1).toUpperCase()}<i className={`sdot ${u.status}`} /></div>
+                <div className="staff-av" aria-hidden="true" style={{ '--h': hueOf(u.name) }}>{u.name.slice(0, 1).toUpperCase()}<i className={`sdot ${u.status}`} /></div>
                 <div className="grow">
                   <b className="staff-nm">{u.name}{isMe && <span className="muted" style={{ fontWeight: 400 }}> (you)</span>}
                     {(!u.superAdmin || isMe) && <button type="button" className="staff-rename" onClick={() => setModal({ kind: 'rename', u })} aria-label={`Change ${u.name}'s name`} title="Change name"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.6-2.7L10.8 3a1.4 1.4 0 0 1 2 0l.2.2a1.4 1.4 0 0 1 0 2L5.8 12.4 3 13Z" /></svg></button>}</b>
@@ -96,7 +122,7 @@ export default function Staff({ toast, user: me, onMe }) {
                   Locked {ago(u.lockedAt).toLowerCase()}{u.lockedBy ? ` by ${u.lockedBy}` : ''}.{u.lockReason ? <> Reason: <i>{u.lockReason}</i></> : ''}
                 </div>
               )}
-              {u.needsNewPin && u.status !== 'locked' && <div className="staff-note warn">Still has an old PIN. They’ll be asked to set a 6-digit PIN when they next sign in, or set one for them with Change PIN.</div>}
+              {u.needsNewPin && u.status !== 'locked' && <div className="staff-note warn st10-pin" title="They’ll be asked to set a 6-digit PIN when they next sign in, or set one for them with Change PIN."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5zM12 15v2" /></svg>Still has an old PIN · set a new one with Change PIN</div>}
               {u.status === 'paused' && <div className="staff-note warn">Too many wrong PINs. Sign-in opens again {new Date(u.lockedUntil).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}.</div>}
 
               <dl className="staff-facts">

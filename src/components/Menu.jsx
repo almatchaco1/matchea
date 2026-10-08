@@ -5,7 +5,7 @@ import { priceLine } from '../shared/pricing.mjs';
 import Modal, { ConfirmButton } from './Modal';
 import { Field, RowError, useErrors } from './Field';
 import { checkProduct, checkSettings, checkStoreInfo, LIMITS } from '../shared/rules.mjs';
-import { DRINK_IMAGES, allowedAddons, imageOf } from '../lib/drinkImages';
+import { DRINK_IMAGES, allowedAddons, imageOf, sceneBg } from '../lib/drinkImages';
 import { photoUrl } from '../shared/menu-defaults.mjs';
 import { starterSteps, toSteps } from '../lib/recipe';
 import { AdminBtn } from './Locked';
@@ -23,6 +23,8 @@ export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
   };
   const { products, ingredients, settings: s } = data;
   const [modal, setModal] = useState(null); // { kind: 'prod', p } | { kind: 'shop' }
+  const [cat, setCat] = useState('All');
+  const [q, setQ] = useState('');
   const ingById = Object.fromEntries(ingredients.map((i) => [i._id, i]));
   const done = (m) => { setModal(null); toast(m); refresh(); };
 
@@ -40,41 +42,75 @@ export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
         <AdminBtn allowed={isAdmin} className="btn" onClick={() => setModal({ kind: 'shop' })}>Shop & options</AdminBtn>
         <AdminBtn allowed={isAdmin} className="btn primary" onClick={() => setModal({ kind: 'prod' })}>Add drink</AdminBtn>
       </div>
-      <p className="muted" style={{ marginTop: 0 }}>Ran out of something? Tap <b>Not available</b> and the drink stays on the menu but can't be ordered, at the counter or online.{!isAdmin && ' Only an admin can change the menu or prices.'}</p>
+      <p className="muted mn10-note">Ran out of something? Tap <b>Not available</b> and the drink stays on the menu but can't be ordered, at the counter or online.{!isAdmin && ' Only an admin can change the menu or prices.'}</p>
 
-      <div className="panel tbl-wrap">
-        {!products.length ? <div className="empty">{data.loaded ? 'No drinks yet.' : 'Loading…'}</div> : (
-          <table>
-            <thead><tr><th>Item</th><th>Category</th><th className="r">Price</th><th className="r">Ingredient cost</th><th className="r">Margin</th><th>Recipe</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-              {products.map((p) => {
-                const price = p.price + (p.hasSizes !== false ? +s?.sizes?.[0]?.price || 0 : 0);
-                const c = costOf(p);
+      {(() => {
+        const rows = products.map((p) => {
+          const price = p.price + (p.hasSizes !== false ? +s?.sizes?.[0]?.price || 0 : 0);
+          const c = costOf(p);
+          return { p, price, c, margin: c && price ? Math.round(((price - c) / price) * 100) : null };
+        });
+        const live = rows.filter((r) => r.p.active);
+        const margins = live.filter((r) => r.margin != null);
+        const avg = margins.length ? Math.round(margins.reduce((a, r) => a + r.margin, 0) / margins.length) : null;
+        const best = margins.slice().sort((a, b) => b.margin - a.margin)[0];
+        const cats = ['All', ...new Set(rows.map((r) => r.p.cat).filter(Boolean))];
+        const rank = (r) => (!r.p.active ? 2 : r.p.available === false ? 1 : 0); // hidden drinks go last
+        const shown = rows.slice().sort((a, b) => rank(a) - rank(b)).filter((r) => (cat === 'All' || r.p.cat === cat) && (!q || r.p.name.toLowerCase().includes(q.toLowerCase())));
+        return (<>
+          <div className="mn10-stats">
+            <div className="mn10-stat k1"><small>On the menu</small><b className="num">{live.length}</b><span>{rows.length - live.length ? `${rows.length - live.length} hidden` : 'none hidden'}</span></div>
+            <div className="mn10-stat"><small>Can be ordered</small><b className="num">{live.filter((r) => r.p.available !== false).length}</b><span>{live.filter((r) => r.p.available === false).length ? `${live.filter((r) => r.p.available === false).length} not available` : 'all available'}</span></div>
+            <div className="mn10-stat"><small>Average margin</small><b className="num">{avg != null ? `${avg}%` : '—'}</b><span>after ingredient cost</span></div>
+            <div className="mn10-stat"><small>Best margin</small><b className="num">{best ? `${best.margin}%` : '—'}</b><span>{best ? best.p.name : 'add ingredient costs'}</span></div>
+          </div>
+          <div className="mn10-bar">
+            <div className="mn10-cats" role="tablist" aria-label="Category">
+              {cats.map((c) => <button key={c} role="tab" aria-selected={cat === c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c}<i>{c === 'All' ? rows.length : rows.filter((r) => r.p.cat === c).length}</i></button>)}
+            </div>
+            <label className="mn10-search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm9 3-4.5-4.5" /></svg><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a drink…" aria-label="Find a drink" /></label>
+          </div>
+          {!products.length ? <div className="panel empty">{data.loaded ? 'No drinks yet.' : 'Loading…'}</div> : !shown.length ? <div className="panel empty">No drinks match.</div> : (
+            <div className="mn10-grid">
+              {shown.map(({ p, price, c, margin }) => {
+                const st = !p.active ? 'hidden' : p.available === false ? 'off' : 'on';
                 return (
-                  <tr key={p._id}>
-                    <td><span className="menu-item">{imageOf(p) ? <img src={imageOf(p)} alt="" className="mini" /> : <span className="mini" />}<b>{p.name}</b>{p.bestSeller && <span className="pill best" style={{ marginLeft: 8 }}>★ Best seller</span>}</span>
-                      <div className="muted" style={{ fontSize: 12 }}>{s ? `Add-ons: ${allowedAddons(p, s).map((a) => a.label).join(', ') || 'none'}` : ''}</div></td>
-                    <td>{p.cat}</td>
-                    <td className="r num">{peso(price)}</td>
-                    <td className="r num">{c ? peso(c) : '—'}</td>
-                    <td className="r num">{c && price ? Math.round(((price - c) / price) * 100) + '%' : '—'}</td>
-                    <td className="muted" style={{ fontSize: 12, maxWidth: 300 }}>
-                      {[...p.recipe.map((r) => `${qfmt(r.qty)}${ingById[r.ing]?.unit || ''} ${ingById[r.ing]?.name || '(deleted ingredient)'}`), p.milkQty ? `${p.milkQty}ml ${s?.milks?.length === 1 ? s.milks[0].label : "milk of choice"}` : ''].filter(Boolean).join(', ')}
-                    </td>
-                    <td>{!p.active ? <span className="pill mute">Hidden</span> : p.available === false ? <span className="pill bad">Not available</span> : <span className="pill ok">Available</span>}</td>
-                    <td className="r" style={{ whiteSpace: 'nowrap' }}>
-                      {p.active && (p.available === false
-                        ? <button className="btn sm primary" disabled={switching === p._id} onClick={() => setAvailable(p, true)}>Make available</button>
-                        : <button className="btn sm" disabled={switching === p._id} onClick={() => setAvailable(p, false)}>Not available</button>)}{' '}
-                      <AdminBtn allowed={isAdmin} className="btn sm ghost" onClick={() => setModal({ kind: 'prod', p })}>Edit</AdminBtn>
-                    </td>
-                  </tr>
+                  <article key={p._id} className={`mn10-card s-${st}`} data-drink={p.name}>
+                    <div className="mn10-photo" style={sceneBg(imageOf(p))}>
+                      {imageOf(p) ? <img src={imageOf(p)} alt="" /> : <span className="mn10-nophoto">No photo</span>}
+                      <span className={`mn10-status s-${st}`}>{st === 'hidden' ? 'Hidden' : st === 'off' ? 'Not available' : 'Available'}</span>
+                      {p.bestSeller && <span className="mn10-best">★ Best seller</span>}
+                    </div>
+                    <div className="mn10-body">
+                      <div className="mn10-top">
+                        <small>{p.cat || 'No category'}</small><h3>{p.name}</h3>
+                        <b className="num mn10-price">{peso(price)}</b>
+                      </div>
+                      <div className="mn10-money">
+                        <span>Cost <b className="num">{c ? peso(c) : '—'}</b></span>
+                        <span>Margin <b className="num">{margin != null ? `${margin}%` : '—'}</b></span>
+                      </div>
+                      <div className="mn10-meter" aria-hidden="true"><i style={{ width: `${Math.max(0, Math.min(100, margin || 0))}%` }} className={margin == null ? '' : margin >= 70 ? 'good' : margin >= 50 ? 'ok' : 'low'} /></div>
+                      <ul className="mn10-recipe" aria-label="Recipe">
+                        {p.recipe.map((r, k) => <li key={k}><b className="num">{qfmt(r.qty)}{ingById[r.ing]?.unit || ''}</b> {ingById[r.ing]?.name || '(deleted ingredient)'}</li>)}
+                        {p.milkQty > 0 && <li><b className="num">{p.milkQty}ml</b> {s?.milks?.length === 1 ? s.milks[0].label : 'milk of choice'}</li>}
+                        {!p.recipe.length && !p.milkQty && <li className="none">No recipe yet</li>}
+                      </ul>
+                      {s && <p className="mn10-adds">Add-ons: {allowedAddons(p, s).map((a) => a.label).join(', ') || 'none'}</p>}
+                      <div className="mn10-actions">
+                        {p.active && (p.available === false
+                          ? <button className="btn sm primary" disabled={switching === p._id} onClick={() => setAvailable(p, true)}>Make available</button>
+                          : <button className="btn sm" disabled={switching === p._id} onClick={() => setAvailable(p, false)}>Not available</button>)}
+                        <AdminBtn allowed={isAdmin} className="btn sm ghost" onClick={() => setModal({ kind: 'prod', p })}>Edit</AdminBtn>
+                      </div>
+                    </div>
+                  </article>
                 );
               })}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </div>
+          )}
+        </>);
+      })()}
       {s && <p className="muted" style={{ fontSize: 12 }}>Cost and margin use the {s.sizes?.[0]?.label || 'base'} size{s.milks?.[0] ? ` with ${s.milks[0].label}` : ''}, from each ingredient's cost per unit.{goInventory && <> <button className="linkbtn" onClick={goInventory}>Change ingredient costs in Inventory</button> (tap the cost to edit it).</>}</p>}
 
 
