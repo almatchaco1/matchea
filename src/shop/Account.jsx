@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { usePullRefresh } from './fx';
+import { usePullRefresh, CountUp } from './fx';
 import { call } from './api';
 import { checkCustomerName, checkPhone, checkPassword, normPhone, fmtPhoneInput, cleanName, commonPassword } from '../shared/rules.mjs';
 import { peso, pad } from '../lib/format';
@@ -29,6 +29,15 @@ export function OrdersPage({ orders, go, reload, menu, onReorder }) {
   const now = orders.filter((o) => ACTIVE.includes(o.status));
   const past = orders.filter((o) => !ACTIVE.includes(o.status));
   const photoOf = (l) => menu?.items.find((i) => String(i._id) === String(l.product))?.image;
+  const drinks = orders.reduce((n, o) => n + (o.lines || []).reduce((m, l) => m + (+l.qty || 1), 0), 0);
+  // Past orders grouped by when they were made
+  const groupOf = (d) => {
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    const x = new Date(d); x.setHours(0, 0, 0, 0);
+    const days = Math.round((t - x) / 864e5);
+    return days <= 0 ? 'Today' : days === 1 ? 'Yesterday' : days < 7 ? 'This week' : days < 31 ? 'This month' : 'Earlier';
+  };
+  const groups = past.reduce((g, o) => { const k = groupOf(o.createdAt); (g[g.length - 1]?.k === k ? g[g.length - 1].list : (g.push({ k, list: [] }), g[g.length - 1].list)).push(o); return g; }, []);
   const when = (d) => `${new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} · ${new Date(d).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}`;
   const Thumbs = ({ o }) => (
     <span className="o7-thumbs" aria-hidden="true">
@@ -43,7 +52,10 @@ export function OrdersPage({ orders, go, reload, menu, onReorder }) {
         <span>{busy ? 'Refreshing…' : pull >= 0.8 ? 'Let go to refresh' : 'Pull to refresh'}</span>
       </div>
       <div className="o7-head">
-        <h1>My orders</h1>
+        <div>
+          <h1>My orders</h1>
+          {orders.length > 0 && <p className="o7-sub">{orders.length} {orders.length === 1 ? 'order' : 'orders'} · {drinks} {drinks === 1 ? 'drink' : 'drinks'} so far</p>}
+        </div>
         {orders.length > 0 && <button className="sh-btn sm" onClick={() => go('/menu')}>Order something</button>}
       </div>
       {!orders.length ? (
@@ -76,8 +88,8 @@ export function OrdersPage({ orders, go, reload, menu, onReorder }) {
         {past.length > 0 && (
           <div className="o7-past">
             <h2>Past orders</h2>
-            <ul>
-              {past.map((o) => (
+            {groups.map((g) => (<div key={g.k} className="o7-group"><h3>{g.k}</h3><ul>
+              {g.list.map((o) => (
                 <li key={o.code} className={`o7-card s-${o.status}`}>
                   <button className="o7-card-main" onClick={() => go('/order/' + o.code)}>
                     <Thumbs o={o} />
@@ -106,7 +118,7 @@ export function OrdersPage({ orders, go, reload, menu, onReorder }) {
                   </div>
                 </li>
               ))}
-            </ul>
+            </ul></div>))}
           </div>
         )}
       </>)}
@@ -187,17 +199,18 @@ export function AccountPage({ me, setMe, go, signOut, helpUnread = 0 }) {
   const Ico = ({ d }) => <svg viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>;
   return (
     <div className="acct ac2">
+      <div className="ac2-side">
       <header className="ac2-hero">
-        <div className="acct-av ac2-av"><Avatar me={me} /></div>
+        <div className="acct-av ac2-av" style={{ '--p': Math.min(1, (me.stamps || 0) / 9) }}><Avatar me={me} /></div>
         <div className="ac2-who">
           <p className="ac2-hi">Hello,</p>
           <h1>{me.name}</h1>
           <p className="ac2-meta">{since && <>Member since {since}</>}{since && via && ' · '}{via && <>{via} sign-in</>}</p>
         </div>
         <div className="ac2-stats">
-          <div><b>{me.lifetimeStamps || 0}</b><small>stamps earned</small></div>
-          <div><b>{me.rewardsUsed || 0}</b><small>free drinks</small></div>
-          <div><b>{(me.favorites || []).length}</b><small>saved drinks</small></div>
+          <div><b><CountUp value={me.lifetimeStamps || 0} format={Math.round} duration={900} from0 /></b><small>stamps earned</small></div>
+          <div><b><CountUp value={me.rewardsUsed || 0} format={Math.round} duration={900} from0 /></b><small>free drinks</small></div>
+          <div><b><CountUp value={(me.favorites || []).length} format={Math.round} duration={900} from0 /></b><small>saved drinks</small></div>
         </div>
       </header>
 
@@ -208,7 +221,9 @@ export function AccountPage({ me, setMe, go, signOut, helpUnread = 0 }) {
       <HelpButton go={go} unread={helpUnread} className="ac2-help" />
 
       <StampCard stamps={me.stamps} />
+      </div>
 
+      <div className="ac2-main">
       {ok && <div className="okbox ac2-ok" role="status">{ok}</div>}
 
       <section className="ac2-card">
@@ -269,6 +284,7 @@ export function AccountPage({ me, setMe, go, signOut, helpUnread = 0 }) {
 
       <div className="acct-actions ac2-out">
         <button className="shop-link" onClick={signOut}><Ico d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10" />Sign out</button>
+      </div>
       </div>
     </div>
   );

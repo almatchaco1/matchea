@@ -21,6 +21,8 @@ import './matchea.css';
 import './v3.css';
 import './shop-v6.css';
 import './shop-v7.css';
+import './shop-v10.css';
+import { smoothly, useSpotlight, useNavInk } from './fx10';
 
 const PROTECTED = /^\/(menu|cart|account|orders|welcome|help)(\/|$)/;
 const CART = 'alm.cart';
@@ -38,8 +40,10 @@ export default function Shop() {
   const [orders, setOrders] = useState([]);
 
   const go = useCallback((to, { replace = false } = {}) => {
+    const from = window.location.pathname;
     if (to !== window.location.pathname + window.location.search) window.history[replace ? 'replaceState' : 'pushState'](null, '', to);
-    setPath(to); window.scrollTo(0, 0);
+    const change = () => { setPath(to); window.scrollTo(0, 0); };
+    if (to.split('?')[0] !== from && !replace) smoothly(change); else change(); // a smooth cross-fade between pages
   }, []);
   useEffect(() => { const f = () => setPath(window.location.pathname + window.location.search); window.addEventListener('popstate', f); return () => window.removeEventListener('popstate', f); }, []);
 
@@ -91,6 +95,7 @@ export default function Shop() {
   const rootRef = useRef(null);
   useReveal(rootRef, pathname + (menu ? 1 : 0) + (me ? 1 : 0));
   useRipples(rootRef);
+  useSpotlight(rootRef); // soft light follows the mouse on cards
   usePressSpring(); // buttons squish when pressed
   // Sign-in required for the menu, cart and account
   useEffect(() => {
@@ -235,10 +240,14 @@ function Header({ me, go, path, count, shop, activeCount, decor }) {
     if (taps.current.length >= 5) { taps.current = []; toPos(); return; }
     go('/');
   };
-  const link = (to, label) => (
-    <a href={to} className={path === to ? 'on' : ''} onClick={(e) => { e.preventDefault(); go(to); }}>{label}</a>
+  const link = (to, label, icon) => (
+    <a href={to} className={path === to || (to === '/orders' && path.startsWith('/order/')) ? 'on' : ''} onClick={(e) => { e.preventDefault(); go(to); }}>
+      {icon && <svg className="sh-nav-i" viewBox="0 0 24 24" aria-hidden="true"><path d={icon} /></svg>}{label}
+    </a>
   );
   const scrolled = useScrolled();
+  const nav = useRef(null);
+  useNavInk(nav, path + (me ? 1 : 0) + activeCount);
   return (
     <header className={`sh-head ${scrolled ? 'scrolled' : ''}`}>
       <DecorString decor={decor} />
@@ -247,9 +256,10 @@ function Header({ me, go, path, count, shop, activeCount, decor }) {
         <img className="sh-logo sh-word" src="/brand/matchea-word-sm.webp" alt={shop?.name || 'Matchéa'} width="420" height="128" />
       </a>
       {me ? (
-        <nav className="sh-nav">
-          {link('/menu', 'Menu')}
-          {link('/orders', <>Orders{activeCount > 0 && <i className="sh-dot">{activeCount}</i>}</>)}
+        <nav className="sh-nav" ref={nav}>
+          <span className="sh-ink" aria-hidden="true" />
+          {link('/menu', 'Menu', TABS[1][2])}
+          {link('/orders', <>Orders{activeCount > 0 && <i className="sh-dot">{activeCount}</i>}</>, TABS[2][2])}
           <button className="sh-cart" data-cart="" onClick={() => go('/cart')} aria-label={`Cart, ${count} items`}>
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 7h12l-1.2 12.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 7Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /><path d="M9 7a3 3 0 0 1 6 0" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg>
             {count > 0 && <span>{count}</span>}
@@ -306,6 +316,7 @@ function Footer({ shop }) {
           )}
         </div>
       )}
+      <button className="sf-top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg>Back to top</button>
       <p className="sf-copy">© {new Date().getFullYear()} {s.name || 'Matchéa'} · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms</a></p>
     </footer>
   );

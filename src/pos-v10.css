@@ -1,0 +1,84 @@
+/* ===== POS v10: premium, easy to read at a glance, and every tap answers back =====
+   Same colours (logo green, cream, tan). No gold buttons: the highlights are cream. */
+.shell{--v10-ease:cubic-bezier(.22,1,.36,1);--v10-spring:cubic-bezier(.34,1.45,.64,1)}
+
+/* ---------- sidebar: a cream highlight that glides from tab to tab ---------- */
+.shell .sb-nav.tabs{position:relative}
+.shell .sb-nav .sb-ink{position:absolute;left:0;top:0;z-index:0;border-radius:14px;pointer-events:none;
+  background:linear-gradient(135deg,#FFF8E8,#EFE6CF);box-shadow:0 12px 24px -12px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.7)}
+.shell .sb-nav .sb-item{z-index:1}
+.shell .sb-nav.has-sink button.sb-item[aria-selected="true"]{background:transparent !important;box-shadow:none !important;color:#1E3012}
+.shell .sb-nav.tabs button.sb-item[aria-selected="true"]::before{background:#FFF8E8;box-shadow:0 0 12px rgba(255,248,232,.6)}
+.shell .sb-nav button[aria-selected="true"] .dot{background:#1E3012;color:#FFF8E8}
+.shell .sb .sb-item .sb-ico svg{transition:transform .45s var(--v10-spring)}
+.shell .sb .sb-item:hover:not(:disabled) .sb-ico svg{transform:translateX(2px) rotate(-6deg)}
+.shell .sb-nav.tabs button.sb-item[aria-selected="true"] .sb-ico svg{transform:scale(1.08)}
+
+/* ---------- top bar: frosted glass while you scroll ---------- */
+.shell .tb{-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3)}
+.shell .tb h1{letter-spacing:-.02em}
+
+/* ---------- Today: the main button is cream, not gold ---------- */
+.shell .tabpane .hm .hm-quick .btn.hm-cta.hm-cta.hm-cta.hm-cta{background:#FFF8E8;color:#1E3012}
+.shell .tabpane .hm .hm-quick .btn.hm-cta.hm-cta.hm-cta.hm-cta:hover:not(:disabled){background:#FFFFFF}
+
+/* ---------- cards rise in, one after another, when a tab opens ---------- */
+@keyframes v10Card{from{opacity:0;transform:translateY(18px) scale(.97);filter:blur(4px)}}
+.shell .v10-in{animation:v10Card .55s var(--v10-ease) backwards !important;animation-delay:calc(var(--i,0) * 40ms) !important}
+
+/* ---------- light that follows the mouse on cards ---------- */
+.shell .fx-spot{position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;
+  background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.28),rgba(255,255,255,.07) 35%,transparent 60%)}
+.shell .fx-lit>.fx-spot{opacity:1}
+.shell .hm-hero .fx-spot,.shell .hm-kpi.k1 .fx-spot{background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(255,248,232,.14),transparent 55%)}
+
+/* ---------- register: drinks lift and tilt toward the mouse, press in when tapped ---------- */
+.shell .prod{transition:transform .5s var(--v10-ease),box-shadow .3s,border-color .2s}
+.shell .prod.fx-lit:not(:disabled){transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-5px);transition:transform .16s ease-out,box-shadow .3s}
+.shell .prod .thumb{transition:transform .6s var(--v10-ease)}
+.shell .prod.fx-lit:not(:disabled) .thumb{transform:scale(1.05)}
+.shell .prod:active:not(:disabled){transform:scale(.96) !important;transition:transform .08s}
+.shell .pp-cash,.shell .pp-gcash{transition:transform .4s var(--v10-spring),box-shadow .3s}
+.shell .pp-cash:hover:not(:disabled),.shell .pp-gcash:hover:not(:disabled){transform:translateY(-2px)}
+
+/* ---------- buttons: lift + glow on hover, a firm press ---------- */
+.shell .tabpane .btn,.shell .modal .btn{transition:translate .3s var(--v10-spring),box-shadow .25s,background .2s,border-color .2s,color .2s}
+.shell .tabpane .btn.primary:hover:not(:disabled),.shell .modal .btn.primary:hover:not(:disabled){translate:0 -2px;box-shadow:0 14px 26px -14px rgba(22,51,15,.85)}
+.shell .tabpane .btn:active:not(:disabled),.shell .modal .btn:active:not(:disabled){translate:0 1px}
+
+/* ---------- online orders: each column has its own colour, easy to tell apart ---------- */
+.shell .kcol{position:relative;overflow:hidden}
+.shell .kcol::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--kc,#8DA35C)}
+.shell .kcol.k-new{--kc:#5E9A3A}
+.shell .kcol.k-preparing{--kc:#D08A2A}
+.shell .kcol.k-ready{--kc:#2F7A9A}
+.shell .kcol.k-onway{--kc:#7A5AA8}
+.shell .kcol .kcol-h h3::before{background:var(--kc,#8DA35C) !important;box-shadow:0 0 0 3px color-mix(in srgb,var(--kc,#8DA35C) 20%,transparent) !important}
+.shell .kcard{transition:transform .4s var(--v10-ease),box-shadow .3s}
+.shell .kcard:hover{transform:translateY(-2px)}
+
+/* ---------- tables: rows light up under the mouse, headers stay in view ---------- */
+.shell .tbl-wrap table tbody tr,.shell .tabpane table tbody tr{transition:background .18s}
+.shell .tbl-wrap table tbody tr:hover,.shell .tabpane table tbody tr:hover{background:color-mix(in srgb,var(--matcha,#8DA35C) 8%,transparent)}
+
+/* ---------- numbers: tidy digits that line up ---------- */
+.shell .num,.shell .hm-kpi b,.shell .stat .v{font-variant-numeric:tabular-nums}
+
+/* ---------- inventory and staff cards ---------- */
+.shell .stk-card,.shell .staff-card,.shell .panel.stat,.shell .hm-kpi,.shell .hm-task{transition:transform .4s var(--v10-ease),box-shadow .3s}
+.shell .stk-card:hover,.shell .staff-card:hover,.shell .panel.stat:hover,.shell .hm-kpi:hover{transform:translateY(-3px)}
+.shell .hm-task:hover{transform:translateX(3px)}
+
+/* ---------- small things ---------- */
+.shell ::selection{background:rgba(141,163,92,.35)}
+.shell .tabpane input:not([type=checkbox]):not([type=radio]):not([type=range]):focus,.shell .tabpane textarea:focus,.shell .tabpane select:focus{box-shadow:0 0 0 4px color-mix(in srgb,var(--matcha,#8DA35C) 22%,transparent)}
+
+@media (prefers-color-scheme:dark){
+  .shell .fx-spot{background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(201,227,176,.09),transparent 55%)}
+  .shell .tabpane .btn.primary:hover:not(:disabled){box-shadow:0 14px 26px -14px rgba(0,0,0,.9)}
+}
+@media (prefers-reduced-motion:reduce){
+  .shell .v10-in{animation:none !important}
+  .shell .prod.fx-lit:not(:disabled){transform:none}
+  .shell .sb .sb-item:hover .sb-ico svg{transform:none}
+}

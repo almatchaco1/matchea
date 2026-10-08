@@ -18,6 +18,7 @@ import Modal, { ConfirmButton } from './components/Modal';
 import PrinterSettings from './components/PrinterSettings';
 import { loadPrinterSettings, reconnect } from './lib/printer';
 import { usePosRipples } from './lib/motion';
+import { SideInk, useStaggerIn, usePosSpotlight } from './lib/fx10pos';
 import { DecorString } from './lib/decor';
 import { LockIcon } from './components/Locked';
 import './styles.css';
@@ -27,6 +28,7 @@ import './order-v4.css';
 import './register-pay.css';
 import './pos-v6.css';
 import './shell.css';
+import './pos-v10.css';
 
 // Sidebar: [key, label, icon, admins only]
 const NAV = [
@@ -179,6 +181,9 @@ export default function App() {
   const showNew = newCount > 0 && tab !== 'online' && !training;
   const showRefunds = onlineMeta.refundsDue > 0 && tab !== 'online' && !training;
   usePosRipples();
+  usePosSpotlight(); // soft light follows the mouse over cards
+  const sideNav = useRef(null);
+  useStaggerIn(`${user?._id}${training && !TRAIN_TABS.includes(tab) ? 'register' : tab}`); // cards rise in when a tab opens
   // Auto sign-out after 30 minutes with no taps or typing (a warning shows 1 minute before).
   // The Barista screen in full screen (the kitchen display) stays signed in.
   const [idleLeft, setIdleLeft] = useState(null);
@@ -252,7 +257,8 @@ export default function App() {
             <img className="sb-word" src="/brand/matchea-word-sm.webp" alt={data.settings?.name || 'Matchéa'} width="420" height="128" />
             <img className="sb-seal" src="/brand/matchea-seal-sm.webp" alt="" width="64" height="64" />
           </div>
-          <nav className="tabs sb-nav" role="tablist" aria-orientation="vertical">
+          <nav className="tabs sb-nav" role="tablist" aria-orientation="vertical" ref={sideNav}>
+            <SideInk nav={sideNav} dep={`${shownTab}${slim}${peek}${drawer}`} />
             {NAV.map(([group, items]) => (
               <div className="sb-group" key={group}>
                 <span className="sb-glabel">{group}</span>

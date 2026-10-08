@@ -21,9 +21,9 @@ export function useReveal(root, key) {
 }
 
 /** A number that rolls to its new value (prices, order numbers). */
-export function CountUp({ value, format = (n) => n, duration = 500 }) {
-  const [shown, setShown] = useState(value);
-  const from = useRef(value);
+export function CountUp({ value, format = (n) => n, duration = 500, from0 = false }) {
+  const [shown, setShown] = useState(from0 && !calm() ? 0 : value); // from0: counts up from 0 when it first shows
+  const from = useRef(from0 && !calm() ? 0 : value);
   useEffect(() => {
     const start = from.current, end = +value || 0;
     if (calm() || start === end) { setShown(end); from.current = end; return undefined; }

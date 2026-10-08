@@ -1,0 +1,150 @@
+/* ===== Customer site v10: a bold refresh on top of the existing look =====
+   Same colours (logo green, cream, tan); richer depth, smoother motion, light that follows the mouse. */
+.shop{--v10-ease:cubic-bezier(.22,1,.36,1);--v10-spring:cubic-bezier(.34,1.45,.64,1);--v10-glass:rgba(255,252,244,.72)}
+
+/* ---------- smooth page changes (cross-fade + rise) ---------- */
+@keyframes v10Out{to{opacity:0;transform:translateY(-10px) scale(.995);filter:blur(3px)}}
+@keyframes v10In{from{opacity:0;transform:translateY(16px);filter:blur(6px)}}
+::view-transition-old(root){animation:v10Out .2s cubic-bezier(.4,0,1,1) both}
+::view-transition-new(root){animation:v10In .46s var(--v10-ease,cubic-bezier(.22,1,.36,1)) both}
+.shop .sh-head{view-transition-name:shop-head}
+.shop .tabbar{view-transition-name:shop-tabs}
+::view-transition-old(shop-head),::view-transition-old(shop-tabs){animation:none;opacity:0}
+::view-transition-new(shop-head),::view-transition-new(shop-tabs){animation:none}
+::view-transition-group(shop-head),::view-transition-group(shop-tabs){animation-duration:0s}
+@supports (view-transition-name:none){.shop .shop-main>.page{animation:none}}
+
+/* ---------- header: glass when you scroll, a highlight that slides between links ---------- */
+.shop .sh-head{transition:background .4s,box-shadow .4s,backdrop-filter .4s}
+.shop .sh-head.scrolled{background:rgba(24,48,17,.9) !important;-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 18px 40px -24px rgba(12,24,6,.9),inset 0 -1px 0 rgba(237,217,182,.35) !important}
+.shop .sh-head .sh-logo{transition:transform .5s var(--v10-ease);transform-origin:0 50%}
+.shop .sh-head.scrolled .sh-logo{transform:scale(.9)}
+.shop .sh-head .sh-nav{position:relative;isolation:isolate}
+.shop .sh-head .sh-nav>.sh-ink{position:absolute;z-index:-1;left:0;top:0;width:var(--ink-w,0);height:var(--ink-h,0);transform:translate(var(--ink-x,0),var(--ink-y,0));opacity:var(--ink-o,0);border-radius:999px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,246,226,.2),rgba(255,246,226,.09));box-shadow:inset 0 0 0 1px rgba(255,246,226,.32),0 8px 18px -10px rgba(0,0,0,.6);
+  transition:transform .55s var(--v10-spring),width .55s var(--v10-spring),opacity .3s}
+.shop .sh-head .sh-nav>a.on{background:transparent !important;box-shadow:none !important}
+.shop .sh-head .sh-nav>a{display:inline-flex;align-items:center;gap:7px}
+.shop .sh-nav-i{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .45s var(--v10-spring)}
+.shop .sh-nav>a:hover .sh-nav-i{transform:translateY(-2px) rotate(-8deg)}
+.shop .sh-nav>a.on .sh-nav-i{transform:scale(1.08)}
+.shop .sh-head .sh-cart,.shop .sh-head .sh-avatar{transition:transform .4s var(--v10-spring),background .2s,box-shadow .3s}
+.shop .sh-head .sh-cart:hover,.shop .sh-head .sh-avatar:hover{transform:translateY(-2px) scale(1.05)}
+
+/* ---------- ambient background: slow-moving light ---------- */
+.shop-bg i{opacity:.75}
+.shop-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(1200px 700px at 50% -10%,rgba(255,255,255,.55),transparent 60%)}
+
+/* ---------- light that follows the mouse on cards ---------- */
+.shop .fx-spot{position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;
+  background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.26),rgba(255,255,255,.08) 35%,transparent 60%)}
+.shop .fx-lit>.fx-spot{opacity:1}
+.shop .o7-live-card .fx-spot,.shop .m7-spot .fx-spot{background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(246,227,167,.2),transparent 55%)}
+
+/* ---------- drink cards: lift + a gentle 3D tilt toward the mouse ---------- */
+.shop .m7-card,.shop .m7-spot{transition:transform .5s var(--v10-ease),box-shadow .4s}
+.shop .m7-card.fx-lit,.shop .m7-spot.fx-lit{transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-6px);transition:transform .18s ease-out,box-shadow .4s;
+  box-shadow:0 30px 50px -30px rgba(30,45,18,.55),0 0 0 1px rgba(50,70,35,.06)}
+.shop .m7-card .mn-photo img{transition:transform .7s var(--v10-ease),filter .5s}
+.shop .m7-card.fx-lit .mn-photo img{transform:translateY(-6px) scale(1.07) rotate(-2deg);filter:drop-shadow(0 18px 16px rgba(30,40,20,.32))}
+.shop .m7-add{transition:transform .4s var(--v10-spring),box-shadow .3s,background .2s}
+.shop .m7-card.fx-lit .m7-add{box-shadow:0 12px 22px -10px rgba(22,51,15,.75)}
+.shop .m7-add svg{transition:transform .5s var(--v10-spring)}
+.shop .m7-add:hover svg{transform:rotate(90deg)}
+
+/* ---------- buttons: lift and glow on hover ---------- */
+.shop .sh-btn{transition:translate .35s var(--v10-spring),box-shadow .3s,background .2s,border-color .2s,color .2s}
+.shop .sh-btn:hover:not(:disabled):not(.ghost){translate:0 -2px;box-shadow:inset 0 0 0 1px rgba(237,217,182,.25),0 16px 28px -14px rgba(22,51,15,.85)}
+.shop .sh-btn:focus-visible,.shop a:focus-visible,.shop button:focus-visible{outline:none;box-shadow:0 0 0 3px var(--cream,#FFFCF5),0 0 0 6px color-mix(in srgb,var(--green) 55%,transparent) !important}
+
+/* ---------- scroll reveals: rise out of a soft blur ---------- */
+.shop [data-reveal]{filter:blur(8px);transform:translateY(28px) scale(.985);transition:opacity .8s var(--v10-ease),transform .8s var(--v10-ease),filter .8s var(--v10-ease);transition-delay:calc(var(--i,0) * 80ms)}
+.shop [data-reveal].in{filter:none}
+
+/* ---------- inputs: a calm focus glow ---------- */
+.shop input:not([type=checkbox]):not([type=radio]):not([type=range]),.shop textarea,.shop select{transition:box-shadow .3s,border-color .25s,background .25s}
+.shop input:not([type=checkbox]):not([type=radio]):not([type=range]):focus,.shop textarea:focus,.shop select:focus{box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 16%,transparent)}
+
+/* ---------- phone tab bar: the picked icon pops ---------- */
+@keyframes v10Pop{0%{transform:scale(.7)}55%{transform:translateY(-2px) scale(1.18)}100%{transform:translateY(-1px) scale(1.1)}}
+.shop .tb-item.on .tb-ico{animation:v10Pop .55s var(--v10-ease)}
+.shop .tb-ink{transition:transform .55s var(--v10-spring) !important}
+
+/* ---------- live order card: a soft moving sheen ---------- */
+.shop .o7-live-card{position:relative;overflow:hidden;isolation:isolate}
+.shop .o7-live-card::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(246,227,167,.09) 50%,transparent 65%);background-size:250% 100%;animation:v10Sheen 4.5s ease-in-out infinite}
+@keyframes v10Sheen{0%{background-position:130% 0}60%,100%{background-position:-30% 0}}
+.shop .o7-steps li i{transition:background .6s}
+
+/* ---------- menu hero greeting ---------- */
+.shop .m7-hi{display:inline-flex;align-items:center;gap:8px}
+.shop .m7-hi .m7-wave{display:inline-block;transform-origin:70% 80%;animation:v10Wave 2.4s ease-in-out .6s 2}
+@keyframes v10Wave{0%,60%,100%{rotate:0deg}10%,30%{rotate:14deg}20%,40%{rotate:-8deg}}
+
+/* ---------- footer: richer, with a soft glow ---------- */
+.shop .sh-foot{background-image:radial-gradient(50% 90% at 88% 110%,rgba(201,227,176,.12),transparent 70%),radial-gradient(40% 80% at 0% 110%,rgba(246,227,167,.08),transparent 70%)}
+.shop .sh-foot .sf-social a{transition:transform .35s var(--v10-spring),background .2s}
+.shop .sh-foot .sf-social a:hover{transform:translateY(-2px)}
+.shop .sh-foot .sf-top{width:max-content;justify-self:start;align-self:center}
+.shop .sf-top{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:0;border-radius:999px;font:inherit;font-size:.82rem;font-weight:700;color:#FFF1D6;background:rgba(255,246,226,.1);box-shadow:inset 0 0 0 1px rgba(255,246,226,.25);cursor:pointer;transition:background .2s,transform .35s var(--v10-spring)}
+.shop .sf-top:hover{background:rgba(255,246,226,.18);transform:translateY(-2px)}
+.shop .sf-top svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- small things ---------- */
+.shop ::selection{background:rgba(141,163,92,.35);color:inherit}
+@media (hover:hover){
+  html:has(.shop){scrollbar-color:color-mix(in srgb,#43602F 55%,transparent) transparent;scrollbar-width:thin}
+}
+.shop .ready-banner{animation:v10Drop .6s var(--v10-spring) both}
+@keyframes v10Drop{from{opacity:0;transform:translateY(-16px) scale(.96)}}
+
+/* ---------- dark mode ---------- */
+@media (prefers-color-scheme:dark){
+  .shop .sh-head.scrolled{background:rgba(12,16,8,.82) !important}
+  .shop .fx-spot{background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(201,227,176,.1),transparent 55%)}
+  .shop-bg::after{background:radial-gradient(1200px 700px at 50% -10%,rgba(201,227,176,.05),transparent 60%)}
+  .shop .m7-card.fx-lit,.shop .m7-spot.fx-lit{box-shadow:0 30px 50px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.08)}
+  .shop .sh-btn:hover:not(:disabled):not(.ghost){box-shadow:0 16px 28px -14px rgba(0,0,0,.9)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-old(root),::view-transition-new(root){animation:none}
+  .shop [data-reveal]{filter:none}
+  .shop .o7-live-card::after,.shop .tb-item.on .tb-ico,.shop .m7-hi .m7-wave{animation:none}
+  .shop .m7-card.fx-lit,.shop .m7-spot.fx-lit{transform:none}
+}
+
+/* ===== My orders: summary line, grouped by day, actions beside each order ===== */
+.shop .o7-sub{margin:4px 0 0;font-size:.92rem;font-weight:600;color:var(--ink-2)}
+.shop .o7-group{position:relative;padding-left:22px}
+.shop .o7-group::before{content:"";position:absolute;left:6px;top:30px;bottom:6px;width:2px;border-radius:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--green) 35%,transparent),transparent)}
+.shop .o7-group+.o7-group{margin-top:16px}
+.shop .o7-group h3{position:relative;margin:4px 0 10px;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.shop .o7-group h3::before{content:"";position:absolute;left:-21px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 3px var(--green)}
+.shop .o7-card{transition:transform .4s var(--v10-ease),box-shadow .3s}
+.shop .o7-card:hover{transform:translateX(4px)}
+@media (min-width:700px){
+  .shop .o7-card{display:flex;align-items:center}
+  .shop .o7-card-main{flex:1;min-width:0}
+  .shop .o7-card-a{padding:0 16px 0 0}
+}
+
+/* ===== My account: two columns on computers, a stamp ring around the photo ===== */
+.shop .ac2-side,.shop .ac2-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (min-width:980px){
+  .shop .ac2{max-width:1080px;display:grid;grid-template-columns:400px minmax(0,1fr);align-items:start;gap:22px}
+  .shop .ac2-side{position:sticky;top:88px}
+  .shop .ac2-main>.ac2-card:first-of-type{margin-top:0}
+}
+.shop .ac2-av{position:relative;overflow:visible}
+.shop .ac2-av::after{content:"";position:absolute;inset:-7px;border-radius:33px;pointer-events:none;
+  background:conic-gradient(#C9E3B0 calc(var(--p,0) * 360deg),rgba(255,255,255,.14) 0);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);padding:3px;
+  animation:v10Ring 1.4s var(--v10-ease) both}
+@keyframes v10Ring{from{opacity:0;transform:rotate(-90deg) scale(.9)}}
+.shop .ac2-hero{background-size:200% 200%;animation:v10Hero 14s ease-in-out infinite alternate}
+@keyframes v10Hero{to{background-position:100% 100%}}
+.shop .ac2-stats div{transition:transform .4s var(--v10-spring),background .3s}
+.shop .ac2-stats div:hover{transform:translateY(-3px);background:rgba(255,255,255,.16)}
+.shop .ac2-card{transition:box-shadow .3s}
+@media (prefers-reduced-motion:reduce){.shop .ac2-av::after,.shop .ac2-hero{animation:none}}

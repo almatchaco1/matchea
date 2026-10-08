@@ -8,6 +8,7 @@ import { TabInk } from '../lib/motion';
 import { sceneVar, sceneBg } from '../lib/drinkImages';
 import { Doodle, HeroFx, CupTint, HoneyLevel } from './art';
 import { ShareDrink } from './share';
+import { greeting } from './fx10';
 import './sheetfx.css';
 import './sheet8.css';
 
@@ -64,7 +65,7 @@ export default function MenuPage({ menu, err, reload, me, active, orders = [], g
     <div className="mn mn7">
       <section className="m7-hero">
         <div className="m7-hello">
-          <p className="m7-hi">Hi, {first}</p>
+          <p className="m7-hi">{greeting()}, {first}<svg className="m7-wave" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14Zm0 0 7-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg></p>
           <h1>What are you <em>craving</em> today?</h1>
           <StampCard compact stamps={me.stamps} go={go} />
           {active[0] && (
