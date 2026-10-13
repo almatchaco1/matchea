@@ -114,3 +114,11 @@
   .dfx-halo,.dfx-honey i b{animation:none}
   .dfx-cup,.dfx-floor,.dfx-honey i,.dfx-matcha i{transition:none}
 }
+
+/* ---- the 3D cup ---- */
+.dfx-3d{position:absolute;inset:0;pointer-events:auto;cursor:grab;touch-action:pan-y;opacity:0;transition:opacity .5s ease}
+.dfx-3d:active{cursor:grabbing}
+.dfx-3d canvas{display:block}
+.dfx.is-3d .dfx-3d{opacity:1}
+.dfx.is-3d .dfx-body>img,.dfx.is-3d .dfx-tint{opacity:0;transition:opacity .4s ease}
+.dfx.is-3d .dfx-floor{opacity:.6}

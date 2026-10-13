@@ -6,7 +6,10 @@
 //   extra matcha → a sieve dusts matcha powder in, a bamboo whisk whisks it, the top of the drink turns a deeper green
 // The honey and the matcha stay in the cup (they glide to new levels, they never start over).
 // Everything is skipped when "reduce motion" is on; the cup still shows the right levels.
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+
+const Cup3D = lazy(() => import('./Cup3D')); // the 3D cup loads separately, so the page opens fast
+const has3D = () => { try { if (localStorage.getItem('matchea.no3d') === '1') return false; } catch { /* ignore */ } try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch { return false; } };
 
 const calm = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -36,14 +39,19 @@ export default function DrinkStage({ image, imgRef, sizeAt = 0, sizeCount = 1, s
     body.current.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-2.5deg)', offset: 0.3 }, { transform: 'rotate(1.5deg)', offset: 0.65 }, { transform: 'rotate(0)' }], { duration: 900, delay: fx.matcha && fx.kind === 'add' ? 1300 : 0, easing: 'ease-in-out' });
   }, [fx]);
 
+  // The 3D cup replaces the photo once it is ready (the photo shows meanwhile, and stays if 3D isn't possible)
+  const [use3D] = useState(() => has3D());
+  const [ready3D, setReady3D] = useState(false);
+  useEffect(() => { setReady3D(false); }, [image]);
   const setImg = (el) => { ownImg.current = el; if (imgRef) imgRef.current = el; };
   return (
-    <div className="dfx" aria-hidden="true">
+    <div className={`dfx ${ready3D ? 'is-3d' : ''}`} aria-hidden="true">
       <span className="dfx-halo" />
       <span className="dfx-floor" style={{ '--s': scale }} />
       <div className="dfx-cup" style={{ '--s': scale }}>
         <div className="dfx-body" ref={body}>
           {image && <img ref={setImg} src={image} alt="" onError={onImgError} />}
+          {image && use3D && <Suspense fallback={null}><Cup3D image={image} sweet={lv} matcha={matcha} onReady={() => setReady3D(true)} /></Suspense>}
           {image && sweet != null && (
             <span className={`dfx-tint dfx-honey ${lv > 0 ? 'on' : ''}`} style={{ ...mask, '--lv': lv }}><i><b /></i></span>
           )}
