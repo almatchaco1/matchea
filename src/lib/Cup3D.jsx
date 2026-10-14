@@ -9,10 +9,11 @@
 // - Drag (or swipe) to spin it; left alone it sways gently. It glides in with a shine when it appears.
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { buildToppings, TOPPINGS } from './toppings3d';
 
 const FOV = 22;
 const DIST = 1 / Math.tan(THREE.MathUtils.degToRad(FOV / 2)); // the 2×2 square around the centre fills the box
-const ELEV = THREE.MathUtils.degToRad(7); // we look at the cup a little from above, like the photos
+const ELEV = THREE.MathUtils.degToRad(12); // we look at the cup a little from above, like the photos
 
 // Where the logo is on each bundled photo (measured from the photos).
 // c: round sticker [centre u, centre v, radius]   r: printed logo [left, top, right, bottom]
@@ -179,7 +180,10 @@ function readPhoto(img, logo) {
   }
   const glow = nn ? new THREE.Color(rr / nn / 255, gg / nn / 255, bb / nn / 255) : new THREE.Color(0.75, 0.85, 0.6);
   glow.convertSRGBToLinear();
-  return { S, xl, xr, rimV: rim / S, botV: bot / S, canvas: c, glow };
+  // the top of the toppings (ignoring thin skewers)
+  let top = 0;
+  while (top < rim && w(top) < best * 0.35) top++;
+  return { S, xl, xr, rimV: rim / S, botV: bot / S, topV: top / S, canvas: c, glow };
 }
 
 /** The round Matchéa sticker (cream, gold ring, wordmark), drawn sharp. */
@@ -255,8 +259,8 @@ export default function Cup3D({ image, sweet = 0, matcha = false, onReady }) {
     camera.position.set(0, DIST * Math.sin(ELEV), DIST * Math.cos(ELEV));
     camera.lookAt(0, 0, 0);
     camera.updateMatrixWorld(); camera.updateProjectionMatrix();
-    scene.add(new THREE.HemisphereLight(0xfff8ec, 0x5a6646, 0.9));
-    const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-1.6, 2.4, 2.6); scene.add(key);
+    scene.add(new THREE.HemisphereLight(0xfff8ec, 0x6a7456, 1.5));
+    const key = new THREE.DirectionalLight(0xffffff, 2.8); key.position.set(-1.6, 2.4, 2.6); scene.add(key);
     const back = new THREE.DirectionalLight(0xfff0d6, 1.2); back.position.set(2, 1.5, -2); scene.add(back);
 
     const u = { uSweep: { value: -1 }, uRes: { value: new THREE.Vector2(1, 1) } };
@@ -387,7 +391,8 @@ export default function Cup3D({ image, sweet = 0, matcha = false, onReady }) {
       const cupFront = new THREE.Mesh(cupGeo, frontMat); cupFront.renderOrder = 6; spin.add(cupFront);
 
       // --- the drink: the photo wrapped around a body just inside the plastic ---
-      liqTop = rimY - 0.045; liqBot = botY + 0.034;
+      const has3DTop = !!TOPPINGS[slug];
+      liqTop = rimY - (has3DTop ? 0.13 : 0.045); liqBot = botY + 0.034; // with 3D toppings, they fill the cup's top part
       const ins = 0.028;
       const ring = (k, y, r) => [y, r * k];
       const dprof = [[liqBot, 0], ring(0.5, liqBot, rAt(liqBot) - ins), [liqBot, rAt(liqBot) - ins - 0.012], [liqBot + 0.012, rAt(liqBot + 0.012) - ins]];
@@ -400,13 +405,25 @@ export default function Cup3D({ image, sweet = 0, matcha = false, onReady }) {
       drink = new THREE.Mesh(keep(shell(dprof, n, 120, (x, y, z) => { const [pu, pv] = toPhoto(x + off, y, Math.abs(z)); return [pu, 1 - pv]; })), drinkMat);
       drink.renderOrder = 0; spin.add(drink);
 
-      // --- toppings: the photo above the rim ---
+      // --- toppings: real 3D ones for our drinks (with a clear dome lid over them) ---
+      const baseTop = rimY - 0.035;
+      const tp = has3DTop ? buildToppings(slug, { n, rdAt: (y) => rAt(y) - ins, liqTop, baseTop, height: clamp(yAt(p.topV) - baseTop - 0.05, 0.08, 0.3) }, keep) : null;
+      if (tp) {
+        spin.add(tp.group);
+        const y0 = rimY + 0.02, R0 = rr + 0.014, H = clamp(tp.topY - y0 + 0.025, 0.08, 0.36);
+        const lid = [[rimY - 0.006, rr + 0.012], [rimY + 0.012, rr + 0.024], [y0, rr + 0.02], [y0, R0]];
+        for (let k = 1; k <= 18; k++) { const a = (k / 18) * Math.PI / 2; lid.push([y0 + H * Math.pow(Math.sin(a), 0.85), R0 * Math.pow(Math.cos(a), 0.6) * (k === 18 ? 0 : 1)]); }
+        const lidGeo = keep(shell(lid, n, 120));
+        const lidBack = new THREE.Mesh(lidGeo, backMat); lidBack.renderOrder = 1; spin.add(lidBack);
+        const lidFront = new THREE.Mesh(lidGeo, keep(plasticMaterial(u, { hazeMin: 0.004, hazeMax: 0.08, env: 0.18 }))); lidFront.renderOrder = 6; spin.add(lidFront);
+      }
+      // --- other drinks: their toppings straight from the photo, facing you ---
       const otex = keep(new THREE.Texture(img)); otex.colorSpace = THREE.SRGBColorSpace; otex.anisotropy = 4; otex.needsUpdate = true;
       bu.map.value = otex;
       const sideV = toPhoto(rr + off, rimY, 0)[1];
       bu.uCut.value = sideV; bu.uDip.value = toPhoto(off, rimY, frontZ(0, rr, n))[1] - sideV;
       bu.uCx.value = toPhoto(off, rimY, 0)[0]; bu.uHw.value = toPhoto(rr + off, rimY, 0)[0] - bu.uCx.value;
-      bill.visible = true;
+      bill.visible = !tp;
 
       // --- the logo on the front: the round sticker, or the printed wordmark ---
       if (logo) {
@@ -439,8 +456,8 @@ export default function Cup3D({ image, sweet = 0, matcha = false, onReady }) {
           for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const a = j * (G + 1) + i; idx.push(a, a + 1, a + G + 1, a + 1, a + G + 2, a + G + 1); }
           const g = keep(new THREE.BufferGeometry());
           g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); g.setIndex(idx); g.computeVertexNormals();
-          const mat = keep(new THREE.MeshPhysicalMaterial({ map: tx, transparent: true, roughness: 0.38, clearcoat: 0.6, clearcoatRoughness: 0.2, emissive: 0xffffff, emissiveMap: tx, emissiveIntensity: 0.42, envMapIntensity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
-          mat.color.setScalar(0.62);
+          const mat = keep(new THREE.MeshPhysicalMaterial({ map: tx, transparent: true, roughness: 0.38, clearcoat: 0.6, clearcoatRoughness: 0.2, emissive: 0xffffff, emissiveMap: tx, emissiveIntensity: 0.3, envMapIntensity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+          mat.color.setScalar(0.55);
           const decal = new THREE.Mesh(g, mat); decal.renderOrder = 8; spin.add(decal);
           // keep the drops of water off the sticker
           dropsAvoid = { cx: cxN, cy: cyN, hw: hw * 1.05, hh: hh * 1.05 };
