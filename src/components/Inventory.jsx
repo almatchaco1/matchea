@@ -4,6 +4,7 @@ import { peso, qfmt } from '../lib/format';
 import Modal, { ConfirmButton } from './Modal';
 import { Field, useErrors } from './Field';
 import { checkIngredient, checkStockQty, LIMITS, UNITS, PACK_NAMES, unitCostOf } from '../shared/rules.mjs';
+import { usePage, Pager } from '../lib/Pager';
 import StockBoard from './StockBoard';
 
 const REASON = { sale: 'Sale', void: 'Void', receive: 'Received', count: 'Count', create: 'Opening stock', waste: 'Waste (old)', staff: 'Staff drink' };
@@ -95,7 +96,7 @@ function IngredientModal({ ing, packFirst = false, onClose, done, toast }) {
       done('Saved');
     } catch (e) { fromServer(e, toast); }
   };
-  const del = async () => { try { await api.del(`/ingredients/${ing._id}`); done('Moved to the Recycle bin (Reports → Recycle bin) for 30 days'); } catch (e) { toast(e.message); } };
+  const del = async () => { try { await api.del(`/ingredients/${ing._id}`); done('Moved to the Archive (Reports → Archive). You can restore it there.'); } catch (e) { toast(e.message); } };
   return (
     <Modal title={ing ? 'Edit ingredient' : 'New ingredient'} onClose={onClose}
       footer={<>{ing && <ConfirmButton style={{ marginRight: 'auto' }} onConfirm={del} confirmText="Tap again to delete">Delete</ConfirmButton>}
@@ -157,12 +158,13 @@ function IngredientModal({ ing, packFirst = false, onClose, done, toast }) {
 function HistoryModal({ ing, onClose }) {
   const [moves, setMoves] = useState(null);
   useEffect(() => { api.get(`/ingredients/${ing._id}/moves`).then(setMoves).catch(() => setMoves([])); }, [ing._id]);
+  const pg = usePage(moves); // 10 a page
   return (
     <Modal title={`History · ${ing.name}`} onClose={onClose} footer={<button className="btn primary" onClick={onClose}>Close</button>}>
       {!moves ? <div className="empty">Loading…</div> : !moves.length ? <div className="empty">No stock changes yet.</div> : (
         <div className="tbl-wrap"><table>
           <thead><tr><th>When</th><th>What</th><th className="r">Change</th><th className="r">After</th><th>By</th></tr></thead>
-          <tbody>{moves.map((m) => (
+          <tbody>{pg.rows.map((m) => (
             <tr key={m._id}>
               <td className="num" style={{ whiteSpace: 'nowrap' }}>{new Date(m.createdAt).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
               <td>{REASON[m.reason] || m.reason}</td>
@@ -173,6 +175,7 @@ function HistoryModal({ ing, onClose }) {
           </tbody>
         </table></div>
       )}
+      {moves && <Pager {...pg} what="changes" />}
     </Modal>
   );
 }

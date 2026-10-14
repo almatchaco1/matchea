@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { peso, pad } from '../lib/format';
 import Modal, { ConfirmButton } from './Modal';
 import { Field, RowError, useErrors } from './Field';
+import { usePage, Pager } from '../lib/Pager';
 import { checkStaff, checkStaffName, checkPin, LIMITS } from '../shared/rules.mjs';
 
 const STATUS = {
@@ -52,16 +53,21 @@ export default function Staff({ toast, user: me, onMe }) {
     catch (e) { toast(e.message); return false; }
   };
 
+  // the people shown (sorted, filtered), 10 a page
+  const ORDER = { online: 0, paused: 1, offline: 2, locked: 3 };
+  const attnOf = (u) => u.status === 'locked' || u.status === 'paused' || u.needsNewPin || u.today.wrongPins > 0;
+  const picked = (users || []).filter((u) => who === 'all' || (who === 'online' ? u.status === 'online' : who === 'admin' ? u.role === 'admin' : who === 'cashier' ? u.role !== 'admin' : attnOf(u)))
+    .sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.name.localeCompare(b.name));
+  const pg = usePage(picked, who);
+
   if (!users) return err ? <div className="banner">{err}</div> : <p className="muted">Loading staff…</p>;
 
   const online = users.filter((u) => u.status === 'online').length;
   const locked = users.filter((u) => u.status === 'locked').length;
   const todayTotal = users.reduce((a, u) => a + u.today.total, 0);
   const wrong = users.reduce((a, u) => a + u.today.wrongPins, 0);
-  const order = { online: 0, paused: 1, offline: 2, locked: 3 };
   const iAmSuper = !!users.find((x) => x._id === me._id)?.superAdmin;
-  const attn = (u) => u.status === 'locked' || u.status === 'paused' || u.needsNewPin || u.today.wrongPins > 0;
-  const sorted = [...users].sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name));
+  const attn = attnOf;
 
   return (
     <>
@@ -102,7 +108,7 @@ export default function Staff({ toast, user: me, onMe }) {
       </div>
 
       <div className="staff-grid">
-        {sorted.filter((u) => who === 'all' || (who === 'online' ? u.status === 'online' : who === 'admin' ? u.role === 'admin' : who === 'cashier' ? u.role !== 'admin' : attn(u))).map((u) => {
+        {pg.rows.map((u) => {
           const [tone, label] = STATUS[u.status];
           const isMe = u._id === me._id;
           return (
@@ -162,6 +168,7 @@ export default function Staff({ toast, user: me, onMe }) {
           );
         })}
       </div>
+      <Pager {...pg} what="staff" />
 
       <AddStaff toast={toast} onAdded={load} />
 
@@ -208,14 +215,14 @@ function RemoveModal({ u, toast, onClose, onLock, onDone }) {
     e.preventDefault();
     if (!ok) return setErr(`Type ${u.name} to confirm.`);
     setBusy(true);
-    try { await api.del(`/auth/users/${u._id}`); toast(`${u.name} was removed`); onDone(); }
+    try { await api.del(`/auth/users/${u._id}`); toast(`${u.name} was removed. You can restore the account in Reports → Archive.`); onDone(); }
     catch (x) { setErr(x.message); setBusy(false); }
   };
   return (
     <Modal title={`Remove ${u.name}?`} onClose={onClose}
-      footer={<><button className="btn ghost" onClick={onClose}>Cancel</button><button className="btn danger" form="rmf" disabled={busy || !ok}>{busy ? 'Removing…' : 'Remove for good'}</button></>}>
+      footer={<><button className="btn ghost" onClick={onClose}>Cancel</button><button className="btn danger" form="rmf" disabled={busy || !ok}>{busy ? 'Removing…' : 'Remove'}</button></>}>
       <form id="rmf" onSubmit={go} noValidate>
-        <p style={{ marginTop: 0 }}>This deletes {u.name}'s account and signs them out right away. It can't be undone.</p>
+        <p style={{ marginTop: 0 }}>This removes {u.name}'s account and signs them out right away. It goes to <b>Reports → Archive</b>, where you can restore it.</p>
         <ul className="muted" style={{ margin: '0 0 12px', paddingLeft: 18, fontSize: 14 }}>
           <li>Their past sales stay in your reports under their name.</li>
           <li>If they might come back, <button type="button" className="linkbtn" onClick={onLock}>lock the account</button> instead.</li>
@@ -283,6 +290,7 @@ function ActivityModal({ u, onClose }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState('');
   useEffect(() => { api.get(`/auth/users/${u._id}/activity`).then(setD).catch((e) => setErr(e.message)); }, [u._id]);
+  const lp = usePage(d?.log), sp = usePage(d?.sales); // 10 a page
   return (
     <Modal title={`${u.name} · activity`} wide onClose={onClose} footer={<button className="btn" onClick={onClose}>Close</button>}>
       {err && <RowError msg={err} />}
@@ -293,7 +301,7 @@ function ActivityModal({ u, onClose }) {
             <h4>Account activity</h4>
             {!d.log.length ? <p className="muted">Nothing yet.</p> : (
               <ol className="act-log">
-                {d.log.map((l) => (
+                {lp.rows.map((l) => (
                   <li key={l._id} className={ALERT.has(l.type) ? 'alert' : ''}>
                     <span className="t">{when(l.createdAt)}</span>
                     <span>
@@ -305,6 +313,7 @@ function ActivityModal({ u, onClose }) {
                 ))}
               </ol>
             )}
+            <Pager {...lp} />
             <p className="muted" style={{ fontSize: 12 }}>Kept for 180 days.</p>
           </section>
           <section>
@@ -312,7 +321,7 @@ function ActivityModal({ u, onClose }) {
             {!d.sales.length ? <p className="muted">No sales yet.</p> : (
               <table>
                 <tbody>
-                  {d.sales.map((s) => (
+                  {sp.rows.map((s) => (
                     <tr key={s._id}>
                       <td>#{pad(s.no)}{s.source === 'online' && <span className="pill mute" style={{ marginLeft: 6 }}>Online</span>}</td>
                       <td className="muted">{when(s.createdAt)}</td>
@@ -322,6 +331,7 @@ function ActivityModal({ u, onClose }) {
                 </tbody>
               </table>
             )}
+            <Pager {...sp} />
           </section>
         </div>
       )}

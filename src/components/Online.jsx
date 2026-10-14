@@ -13,6 +13,7 @@ import { mapsLink, addressLine } from '../shared/delivery.mjs';
 import AdminPin from './AdminPin';
 import { QrHint, ShowQr, QR_LABEL } from './PayQr';
 import { useFlip, flyInto } from '../lib/motion';
+import { usePage, Pager } from '../lib/Pager';
 import Refunds from './Refunds';
 
 const COLS = [
@@ -60,6 +61,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
 
   const showOnway = !!s?.delivery?.enabled || orders.some((o) => o.fulfil === 'delivery');
   const done = orders.filter((o) => ['paid', 'cancelled', 'void'].includes(o.status)).reverse();
+  const dp = usePage(done); // 10 a page
   const shopUrl = window.location.origin + '/';
 
   return (
@@ -157,7 +159,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
           {!done.length ? <div className="empty">No finished online orders yet today.</div> : (
             <table>
               <thead><tr><th>#</th><th>Customer</th><th>Items</th><th>Status</th><th className="r">Total</th></tr></thead>
-              <tbody>{done.map((o) => (
+              <tbody>{dp.rows.map((o) => (
                 <tr key={o._id} onClick={() => o.status === 'paid' && setReceipt(o)} style={{ cursor: o.status === 'paid' ? 'pointer' : 'default' }}>
                   <td className="num">{pad(o.no)}{o.fulfil === 'delivery' && <span className="dtag sm">Delivery</span>}</td><td>{o.customer}</td>
                   <td style={{ fontSize: 12 }}>{o.lines.map((l) => `${l.qty}× ${l.name}`).join(', ')}</td>
@@ -175,6 +177,7 @@ export default function Online({ data, refresh, toast, orders, meta = {}, reload
             </table>
           )}
         </div>
+        <Pager {...dp} what="orders" />
       </div>
 
       {handing && <HandoverModal order={handing} onClose={() => setHanding(null)} toast={toast}

@@ -12,6 +12,7 @@ import Profit from './Profit';
 import Busy from './Busy';
 import Expenses from './Expenses';
 import RecycleBin from './RecycleBin';
+import { usePage, Pager } from '../lib/Pager';
 import MonthlyReport from './MonthlyReport';
 import { AdminBtn, LockIcon } from './Locked';
 import AdminPin from './AdminPin';
@@ -19,7 +20,7 @@ import { saveXlsx } from '../lib/xlsx';
 import { imageOf } from '../lib/drinkImages';
 
 const RANGES = [['today', 'Today'], ['yesterday', 'Yesterday'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['month', 'This month'], ['lastmonth', 'Last month'], ['custom', 'Custom…']];
-const VIEWS = [['overview', 'Overview'], ['closing', 'Closing'], ['profit', 'Profit', 'admin'], ['expenses', 'Expenses', 'admin'], ['busy', 'Busy times'], ['reviews', 'Reviews', 'admin'], ['backups', 'Backups', 'admin'], ['bin', 'Recycle bin', 'admin']];
+const VIEWS = [['overview', 'Overview'], ['closing', 'Closing'], ['profit', 'Profit', 'admin'], ['expenses', 'Expenses', 'admin'], ['busy', 'Busy times'], ['reviews', 'Reviews', 'admin'], ['backups', 'Backups', 'admin'], ['bin', 'Archive', 'admin']];
 
 function rangeOf(key, custom) {
   const d = (n) => { const x = new Date(); x.setDate(x.getDate() - n); return dayKey(x); };
@@ -46,6 +47,7 @@ export default function Reports({ data, toast, isAdmin, refresh, goInventory }) 
   const [xl, setXl] = useState(false);
   const [monthly, setMonthly] = useState(false);
   const [from, to] = rangeOf(range, custom);
+  const og = usePage(orders, `${from}|${to}`); // 10 orders a page
   const days = daysBetween(from, to);
   const go = (v) => { setView(v); try { localStorage.setItem('matchaPos.reportView', v); } catch {} };
   const shown = VIEWS.filter(([, , who]) => !who || isAdmin); // the views this person can open
@@ -208,7 +210,7 @@ export default function Reports({ data, toast, isAdmin, refresh, goInventory }) 
               <table>
                 <thead><tr><th>#</th><th>Time</th><th>Items</th><th>Paid by</th><th className="r">Total</th><th /></tr></thead>
                 <tbody>
-                  {orders.map((o) => (
+                  {og.rows.map((o) => (
                     <tr key={o._id} className={o.status === 'void' ? 'void' : ''} onClick={() => setReceipt(o)} style={{ cursor: 'pointer' }}>
                       <td className="num"><b>{pad(o.no)}</b></td>
                       <td className="num">{single ? '' : o.date.slice(5) + ' '}{timeOf(o.createdAt)}</td>
@@ -223,6 +225,7 @@ export default function Reports({ data, toast, isAdmin, refresh, goInventory }) 
               </table>
             )}
           </div>
+          <Pager {...og} what="orders" />
         </div>
         <div className="panel rp10-card">
           <div className="card-h"><h3>Payments</h3></div>

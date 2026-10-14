@@ -5,6 +5,7 @@ import { peso, pad } from '../lib/format';
 import { STAMPS_PER_REWARD } from '../shared/loyalty.mjs';
 import { ago } from './Staff';
 import Modal from './Modal';
+import { usePage, Pager } from '../lib/Pager';
 import '../customers.css';
 
 const SORTS = [['joined', 'Newest'], ['orders', 'Most orders'], ['spent', 'Most spent'], ['last', 'Last order'], ['name', 'Name A–Z']];
@@ -47,6 +48,7 @@ export default function Customers({ toast }) {
     }[sort];
     return [...l].sort(by);
   }, [data, q, sort, filter, monthStart]);
+  const pg = usePage(shown, `${q}|${sort}|${filter}`); // 10 customers a page
 
   if (!data) return err ? <div className="banner">{err} <button className="linkbtn" onClick={load}>Try again</button></div> : <p className="muted">Loading customers…</p>;
   const s = data.summary;
@@ -99,7 +101,7 @@ export default function Customers({ toast }) {
             <table className="cu-table">
               <thead><tr><th>Customer</th><th>Mobile no.</th><th className="r">Orders</th><th className="r">Spent</th><th>Last order</th><th>Favorite drink</th><th>Stamps</th><th>Joined</th></tr></thead>
               <tbody>
-                {shown.map((c) => (
+                {pg.rows.map((c) => (
                   <tr key={c._id} onClick={() => setOpen(c)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpen(c); }}>
                     <td data-l="Customer"><div className="cu-who"><span className="cu-av" aria-hidden="true" style={{ '--h': hue(c.name) }}>{initials(c.name)}</span><span><b>{c.name}</b>{c.email && <small>{c.email}</small>}</span></div></td>
                     <td data-l="Mobile no." className="num">{phoneFmt(c.phone) || <span className="muted">—</span>}</td>
@@ -115,7 +117,8 @@ export default function Customers({ toast }) {
             </table>
           </div>
         )}
-        {shown.length > 0 && <p className="muted cu-count">Showing {shown.length} of {data.list.length}</p>}
+        <Pager {...pg} what="customers" />
+        {shown.length > 0 && shown.length <= 10 && <p className="muted cu-count">Showing {shown.length} of {data.list.length}</p>}
       </div>
 
       {open && <CustomerModal c={open} onClose={() => setOpen(null)} toast={toast} />}
@@ -149,6 +152,7 @@ function CustomerModal({ c: row, onClose }) {
   const [c, setC] = useState(null);
   const [err, setErr] = useState('');
   useEffect(() => { api.get(`/customers/${row._id}`).then(setC).catch((e) => setErr(e.message)); }, [row._id]);
+  const op = usePage(c?.recent); // 10 orders a page
   const avg = c && c.orders ? c.spent / c.orders : 0;
   const isNew = Date.now() - new Date(row.joined) < 30 * 864e5;
   const prog = c ? c.stamps % STAMPS_PER_REWARD : 0;
@@ -199,10 +203,10 @@ function CustomerModal({ c: row, onClose }) {
           </div>
 
           <section className="cp-orders">
-            <div className="cp-card-h"><b>Recent orders</b>{c.recent.length > 0 && <span>Last {c.recent.length}</span>}</div>
+            <div className="cp-card-h"><b>Orders</b>{c.recent.length > 0 && <span>{c.recent.length} {c.recent.length === 1 ? 'order' : 'orders'}</span>}</div>
             {!c.recent.length ? <p className="cp-empty">No finished orders yet.</p> : (
               <ul>
-                {c.recent.map((o) => {
+                {op.rows.map((o) => {
                   const kind = o.source === 'online' ? (o.area ? 'delivery' : 'online') : 'counter';
                   return (
                     <li key={o._id} className={kind}>
@@ -218,6 +222,7 @@ function CustomerModal({ c: row, onClose }) {
                 })}
               </ul>
             )}
+            <Pager {...op} what="orders" />
           </section>
         </>)}
       </div>

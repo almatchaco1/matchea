@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { peso, dayKey } from '../lib/format';
 import Modal, { ConfirmButton } from './Modal';
 import { Field, useErrors } from './Field';
+import { usePage, Pager } from '../lib/Pager';
 import { checkExpense, EXPENSE_CATS } from '../shared/rules.mjs';
 
 const monthOf = (d) => d.slice(0, 7);
@@ -19,6 +20,7 @@ export default function Expenses({ toast }) {
   const load = useCallback(() => api.get(`/expenses?from=${month}-01&to=${lastDay(month)}`).then(setD).catch((e) => toast(e.message)), [month, toast]);
   useEffect(() => { setD(null); load(); }, [load]);
   const max = Math.max(1, ...(d?.byCat || []).map((c) => c.amount));
+  const pg = usePage(d?.list, month); // 10 a page
 
   return (
     <>
@@ -39,7 +41,7 @@ export default function Expenses({ toast }) {
             <table>
               <thead><tr><th>Date</th><th>For</th><th>Note</th><th className="r">Amount</th><th /></tr></thead>
               <tbody>
-                {d.list.map((e) => (
+                {pg.rows.map((e) => (
                   <tr key={e._id}>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>{new Date(e.date + 'T12:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</td>
                     <td><b>{e.cat}</b></td>
@@ -52,6 +54,7 @@ export default function Expenses({ toast }) {
               <tfoot><tr><td colSpan={3}><b>Total</b></td><td className="r num"><b>{peso(d.total)}</b></td><td /></tr></tfoot>
             </table>
           )}
+          {d && <Pager {...pg} what="expenses" />}
         </div>
         <div className="panel">
           <div className="card-h"><h3>By type</h3><span className="num"><b>{d ? peso(d.total) : '…'}</b></span></div>
@@ -77,7 +80,7 @@ function ExpenseModal({ e, month, onClose, done, toast }) {
     try { if (e) await api.put(`/expenses/${e._id}`, f); else await api.post('/expenses', f); done(e ? 'Expense updated' : 'Expense added'); }
     catch (x) { fromServer(x, toast); }
   };
-  const del = async () => { try { await api.del(`/expenses/${e._id}`); done('Moved to the Recycle bin (Reports → Recycle bin) for 30 days'); } catch (x) { toast(x.message); } };
+  const del = async () => { try { await api.del(`/expenses/${e._id}`); done('Moved to the Archive (Reports → Archive). You can restore it there.'); } catch (x) { toast(x.message); } };
   return (
     <Modal title={e ? 'Edit expense' : 'Add expense'} onClose={onClose}
       footer={<>{e && <ConfirmButton style={{ marginRight: 'auto' }} onConfirm={del} confirmText="Tap again to delete">Delete</ConfirmButton>}

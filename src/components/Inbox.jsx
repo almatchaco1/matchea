@@ -5,6 +5,7 @@ import { peso, pad } from '../lib/format';
 import { shrinkImage } from '../lib/shrinkImage';
 import { ago } from './Staff';
 import Modal from './Modal';
+import { usePage, Pager } from '../lib/Pager';
 import '../inbox.css';
 
 const QUICK = [
@@ -78,6 +79,7 @@ export default function Inbox({ toast, onCount, onOrders }) {
     const s = q.trim().toLowerCase();
     return all.filter((t) => (filter === 'all' || t.status === filter) && (!s || t.name.toLowerCase().includes(s) || t.phone.includes(s.replace(/\D/g, '') || '~')));
   }, [list, filter, q]);
+  const tp = usePage(threads, `${filter}|${q}`); // 10 conversations a page
   const active = conv?.thread;
 
   const send = async (e) => {
@@ -146,7 +148,7 @@ export default function Inbox({ toast, onCount, onOrders }) {
               <small>Customers can chat with you from the website: “Contact customer service”.</small>
             </li>
           )}
-          {threads.map((t) => (
+          {tp.rows.map((t) => (
             <li key={t._id}>
               <button className={`ib-th ${sel === t._id ? 'on' : ''} ${t.unreadStaff ? 'unread' : ''}`} onClick={() => setSel(t._id)}>
                 <span className="ib-ava" aria-hidden="true">{initials(t.name)}</span>
@@ -164,6 +166,7 @@ export default function Inbox({ toast, onCount, onOrders }) {
             </li>
           ))}
         </ul>
+        <Pager {...tp} />
       </aside>
 
       <section className="ib-main">

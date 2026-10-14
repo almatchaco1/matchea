@@ -12,6 +12,7 @@ import { AdminBtn } from './Locked';
 import { QrSettingsModal } from './PayQr';
 import DecorPicker from './DecorPicker';
 import DeliverySettings from './DeliverySettings';
+import { Paged } from '../lib/Pager';
 import { checkDeliverySettings, DELIVERY_DEFAULTS } from '../shared/delivery.mjs';
 
 export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
@@ -71,8 +72,9 @@ export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
             <label className="mn10-search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm9 3-4.5-4.5" /></svg><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a drink…" aria-label="Find a drink" /></label>
           </div>
           {!products.length ? <div className="panel empty">{data.loaded ? 'No drinks yet.' : 'Loading…'}</div> : !shown.length ? <div className="panel empty">No drinks match.</div> : (
+            <Paged list={shown} resetKey={`${cat}|${q}`} what="drinks">{(page) => (
             <div className="mn10-grid">
-              {shown.map(({ p, price, c, margin }) => {
+              {page.map(({ p, price, c, margin }) => {
                 const st = !p.active ? 'hidden' : p.available === false ? 'off' : 'on';
                 return (
                   <article key={p._id} className={`mn10-card s-${st}`} data-drink={p.name}>
@@ -108,6 +110,7 @@ export default function Menu({ data, refresh, toast, isAdmin, goInventory }) {
                 );
               })}
             </div>
+            )}</Paged>
           )}
         </>);
       })()}
@@ -144,7 +147,7 @@ export function ProductModal({ p, data, settings, onClose, done, toast, focusSte
       done('Saved');
     } catch (e) { fromServer(e, toast); }
   };
-  const del = async () => { try { await api.del(`/products/${p._id}`); done('Moved to the Recycle bin (Reports → Recycle bin) for 30 days'); } catch (e) { toast(e.message); } };
+  const del = async () => { try { await api.del(`/products/${p._id}`); done('Moved to the Archive (Reports → Archive). You can restore it there.'); } catch (e) { toast(e.message); } };
   const yesNo = (id, label, key, yes = 'Yes', no = 'No') => (
     <Field id={id} label={label}>
       <select id={id} value={f[key] ? '1' : '0'} onChange={(e) => set(key, e.target.value === '1')}><option value="1">{yes}</option><option value="0">{no}</option></select>
@@ -255,7 +258,9 @@ function ShopModal({ s, ingredients, onClose, done, toast }) {
   const removeOpt = (key, i) => { setF({ ...f, [key]: f[key].filter((_, k) => k !== i) }); clear(...Object.keys(errs).filter((k) => k.startsWith(key + '.'))); };
   const save = async () => {
     if (!check({ ...checkSettings(f), ...checkStoreInfo(f), ...checkDeliverySettings({ ...DELIVERY_DEFAULTS, ...(f.delivery || {}) }) })) return;
-    try { await api.put('/settings', f); done('Saved'); } catch (e) { fromServer(e, toast); }
+    // anything taken out of the lists goes to the Archive
+    const gone = ['sizes', 'milks', 'addons'].some((k) => (s[k] || []).some((o) => !f[k].some((x) => x._id === o._id))) || (s.delivery?.areas || []).some((a) => !(f.delivery?.areas || []).some((x) => x.name === a.name));
+    try { await api.put('/settings', f); done(gone ? 'Saved. Removed options are in Reports → Archive.' : 'Saved'); } catch (e) { fromServer(e, toast); }
   };
   const inv = (k) => ({ 'aria-invalid': !!errs[k] });
 

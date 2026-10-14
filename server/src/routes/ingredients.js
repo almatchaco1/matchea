@@ -137,7 +137,7 @@ r.post('/count-all', ah(async (req, res) => {
 }));
 
 r.get('/:id/moves', ah(async (req, res) => {
-  res.json(await StockMove.find({ ing: req.params.id }).sort({ createdAt: -1 }).limit(50));
+  res.json(await StockMove.find({ ing: req.params.id }).sort({ createdAt: -1 }).limit(300));
 }));
 
 r.delete('/:id', requireAdmin, ah(async (req, res) => {

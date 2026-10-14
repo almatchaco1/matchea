@@ -1,6 +1,7 @@
 // Owner: daily automatic backups of all data, plus "Back up now" and downloads.
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { usePage, Pager } from '../lib/Pager';
 import Modal from './Modal';
 
 const size = (b) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1e3))} KB`);
@@ -29,6 +30,7 @@ export default function Backups({ toast }) {
     catch (e) { setDirErr(e.fields?.dir || e.message); } finally { setBusy(''); }
   };
   const list = d?.backups || [];
+  const pg = usePage(list); // 10 a page
   const last = list[0];
   const stale = !last || Date.now() - new Date(last.createdAt) > 36 * 3600e3;
   return (
@@ -70,7 +72,7 @@ export default function Backups({ toast }) {
           <table>
             <thead><tr><th>Backup</th><th>Type</th><th className="r">Size</th><th></th></tr></thead>
             <tbody>
-              {list.slice(0, 10).map((b) => (
+              {pg.rows.map((b) => (
                 <tr key={b.name}>
                   <td>{when(b.createdAt)}</td>
                   <td>{/-daily/.test(b.name) ? 'Daily' : /-closing/.test(b.name) ? 'Day closed' : /-prerestore/.test(b.name) ? 'Before a restore' : /-reset/.test(b.name) ? 'Before starting fresh' : 'Manual'}</td>
@@ -80,7 +82,7 @@ export default function Backups({ toast }) {
               ))}
             </tbody>
           </table>
-          {list.length > 10 && <p className="muted" style={{ fontSize: 12, margin: '8px 12px' }}>+{list.length - 10} older backups in the server’s backups folder.</p>}
+          <Pager {...pg} what="backups" />
         </div>
       )}
       {restore && <RestoreModal b={restore} onClose={() => setRestore(null)} toast={toast} done={() => { setRestore(null); load(); }} />}

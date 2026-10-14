@@ -5,6 +5,7 @@ import { peso, qfmt, ingStatus, daysLeft, needsRestock, restockQty } from '../li
 import { priceLine } from '../shared/pricing.mjs';
 import Modal from './Modal';
 import { AdminBtn } from './Locked';
+import { usePage, Pager } from '../lib/Pager';
 import '../stock.css';
 
 const STATUS = { ok: 'Good', warn: 'Low', bad: 'Out' };
@@ -68,6 +69,7 @@ export default function StockBoard({ data, isAdmin, toast, refresh, onAct, openL
     .filter((i) => filter === 'all' || (filter === 'buy' ? needsRestock(i) : ingStatus(i) === filter))
     .filter((i) => !q || `${i.name} ${i.cat}`.toLowerCase().includes(q.toLowerCase()))
     .sort((a, b) => ({ bad: 0, warn: 1, ok: 2 }[ingStatus(a)] - { bad: 0, warn: 1, ok: 2 }[ingStatus(b)]) || a.name.localeCompare(b.name));
+  const pg = usePage(shown, `${filter}|${q}`); // 10 ingredients a page
   const step = toBuy.length ? 1 : 0;
   const finished = (msg) => { setFlow(null); refresh(); if (msg) toast(msg); };
 
@@ -128,9 +130,10 @@ export default function StockBoard({ data, isAdmin, toast, refresh, onAct, openL
 
       {!shown.length ? <div className="panel empty">{!data.loaded ? 'Loading…' : list.length ? 'Nothing here.' : 'No ingredients yet. Add your matcha, milk, cups and syrups.'}</div> : (
         <div className="stk-grid">
-          {shown.map((i) => <IngCard key={i._id} i={i} uses={uses[i._id] || []} isAdmin={isAdmin} onAct={onAct} toast={toast} refresh={refresh} />)}
+          {pg.rows.map((i) => <IngCard key={i._id} i={i} uses={uses[i._id] || []} isAdmin={isAdmin} onAct={onAct} toast={toast} refresh={refresh} />)}
         </div>
       )}
+      <Pager {...pg} what="ingredients" />
 
       {flow?.kind === 'list' && <ShoppingList list={list} toast={toast} shop={data.settings?.name} onClose={() => setFlow(null)}
         onReceiveNow={(items) => setFlow({ kind: 'receive', items })} />}

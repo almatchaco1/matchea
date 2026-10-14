@@ -6,6 +6,7 @@ import { peso, pad, dayKey, refShow } from '../lib/format';
 import { PAY_LABELS } from '../shared/pricing.mjs';
 import { printReceipt } from './Receipt';
 import { printClosing } from '../lib/printer';
+import { usePage, Pager } from '../lib/Pager';
 import GoalBar from './GoalBar';
 
 const shift = (d, n) => { const x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return dayKey(x); };
@@ -53,6 +54,7 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
   const checkedN = c ? c.refs.filter((r) => r.checked).length : 0;
   const diff = cash !== '' && c ? Math.round((+cash - c.cashExpected) * 100) / 100 : null;
   const discounts = c ? Object.entries(c.discounts).filter(([, v]) => v.count) : [];
+  const rp = usePage(c?.refs, date), vp = usePage(c?.voids, date); // 10 a page
 
   return (
     <div className="closing">
@@ -111,7 +113,7 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
                   <>
                     <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>Tick each one once you see it in your GCash app.</p>
                     <ul className="cl-refs">
-                      {c.refs.map((r) => (
+                      {rp.rows.map((r) => (
                         <li key={r.id}>
                           <label className={r.checked ? 'on' : ''}>
                             <input type="checkbox" checked={r.checked} onChange={() => tick(r)} />
@@ -122,6 +124,7 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
                         </li>
                       ))}
                     </ul>
+                    <Pager {...rp} what="payments" />
                   </>
                 )}
               </div>
@@ -146,7 +149,8 @@ export default function Closing({ settings, toast, goInventory, isAdmin }) {
               <div className="card-b">
                 {discounts.length ? discounts.map(([k, v]) => <div className="cl-row" key={k}><span>{DISC[k]} <span className="muted">×{v.count}</span></span><span className="num">−{peso(v.amount)}</span></div>) : <div className="cl-row"><span className="muted">No discounts</span><span /></div>}
                 <div className="cl-row"><span>Voided orders <span className="muted">×{c.voids.length}</span></span><span className="num">{peso(c.voids.reduce((a, v) => a + v.total, 0))}</span></div>
-                {c.voids.map((v) => <div className="cl-row sub" key={v.no}><span>#{pad(v.no)} · {v.time}{v.by ? ` · by ${v.by}` : ''}{v.reason ? ` · ${v.reason}` : ''}</span><span className="num">{peso(v.total)}</span></div>)}
+                {vp.rows.map((v) => <div className="cl-row sub" key={v.no}><span>#{pad(v.no)} · {v.time}{v.by ? ` · by ${v.by}` : ''}{v.reason ? ` · ${v.reason}` : ''}</span><span className="num">{peso(v.total)}</span></div>)}
+                <Pager {...vp} what="voids" />
                 {c.cancelled > 0 && <div className="cl-row"><span>Cancelled online orders</span><span className="num">{c.cancelled}</span></div>}
                 {c.staff?.drinks > 0 && <>
                   <div className="cl-row"><span>Staff drinks <span className="muted">×{c.staff.drinks}</span></span><span className="num">{peso(c.staff.cost)} cost</span></div>

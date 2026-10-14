@@ -327,7 +327,7 @@ r.post('/orders/:code/rating', requireCustomer, limit(30, 15 * 60000), ah(async 
 
 // Order history
 r.get('/orders', requireCustomer, ah(async (req, res) => {
-  const list = await Sale.find({ customerId: req.customer._id, source: 'online', hiddenByCustomer: { $ne: true } }).sort({ createdAt: -1 }).limit(50);
+  const list = await Sale.find({ customerId: req.customer._id, source: 'online', hiddenByCustomer: { $ne: true } }).sort({ createdAt: -1 }).limit(200);
   res.json(list.map((s) => ({
     code: s.trackCode, no: s.no, date: s.date, status: s.status === 'void' ? 'cancelled' : s.status, total: s.total,
     createdAt: s.createdAt, paidOnline: !!s.paidOnline, items: s.lines.map((l) => `${l.qty}× ${l.name}`).join(', '),

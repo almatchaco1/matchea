@@ -75,7 +75,7 @@ r.get('/:id', ah(async (req, res) => {
   const id = new mongoose.Types.ObjectId(String(c._id));
   const [orders, all] = await Promise.all([
     Sale.find({ ...DONE, customerId: id }, 'no createdAt total source lines.name lines.qty delivery.area stampsAwarded stampsUsed pay.method')
-      .sort({ createdAt: -1 }).limit(30).lean(),
+      .sort({ createdAt: -1 }).limit(200).lean(), // shown 10 a page
     Sale.find({ ...DONE, customerId: id }, 'total').lean(),
   ]);
   const tot = [{ n: all.length, spent: all.reduce((a, x) => a + (+x.total || 0), 0) }];

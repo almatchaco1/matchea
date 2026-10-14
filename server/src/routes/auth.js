@@ -5,6 +5,7 @@ import { ah, HttpError, assertValid, nameRegex, shopTime, TZ } from '../lib/util
 import Sale from '../models/Sale.js';
 import StaffLog, { logStaff } from '../models/StaffLog.js';
 import { checkId } from '../lib/ids.js';
+import { toTrash } from '../lib/trash.js';
 import { checkStaff, checkStaffName, checkPin, weakPin, PIN_LEN, ROLES } from '../../../src/shared/rules.mjs';
 
 const r = Router();
@@ -168,8 +169,8 @@ r.get('/users/:id/activity', requireAuth, requireAdmin, ah(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new HttpError(404, 'Staff member not found.');
   const [log, sales] = await Promise.all([
-    StaffLog.find({ user: user._id }).sort('-createdAt').limit(40).lean(),
-    Sale.find({ cashier: user._id, status: { $in: ['paid', 'void'] } }, 'no total status source createdAt payMethod voidReason').sort('-createdAt').limit(15).lean(),
+    StaffLog.find({ user: user._id }).sort('-createdAt').limit(300).lean(), // shown 10 a page
+    Sale.find({ cashier: user._id, status: { $in: ['paid', 'void'] } }, 'no total status source createdAt payMethod voidReason').sort('-createdAt').limit(100).lean(),
   ]);
   res.json({ log, sales });
 }));
@@ -251,7 +252,7 @@ r.patch('/users/:id', requireAuth, requireAdmin, ah(async (req, res) => {
   res.json({ ...user.toJSON(), status: statusOf(user) });
 }));
 
-// Remove a staff account for good. Their past sales keep their name in reports.
+// Remove a staff account (it goes to the Archive, where it can be restored). Their past sales keep their name in reports.
 r.delete('/users/:id', requireAuth, requireAdmin, ah(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new HttpError(404, 'Staff member not found.');
@@ -262,7 +263,9 @@ r.delete('/users/:id', requireAuth, requireAdmin, ah(async (req, res) => {
     const admins = await User.countDocuments({ role: 'admin', active: true, _id: { $ne: user._id } });
     if (!admins) throw new HttpError(400, 'Keep at least one active admin.');
   }
+  const copy = user.toObject();
   await user.deleteOne();
+  await toTrash('user', copy, req.user.name);
   logStaff(user, 'removed', { by: req.user.name });
   res.json({ ok: true, name: user.name });
 }));

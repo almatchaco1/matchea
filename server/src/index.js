@@ -30,6 +30,7 @@ import { installDefaultQr } from './lib/defaultQr.js';
 import { startDecorPicker } from './lib/decorStart.js';
 import { freshStartIfRequested } from './lib/freshStart.js';
 import { applyNewMenu } from './lib/menuV2.js';
+import { keepArchiveForGood } from './lib/trash.js';
 import User from './models/User.js';
 
 const app = express();
@@ -97,6 +98,7 @@ mongoose
     try { const who = await User.ensureSuperAdmin(); if (who) console.log(`${who} is the super admin.`); } catch (e) { console.error('Could not set the super admin:', e.message); }
     try { await installDefaultQr(); } catch (e) { console.error('Could not add the GCash QR:', e.message); }
     try { await startDecorPicker(); } catch (e) { console.error('Could not set up decorations:', e.message); }
+    try { await keepArchiveForGood(); } catch (e) { console.error('Could not update the archive:', e.message); }
     scheduleDailyBackups();
     app.listen(PORT, () => console.log(`Matcha POS API on http://localhost:${PORT}`));
     checkMail(); // logs whether the Gmail login for sign-up codes works

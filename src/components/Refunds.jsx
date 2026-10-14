@@ -5,6 +5,7 @@ import { api, getToken } from '../lib/api';
 import { peso, pad } from '../lib/format';
 import { shrinkImage } from '../lib/shrinkImage';
 import Modal from './Modal';
+import { usePage, Pager } from '../lib/Pager';
 import '../refunds.css';
 
 const LABEL = { gcash: 'GCash', gotyme: 'GoTyme', maya: 'Maya', paymongo: 'PayMongo' };
@@ -22,6 +23,7 @@ export default function Refunds({ toast, count = 0, onChange }) {
   const [proof, setProof] = useState(null);
   const load = useCallback(() => api.get('/online/refunds').then(setData).catch(() => {}), []);
   useEffect(() => { load(); }, [load, count]);
+  const duePg = usePage(data?.due), sentPg = usePage(data?.sent); // 10 a page
   if (!data || (!data.due.length && !data.sent.length)) return null;
 
   return (
@@ -36,7 +38,7 @@ export default function Refunds({ toast, count = 0, onChange }) {
       </div>
       {data.due.length > 0 && (
         <ul className="rf-list">
-          {data.due.map((x) => (
+          {duePg.rows.map((x) => (
             <li key={x._id} className="rf-row">
               <span className="rf-no num">#{pad(x.no)}</span>
               <span className="rf-who">
@@ -50,9 +52,10 @@ export default function Refunds({ toast, count = 0, onChange }) {
           ))}
         </ul>
       )}
+      {data.due.length > 0 && <Pager {...duePg} what="refunds" />}
       {history && (
         <ul className="rf-list sent">
-          {data.sent.map((x) => (
+          {sentPg.rows.map((x) => (
             <li key={x._id} className="rf-row">
               <span className="rf-no num">#{pad(x.no)}</span>
               <span className="rf-who">
@@ -65,6 +68,7 @@ export default function Refunds({ toast, count = 0, onChange }) {
           ))}
         </ul>
       )}
+      {history && <Pager {...sentPg} what="sent" />}
       {open && <SendRefund order={open} toast={toast} onClose={() => setOpen(null)} onDone={() => { setOpen(null); load(); onChange?.(); toast?.(`Refund for #${pad(open.no)} recorded. The customer was told.`); }} />}
       {proof && <Proof order={proof} onClose={() => setProof(null)} />}
     </section>

@@ -59,7 +59,7 @@ r.get('/reviews', requireAdmin, ah(async (req, res) => {
   res.json({
     days, count: list.length, avg, dist,
     byDrink: Object.values(drinks).map((d) => ({ name: d.name, count: d.count, avg: Math.round((d.sum / d.count) * 10) / 10 })).sort((a, b) => b.count - a.count),
-    recent: list.slice(0, 50).map((s) => ({ no: s.no, date: s.date, customer: String(s.customer || '').split(' ')[0], stars: s.rating.stars, comment: s.rating.comment || '', at: s.rating.at, items: s.lines.map((l) => `${l.qty}× ${l.name}`).join(', ') })),
+    recent: list.map((s) => ({ no: s.no, date: s.date, customer: String(s.customer || '').split(' ')[0], stars: s.rating.stars, comment: s.rating.comment || '', at: s.rating.at, items: s.lines.map((l) => `${l.qty}× ${l.name}`).join(', ') })),
   });
 }));
 

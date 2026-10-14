@@ -1,0 +1,11 @@
+/* Pages for long lists (POS and customer site). Colours come from each side's theme. */
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin:12px 2px 2px;font-size:13px}
+.pager-info{color:var(--muted,var(--ink-2,#505749))}
+.pager-btns{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.pager-b{min-width:36px;height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--line,#E8DFCE);background:var(--surface,#FFFBF7);color:var(--ink,#1E2418);font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:border-color .15s,background .15s,transform .1s}
+.pager-b:hover:not(:disabled){border-color:var(--green,var(--matcha,#324623))}
+.pager-b:active:not(:disabled){transform:scale(.96)}
+.pager-b:disabled{opacity:.4;cursor:not-allowed}
+.pager-b.on{background:var(--green,var(--matcha,#324623));border-color:var(--green,var(--matcha,#324623));color:var(--on-matcha,#fff)}
+.pager-gap{min-width:18px;text-align:center;color:var(--muted,var(--ink-2,#505749))}
+@media (max-width:520px){.pager{justify-content:center}.pager-w{display:none}.pager-b{min-width:34px;height:34px;padding:0 8px}}

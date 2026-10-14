@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
 
-// Recycle bin: deleted drinks, ingredients and expenses, kept 30 days so they can be restored
+// Archive: deleted drinks, ingredients, expenses, staff accounts and menu options (sizes, milks, add-ons,
+// delivery areas), kept until the owner deletes them for good, so they can always be restored
 const trashSchema = new mongoose.Schema(
   {
-    kind: { type: String, enum: ['product', 'ingredient', 'supplier', 'expense'], required: true },
+    kind: { type: String, enum: ['product', 'ingredient', 'supplier', 'expense', 'user', 'option'], required: true },
     name: String, // shown in the list
     data: { type: mongoose.Schema.Types.Mixed, required: true }, // the whole record, as it was
     by: String,
-    expiresAt: { type: Date, required: true },
+    expiresAt: { type: Date }, // only on items from before the archive kept things for good (removed at start-up)
   },
   { timestamps: true }
 );
-trashSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // MongoDB removes them after 30 days
 
 export default mongoose.model('Trash', trashSchema);

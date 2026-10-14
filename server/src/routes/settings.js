@@ -8,6 +8,7 @@ import { isQrPh } from '../../../src/shared/qrph.mjs';
 import { checkSettings, isObjectId, checkStoreInfo, socialUrl, normPhone } from '../../../src/shared/rules.mjs';
 import { cleanDecor, GREETING_MAX } from '../../../src/shared/decor.mjs';
 import { checkDeliverySettings, cleanAreas, DELIVERY_DEFAULTS } from '../../../src/shared/delivery.mjs';
+import { toTrash } from '../lib/trash.js';
 
 const r = Router();
 
@@ -40,6 +41,8 @@ r.put('/', requireAdmin, ah(async (req, res) => {
   refs.forEach(([k, id]) => { if (!found.has(id)) missing[k] = 'This ingredient no longer exists.'; });
   assertValid(missing);
 
+  // what was taken out of the lists (it goes to the Archive after saving)
+  const before = { sizes: cur.sizes, milks: cur.milks, addons: cur.addons, areas: cur.delivery?.areas || [] };
   const keepId = (o) => (isObjectId(String(o._id || '')) ? { _id: o._id } : {}); // keeps open carts valid
   Object.assign(s, {
     name: String(next.name).trim(), address: String(next.address || '').trim(), tin: String(next.tin || '').trim(),
@@ -66,6 +69,15 @@ r.put('/', requireAdmin, ah(async (req, res) => {
   if (b.onlineMessage != null) s.onlineMessage = String(b.onlineMessage).trim().slice(0, 160);
   if (Array.isArray(b.sweetness) && b.sweetness.length && b.sweetness.length <= 10) s.sweetness = b.sweetness.map((x) => String(x).slice(0, 10));
   await s.save();
+  const after = s.toObject();
+  const removed = [];
+  for (const list of ['sizes', 'milks', 'addons']) {
+    const left = new Set(after[list].map((x) => String(x._id)));
+    before[list].forEach((x) => { if (!left.has(String(x._id))) removed.push({ list, item: x }); });
+  }
+  const areasLeft = new Set((after.delivery?.areas || []).map((a) => a.name.toLowerCase()));
+  before.areas.forEach((a) => { if (a?.name && !areasLeft.has(a.name.toLowerCase())) removed.push({ list: 'areas', item: a }); });
+  for (const x of removed) await toTrash('option', x, req.user?.name || '');
   res.json(s);
 }));
 

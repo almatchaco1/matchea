@@ -1,6 +1,7 @@
 // Owner: what customers thought of their orders (private, not shown to customers).
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { usePage, Pager } from '../lib/Pager';
 import { pad } from '../lib/format';
 
 const Stars = ({ n }) => <span className="rv-stars" aria-label={`${n} out of 5`}>{'★★★★★'.slice(0, n)}<i>{'★★★★★'.slice(n)}</i></span>;
@@ -12,6 +13,7 @@ export default function Reviews({ toast }) {
   useEffect(() => { api.get(`/reports/reviews?days=${days}`).then(setD).catch((e) => toast(e.message)); }, [days]); // eslint-disable-line react-hooks/exhaustive-deps
   const list = (d?.recent || []).filter((r) => only === 'all' || (only === 'low' ? r.stars <= 3 : !!r.comment));
   const max = Math.max(1, ...(d?.dist || [1]));
+  const pg = usePage(list, `${days}|${only}`); // 10 a page
   return (
     <section>
       <div className="toolbar">
@@ -48,13 +50,14 @@ export default function Reviews({ toast }) {
                 <button key={k} className="chip" aria-pressed={only === k} onClick={() => setOnly(k)}>{n}</button>
               ))}
             </div>
-            {!list.length ? <p className="muted">Nothing here.</p> : list.map((r, i) => (
+            {!list.length ? <p className="muted">Nothing here.</p> : pg.rows.map((r, i) => (
               <div key={i} className={`rv-item ${r.stars <= 2 ? 'low' : ''}`}>
                 <div className="rv-top"><Stars n={r.stars} /><span className="muted">{r.customer} · #{pad(r.no)} · {new Date(r.at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span></div>
                 {r.comment && <p>“{r.comment}”</p>}
                 <small className="muted">{r.items}</small>
               </div>
             ))}
+            <Pager {...pg} what="ratings" />
           </div>
         </div>
       )}

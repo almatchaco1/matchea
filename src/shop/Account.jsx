@@ -10,6 +10,7 @@ import { Stars } from './RateOrder';
 import { Doodle, Avatar } from './art';
 import { Field, CodeStep, PasswordBox } from './Auth';
 import { HelpButton } from './HelpChat';
+import { usePage, Pager } from '../lib/Pager';
 import './ac2.css';
 
 const LABEL = { awaiting_payment: 'Waiting for payment', new: 'Order received', preparing: 'Preparing', ready: 'Ready for pickup', paid: 'Picked up', cancelled: 'Cancelled' };
@@ -37,7 +38,8 @@ export function OrdersPage({ orders, go, reload, menu, onReorder }) {
     const days = Math.round((t - x) / 864e5);
     return days <= 0 ? 'Today' : days === 1 ? 'Yesterday' : days < 7 ? 'This week' : days < 31 ? 'This month' : 'Earlier';
   };
-  const groups = past.reduce((g, o) => { const k = groupOf(o.createdAt); (g[g.length - 1]?.k === k ? g[g.length - 1].list : (g.push({ k, list: [] }), g[g.length - 1].list)).push(o); return g; }, []);
+  const pg = usePage(past); // 10 past orders a page
+  const groups = pg.rows.reduce((g, o) => { const k = groupOf(o.createdAt); (g[g.length - 1]?.k === k ? g[g.length - 1].list : (g.push({ k, list: [] }), g[g.length - 1].list)).push(o); return g; }, []);
   const when = (d) => `${new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} · ${new Date(d).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}`;
   const Thumbs = ({ o }) => (
     <span className="o7-thumbs" aria-hidden="true">
@@ -119,6 +121,7 @@ export function OrdersPage({ orders, go, reload, menu, onReorder }) {
                 </li>
               ))}
             </ul></div>))}
+            <Pager {...pg} what="orders" />
           </div>
         )}
       </>)}
