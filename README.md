@@ -1,137 +1,86 @@
-# Matchéa POS: how to run it
+# Matchéa: Point-of-Sale, Inventory and Online Ordering System
 
-Your old movie app is saved in `_backup_movie_app/`.
+A full-stack **MERN** web application (MongoDB, Express.js, React, Node.js) for a small matcha drink shop.
 
-## First time only
+- **Customer website** (`/`): browse the menu, customise a drink (with a 3D cup preview), order ahead for pickup or delivery, pay by GCash / QR Ph, track the order live, collect loyalty stamps, chat with the shop.
+- **Staff POS** (`/pos`): counter orders, online orders, barista screen, inventory with recipes and stock history, menu management, reports and end-of-day closing, customers, staff accounts, archive and backups.
 
-1. Create a free MongoDB database at https://www.mongodb.com/atlas (M0 cluster).
-   Add a database user, allow your IP under Network Access, and copy the connection string from Connect → Drivers.
-2. In VS Code, open `server/.env` and paste the string into `MONGODB_URI`
-   (add `matcha_pos` after the last `/`), for example:
-   `MONGODB_URI=mongodb+srv://al:yourpass@cluster0.abcde.mongodb.net/matcha_pos`
-3. In a VS Code terminal:
-   ```
-   npm run seed
-   ```
-   This loads the Matchéa menu and creates the admin **Owner** with PIN **1234**. The first time you sign in, you are asked to choose a new 6-digit PIN.
+**Integrative Programming and Technologies · Section INF243**
+Instructor: Mr. Mark Anthony Gipit
 
-## Every time
+## Group members
 
-Open two terminals in VS Code (the + button in the terminal panel):
+1. Sheng, Hubert Ryan C.
+2. Bongo, John Onin D.
+3. Carabido, John Briant V.
+4. Lumanta, Alvin Clark P.
 
-| Terminal 1 | Terminal 2 |
+## Tech stack
+
+| Layer | Technology |
 |---|---|
-| `npm run server` | `npm start` |
+| Frontend | React 19, CSS, three.js |
+| Backend | Node.js, Express 4 (REST API) |
+| Database | MongoDB Atlas with Mongoose (16 collections) |
+| Security | bcryptjs (hashed PINs/passwords), JWT sessions, admin/cashier roles |
+| Integrations | PayMongo (GCash / QR Ph), Google Sign-In, Gmail (Nodemailer), OpenStreetMap, Leaflet |
+| Hosting | Render |
 
-The app opens at http://localhost:3000. Stop either one with Ctrl + C.
+## Main features
 
-## Where things are
+- Authentication: staff sign in with name + PIN; customers with password, e-mail code or Google.
+- CRUD: drinks, ingredients, expenses, staff accounts, shop settings; orders are created, updated and voided.
+- Inventory: each drink's recipe takes ingredients out of stock automatically; low-stock warnings; full stock history.
+- Input validation on both the browser and the server (`src/shared/rules.mjs`), with clear error messages.
+- Central error handling, offline mode for the POS, daily backups, and an Archive to restore deleted records.
+- Reports: sales by day/hour, best sellers, profit, busy times, ratings, monthly PDF and Excel export.
+- Responsive design (phone, tablet, desktop), light and dark mode, lists shown 10 per page.
 
-- `src/`: the React app (Register, Inventory, Menu, Reports screens are in `src/components/`)
-- `src/shared/pricing.mjs`: price, VAT and discount rules, used by both the app and the server
-- `server/`: Express + MongoDB API (`server/src/models` are the database collections)
+## Project structure
 
-## Two sites in one
+```
+src/
+  components/   POS screens (Register, Inventory, Menu, Reports, Staff, ...)
+  shop/         customer website screens
+  lib/          shared front-end helpers (API client, 3D cup, pager, printer, ...)
+  shared/       rules used by BOTH the browser and the server (prices, VAT, validation, loyalty)
+server/src/
+  routes/       REST API, one file per area (/api/sales, /api/products, ...)
+  models/       Mongoose schemas (database collections)
+  middleware/   authentication and roles
+  lib/          backups, payments, e-mail, archive, delivery helpers
+  index.js      Express app and MongoDB connection
+```
 
-| Address | Who | What |
-|---|---|---|
-| `/` | Customers | Menu with photos, order ahead, track the order (pickup only, pay at the counter) |
-| `/pos` | Staff | Sign in with name + PIN. Register, **Online** orders, Inventory, Menu, Reports |
+## Run it on your computer
 
-Online orders: **New → Accept** (stock is taken) **→ Mark ready → Picked up · Take payment**.
-Pause online ordering any time from the Online tab or Menu → Shop & options.
+Requirements: Node.js 20+ and a MongoDB Atlas database.
 
-## Put it online (so customers can reach it)
+1. Install everything:
+   ```
+   npm install
+   npm run install:server
+   ```
+2. Create `server/.env` (never upload this file) with at least:
+   ```
+   MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/matcha_pos
+   JWT_SECRET=<any long random text>
+   SHOP_TZ=Asia/Manila
+   ```
+   Optional: `GOOGLE_CLIENT_ID`, `SMTP_USER`, `SMTP_PASS`, `PAYMONGO_SECRET_KEY`.
+3. Load the starting menu (first time only): `npm run seed`
+4. Start it in two terminals:
+   ```
+   npm run server     # API on http://localhost:5000
+   npm start          # website on http://localhost:3000  (POS at /pos)
+   ```
 
-Your computer's `localhost` only works on your own Mac. To let everyone in, deploy to a host:
+## Deploy (Render)
 
-1. Push this folder to a **private GitHub repository** (`server/.env` is ignored and never uploaded).
-2. Create a free account at **render.com** → **New → Web Service** → pick the repo.
-3. Settings:
-   - Build command: `npm install && npm run install:server && npm run build`
-   - Start command: `npm run serve`
-4. **Environment variables** (Render → Environment): `MONGODB_URI`, `JWT_SECRET`, `SHOP_TZ=Asia/Manila` — copy the values from `server/.env`.
-5. In MongoDB Atlas → Network Access, keep `0.0.0.0/0` (Render's IP changes).
-6. Deploy. Render gives you an address like `https://matchea.onrender.com`.
-   - Customers: `https://matchea.onrender.com/`
-   - Staff: `https://matchea.onrender.com/pos`
-7. Optional: buy a domain (e.g. `matchea.com`) and add it under Render → Settings → Custom Domains.
+- Build command: `npm install && npm run install:server && npm run build`
+- Start command: `npm run serve`
+- Environment variables: the same as `server/.env`.
 
-Note: Render's free plan sleeps after 15 minutes without visitors, so the first page load can take ~50 seconds.
-For a shop that's open all day, use the paid "Starter" plan so it stays awake.
+## Documentation
 
-## Online payment (PayMongo)
-
-Customers can choose **Pay now** (GCash, Maya, QR Ph on PayMongo's secure page) or **Pay at pickup**.
-Without PayMongo keys, only pay at pickup is shown.
-
-1. Sign up at **dashboard.paymongo.com**. You can test right away; real payments need account activation (business documents).
-2. Developers → API keys → copy the **secret key** into `server/.env` as `PAYMONGO_SECRET_KEY` (`sk_test_…` first).
-3. When the site is online: Developers → Webhooks → add `https://YOUR-SITE/api/public/paymongo/webhook`
-   with event **checkout_session.payment.paid**, and put its secret in `PAYMONGO_WEBHOOK_SECRET`. Set `PUBLIC_URL` to your site address.
-4. Restart the server. The Online tab shows "Online payment · test mode" (or "on" with live keys).
-
-How it works:
-- A pay-now order stays hidden from staff until it's paid, then appears in **New** marked *Paid online*. At pickup, staff just tap **Picked up**.
-- If the customer doesn't pay within 45 minutes, the order is cancelled automatically.
-- Payment is confirmed by the webhook, and also checked when the customer returns to their order page (so it works on localhost without a webhook).
-- If staff cancel a paid order, it's marked **refund due**: refund it in the PayMongo dashboard using the payment reference shown.
-
-## Customer accounts (sign up / sign in)
-
-Customers must sign in before they can see the menu and order. Mobile number + password works right away. The Google and Facebook buttons only appear once you add their keys to `server/.env` (then restart `npm run server`).
-
-**Google**
-1. Go to console.cloud.google.com → create a project → APIs & Services → OAuth consent screen (External, add your shop name and email).
-2. Credentials → Create credentials → OAuth client ID → Web application.
-3. Authorized JavaScript origins: `http://localhost:3000` and later your live address (e.g. `https://matchea.onrender.com`).
-4. Copy the Client ID into `GOOGLE_CLIENT_ID=` in `server/.env`.
-
-**Facebook**
-1. Go to developers.facebook.com → My Apps → Create app → "Authenticate and request data from users with Facebook Login".
-2. App settings → Basic: copy App ID and App Secret into `FACEBOOK_APP_ID=` and `FACEBOOK_APP_SECRET=`. Add your live domain to App Domains.
-3. Facebook Login → Settings: add your live address to Allowed Domains for the JavaScript SDK. Facebook requires `https` for the live site; `localhost` works while testing.
-4. Switch the app to Live mode when you go live.
-
-After Google/Facebook sign-in, customers are asked once for their mobile number. Forgot password: customers ask at the counter (reset it by setting a new one from the database for now).
-
-## Stamp card, best sellers, low-stock alerts, order-ready texts
-
-**Stamp card:** 1 stamp per drink, 9 stamps = the 10th drink free (its regular-size price comes off; upsize and add-ons are still charged).
-- Online: stamps are added when the order is picked up. Customers see their card in their account and on the menu, and tick "Use my free drink" at checkout.
-- At the counter: type the customer's mobile number in "Stamp card" on the register and press Find. Their stamps are added with the sale, and you can tick "Use free drink".
-- Cancelled or voided orders give back the stamps they used and take back the stamps they earned.
-
-**Best sellers:** Menu → Edit a drink → "Best seller badge". Putobumbong and S'mores are marked to start.
-
-**Low stock:** a yellow bar shows on every POS tab when something reaches its reorder level or will run out within 3 days. Inventory → "Restock list" suggests how much to buy for about a week; copy it into a message to your supplier or download it.
-
-**Order-ready text:** when staff tap Ready on an online order, the customer gets one SMS.
-1. Sign up at semaphore.co and buy credits (₱0.56 per text plus VAT, as listed on semaphore.co in Sept 2026).
-2. Account → API: copy your API key into `SEMAPHORE_API_KEY=` in `server/.env`.
-3. Optional: register a sender name (like MATCHEA) and put it in `SEMAPHORE_SENDER=`.
-4. Restart `npm run server`. When you go live, set `PUBLIC_URL=` so the text includes the tracking link.
-Without a key, no texts are sent; customers still get a chime, a banner and a notification on the ordering site.
-
-## Backups
-
-The server saves a copy of **all** data (sales, menu, stock, staff, customers, stamps, ratings) once a day into `server/backups/`, and keeps the newest 30.
-- Reports tab → **Backups**: see the last backup, press **Back up now**, or **Download** one.
-- Download one every week and keep it somewhere safe (Google Drive, a USB stick). The files contain customer details: don't share them.
-- To put a backup back (replaces everything; a safety copy of the current data is made first):
-  `npm run restore -- backup-2026-09-24_0900-daily.json.gz` then type `RESTORE`, then restart `npm run server`.
-- When the site is hosted online (e.g. Render), its disk is wiped on every update, so the Download button is your real backup there.
-
-## Receipt printer (one tap, no print window)
-
-Works in **Google Chrome or Microsoft Edge** with any ESC/POS thermal printer (58 mm or 80 mm, e.g. Xprinter, Epson TM, GOOJPRT).
-1. POS header → **Printer** → pick how it's connected: USB cable, Bluetooth paired on this computer, or Bluetooth from an Android tablet.
-2. Choose the paper width and press **Print test page**.
-3. Tick **Print automatically after each sale** if you want every receipt printed without pressing Print.
-The setting is saved on that device. iPads/iPhones can't talk to printers this way; they use the normal print window.
-Windows only: if Chrome can't open a USB printer, the printer's own driver is holding it. Use the Bluetooth/serial option, or print through the print window.
-
-## Favourite drinks and ratings
-
-- Customers tap **Save these choices as a favourite** on a drink. Favourites appear at the top of the menu with a one-tap **Add**.
-- After pickup, customers can rate the order (1–5 stars + comment) for 14 days. Only admins see ratings: Reports tab → **Customer ratings**.
+The full technical documentation (overview, objectives, scope, system architecture, database design, UI, features, testing and references) is submitted with the project.
